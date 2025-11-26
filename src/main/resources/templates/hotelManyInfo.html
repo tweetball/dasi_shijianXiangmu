@@ -1,0 +1,452 @@
+<!--
+    文件名称：hotelManyInfo.html
+    文件功能：酒店详情页面模板（多房型酒店）
+    功能概述：
+        1. 显示酒店详细信息，包括酒店图片、名称、评分、地址、描述等
+        2. 显示酒店设施信息
+        3. 显示多个房型选择列表（使用Thymeleaf动态生成）
+        4. 提供预订功能，包括预订弹窗、表单验证、订单摘要计算等
+        5. 集成客户评价展示功能（通过外部JavaScript文件实现）
+        6. 响应式设计，支持PC端和移动端访问
+    技术栈：HTML5 + CSS3 + JavaScript + Thymeleaf模板引擎
+    依赖文件：
+        - /css/navbar.css（导航栏样式）
+        - /js/jquery-1.8.3.js（jQuery库）
+        - /js/hotelManyInfo.js（酒店详情页面JavaScript功能，外部文件）
+        - Font Awesome图标库（CDN）
+    作者：游市生活开发团队
+    创建日期：2024年
+    最后更新：2024年
+-->
+<!DOCTYPE html>
+<!-- HTML5文档类型声明，标识这是一个HTML5文档 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<!-- 
+    HTML根元素
+    lang="zh-CN"：设置页面语言为简体中文
+    xmlns:th="http://www.thymeleaf.org"：声明Thymeleaf命名空间，用于模板引擎语法
+-->
+<head>
+    <!-- HTML文档头部，包含元数据和样式表引用 -->
+    <!-- 字符编码声明，指定页面使用UTF-8编码，支持中文等多语言字符 -->
+    <meta charset="UTF-8">
+    <!-- 视口元数据，设置页面在移动设备上的显示方式，width=device-width表示宽度自适应设备宽度，initial-scale=1.0表示初始缩放比例为1.0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题，使用Thymeleaf动态显示酒店名称 -->
+    <title th:text="${m.name} + ' - 游市生活'">酒店详情 - 游市生活</title>
+    
+    <!-- 引入Font Awesome图标库（CDN） -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 引入导航栏样式表 -->
+    <link rel="stylesheet" href="/css/navbar.css">
+    <!-- 引入jQuery库（用于DOM操作和AJAX请求） -->
+    <script src="/js/jquery-1.8.3.js"></script>
+</head>
+<body>
+    <!-- 统一导航栏 -->
+    <!-- 页面顶部导航栏，包含网站Logo、导航链接和用户操作按钮 -->
+    <header class="header">
+        <!-- 导航栏容器 -->
+        <nav class="nav">
+            <!-- 网站Logo链接，点击跳转到首页 -->
+            <a href="/" class="logo">
+                <!-- 城市图标 -->
+                <i class="fas fa-city"></i>
+                <!-- 网站名称 -->
+                游市生活
+            </a>
+            <!-- 导航链接列表 -->
+            <ul class="nav-links">
+                <!-- 首页导航链接 -->
+                <li><a href="/">首页</a></li>
+                <!-- 住宿服务导航链接 -->
+                <li><a href="/hc/f2">住宿服务</a></li>
+                <!-- 出行服务导航链接 -->
+                <li><a href="/travel">出行服务</a></li>
+                <!-- 美食服务导航链接 -->
+                <li><a href="/food">美食服务</a></li>
+                <!-- 购物服务导航链接 -->
+                <li><a href="/shopping">购物服务</a></li>
+                <!-- 生活缴费导航链接 -->
+                <li><a href="/payment">生活缴费</a></li>
+            </ul>
+            <!-- 用户操作区域 -->
+            <div class="user-actions">
+                <!-- 未登录用户显示区域（使用Thymeleaf条件判断） -->
+                <div th:if="${session.user == null}">
+                    <!-- 登录按钮链接 -->
+                    <a href="/user/login" class="login-btn">登录</a>
+                    <!-- 注册按钮链接 -->
+                    <a href="/user/register" class="register-btn">注册</a>
+                </div>
+                <!-- 已登录用户显示区域（使用Thymeleaf条件判断） -->
+                <div th:if="${session.user != null}">
+                    <!-- 我的订单链接（统一订单中心） -->
+                    <a href="/unified-new/orders" style="color: #FF6600; text-decoration: none; font-weight: 500; margin-right: 15px;">
+                        <!-- 订单列表图标 -->
+                        <i class="fas fa-list-alt"></i>
+                        <!-- 订单文本 -->
+                        我的订单
+                    </a>
+                    <!-- 用户个人中心链接 -->
+                    <a href="/user/profile" style="color: #FF6600; text-decoration: none; font-weight: 500;">
+                        <!-- 用户头像图标 -->
+                        <i class="fas fa-user-circle"></i>
+                        <!-- 用户昵称或用户名（使用Thymeleaf三元运算符，优先显示昵称，如果没有则显示用户名） -->
+                        <span th:text="${session.user.nickname ?: session.user.username}">用户</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+<!-- 统一TabBar -->
+<!-- 页面底部导航栏（移动端常用），包含首页、住宿、出行、订单、我的等快捷入口 -->
+<div class="unified-tabbar">
+    <!-- TabBar容器 -->
+    <div class="tabbar-container">
+        <!-- 首页TabBar项 -->
+        <a href="/hc/f2" class="tabbar-item">
+            <!-- 首页图标 -->
+            <i class="fas fa-home"></i>
+            <!-- 首页文本 -->
+            <span>首页</span>
+        </a>
+        <!-- 住宿TabBar项 -->
+        <a href="/hc/fAll" class="tabbar-item">
+            <!-- 住宿图标 -->
+            <i class="fas fa-bed"></i>
+            <!-- 住宿文本 -->
+            <span>住宿</span>
+        </a>
+        <!-- 出行TabBar项 -->
+        <a href="/travel" class="tabbar-item">
+            <!-- 出行图标 -->
+            <i class="fas fa-map"></i>
+            <!-- 出行文本 -->
+            <span>出行</span>
+        </a>
+        <!-- 订单TabBar项（当前激活状态） -->
+        <a href="/unified-new/orders" class="tabbar-item active">
+            <!-- 订单图标 -->
+            <i class="fas fa-list-alt"></i>
+            <!-- 订单文本 -->
+            <span>订单</span>
+        </a>
+        <!-- 我的TabBar项 -->
+        <a href="/user/profile" class="tabbar-item">
+            <!-- 用户图标 -->
+            <i class="fas fa-user"></i>
+            <!-- 我的文本 -->
+            <span>我的</span>
+        </a>
+    </div>
+</div>
+
+<!-- 主要内容区域 -->
+<main class="container py-4">
+    <!-- 返回按钮 -->
+    <!-- 返回上一页按钮，点击后返回酒店列表页面 -->
+    <div class="mb-4">
+        <!-- 返回按钮，使用onclick事件调用history.back()方法返回上一页 -->
+        <button class="hotel-btn hotel-btn-secondary" onclick="history.back()">
+            <!-- 返回箭头图标 -->
+            <i class="fas fa-arrow-left"></i> 
+            <!-- 返回按钮文本 -->
+            返回酒店列表
+        </button>
+    </div>
+
+    <!-- 酒店基本信息 -->
+    <!-- 酒店基本信息卡片，包含酒店图片、名称、评分、地址、描述、价格等信息 -->
+    <section class="hotel-card">
+        <!-- 酒店头部信息容器 -->
+        <div class="hotel-header">
+            <!-- 酒店图片容器 -->
+            <div class="hotel-image">
+                <!-- 酒店外观图片，使用Thymeleaf动态绑定图片路径 -->
+                <img th:src="${m.img}" alt="酒店外观" class="fixed-size-image" />
+            </div>
+            <!-- 酒店信息容器 -->
+            <div class="hotel-info">
+                <!-- 酒店名称标题，使用Thymeleaf动态显示酒店名称 -->
+                <h1 class="hotel-name" th:text="${m.name}">酒店名称</h1>
+                <!-- 酒店评分显示，优化数据绑定方式，确保评分数据正确输出（如果评分为null则显示"暂无评分"） -->
+                <div class="hotel-rating" id="hotelRating" th:text="${m.score != null ? m.score : '暂无评分'}"></div>
+                <!-- 酒店地址信息 -->
+                <div class="hotel-address">
+                    <!-- 地址图标 -->
+                    <i class="fa fa-map-marker mr-1"></i>
+                    <!-- 地址文本，使用Thymeleaf动态显示酒店地址 -->
+                    <span th:text="${m.address}">辽宁省大连市中山区</span>
+                </div>
+                <!-- 酒店标签容器 -->
+                <div class="hotel-tags">
+                    <!-- 服务电话标签，使用Thymeleaf动态显示酒店电话 -->
+                    <span class="hotel-tag" th:text="'服务电话:'+ ${m.tel}"></span>
+                </div>
+                <!-- 酒店描述信息，使用Thymeleaf动态显示酒店描述内容 -->
+                <div class="hotel-description" th:text="${m.content}">
+                    豪华商务度假综合体，配备米其林餐厅、空中花园及24小时管家服务。
+                </div>
+                <!-- 酒店价格信息 -->
+                <div class="hotel-price">
+                    <!-- 价格文本，最低价格通过JavaScript动态更新 -->
+                    价格：¥<span id="minPrice">788</span>/晚起
+                </div>
+                <!-- 立即预订按钮，点击后打开预订弹窗 -->
+                <button id="bookNowBtn" class="hotel-btn hotel-btn-primary hotel-btn-lg">
+                    <!-- 预订图标 -->
+                    <i class="fas fa-calendar-check"></i> 
+                    <!-- 预订按钮文本 -->
+                    立即预订
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 酒店设施 -->
+    <!-- 酒店设施信息区域，展示酒店提供的各种设施和服务 -->
+    <section class="facilities">
+        <!-- 设施区域标题 -->
+        <h2>
+            <!-- 设施图标 -->
+            <i class="fa fa-cog text-primary mr-1"></i> 
+            <!-- 设施标题文本 -->
+            酒店设施
+        </h2>
+        <!-- 设施列表容器 -->
+        <div class="facility-list">
+            <!-- 免费WiFi设施项 -->
+            <div class="facility-item"><i class="fa fa-wifi"></i> 免费WiFi</div>
+            <!-- 餐厅设施项 -->
+            <div class="facility-item"><i class="fa fa-cutlery"></i> 餐厅</div>
+            <!-- 超强隔音设施项 -->
+            <div class="facility-item"><i class="fa fa-deaf"></i> 超强隔音</div>
+            <!-- 停车场设施项 -->
+            <div class="facility-item"><i class="fa fa-car"></i> 停车场</div>
+            <!-- 健身房设施项 -->
+            <div class="facility-item"><i class="fa fa-heartbeat"></i> 健身房</div>
+            <!-- 独立卫浴设施项 -->
+            <div class="facility-item"><i class="fa fa-bath"></i> 独立卫浴</div>
+            <!-- 电视设施项 -->
+            <div class="facility-item"><i class="fa fa-television"></i> 电视</div>
+            <!-- 空调设施项 -->
+            <div class="facility-item"><i class="fa fa-thermometer-half"></i> 空调</div>
+        </div>
+    </section>
+
+    <!-- 房型选择 -->
+    <!-- 房型选择区域，展示酒店提供的各种房型供用户选择 -->
+    <section class="room-types">
+        <!-- 房型区域标题 -->
+        <h2>
+            <!-- 房型图标 -->
+            <i class="fa fa-bed text-primary mr-1"></i> 
+            <!-- 房型标题文本 -->
+            选择房型
+        </h2>
+        <!-- 房型列表容器，房型将通过Thymeleaf和JS动态生成 -->
+        <div id="roomTypes" class="room-list">
+            <!-- 房型项，使用Thymeleaf的th:each循环遍历酒店房型列表（m.rList） -->
+            <div th:each="ml:${m.rList}" class="room-item" data-id="${ml.id}">
+                <!-- 房型图片容器 -->
+                <div class="room-image">
+                    <!-- 房型图片，使用固定图片路径（实际应该从数据库获取） -->
+                    <img src="/img/r1.jpg" 
+                         alt="房型图片" class="fixed-size-image random-room-image" />
+                </div>
+                <!-- 房型信息容器 -->
+                <div class="room-info">
+                    <!-- 房型名称标题，使用Thymeleaf动态显示房型名称 -->
+                    <h3 class="room-name" th:text="${ml.name}">豪华海景双床房</h3>
+                    <!-- 房型价格信息，使用Thymeleaf动态显示房型价格 -->
+                    <div class="room-price">¥<span th:text="${ml.price}">788</span>/晚</div>
+                    <!-- 房型设施标签列表 -->
+                    <div class="room-facilities">
+                        <!-- 海景设施标签 -->
+                        <span class="room-facility">海景</span>
+                        <!-- 大床设施标签 -->
+                        <span class="room-facility">大床</span>
+                        <!-- 42寸电视设施标签 -->
+                        <span class="room-facility">42寸电视</span>
+                        <!-- 免费WiFi设施标签 -->
+                        <span class="room-facility">免费WiFi</span>
+                        <!-- 独立卫浴设施标签 -->
+                        <span class="room-facility">独立卫浴</span>
+                    </div>
+                    <!-- 房型描述信息，使用Thymeleaf动态显示房型描述内容 -->
+                    <p class="room-description" th:text="${ml.content}">35平方米，海景，大床，免费WiFi，独立卫浴</p>
+                </div>
+                <!-- 房型选择容器 -->
+                <div class="room-select">
+                    <!-- 房型单选按钮，使用Thymeleaf动态绑定房型ID，视觉上隐藏但功能保留 -->
+                    <input type="radio" name="roomType" id="room_${ml.id}" th:value="${ml.id}" class="room-radio visually-hidden" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 客户评价 -->
+    <!-- 客户评价区域，展示其他用户对酒店的评价和反馈 -->
+    <section class="reviews">
+        <!-- 评价区域标题 -->
+        <h2>
+            <!-- 评价图标 -->
+            <i class="fa fa-comment text-primary mr-1"></i> 
+            <!-- 评价标题文本 -->
+            客户评价
+        </h2>
+        <!-- 评价列表容器，评论将通过JavaScript随机生成头像 -->
+        <div id="reviews" class="review-list">
+            <!-- 评价项将通过外部JavaScript文件动态生成 -->
+        </div>
+    </section>
+</main>
+
+<!-- 预订弹窗 -->
+<!-- 预订信息填写弹窗，用户在此填写预订信息并提交预订请求 -->
+<div id="bookingModal" class="modal">
+    <!-- 弹窗内容容器 -->
+    <div class="modal-content">
+        <!-- 弹窗头部 -->
+        <div class="modal-header">
+            <!-- 弹窗标题 -->
+            <h3 class="modal-title">填写预订信息</h3>
+            <!-- 关闭弹窗按钮（×符号） -->
+            <span id="closeModal" class="close-modal">&times;</span>
+        </div>
+        <!-- 弹窗主体内容 -->
+        <div class="modal-body">
+            <!-- 预订表单 -->
+            <form id="bookingForm">
+                <!-- 隐藏字段：酒店ID，使用Thymeleaf动态绑定酒店ID -->
+                <input type="hidden" id="bookHotelId" th:value="${m.id}" />
+                <!-- 隐藏字段：房型ID，通过JavaScript动态设置 -->
+                <input type="hidden" id="bookRoomId" value="" />
+                <!-- 隐藏字段：房型名称，通过JavaScript动态设置 -->
+                <input type="hidden" id="bookRoomName" value="" />
+                <!-- 隐藏字段：房型价格，通过JavaScript动态设置 -->
+                <input type="hidden" id="bookRoomPrice" value="" />
+                <!-- 隐藏字段：订单总价，通过JavaScript动态计算并设置 -->
+                <input type="hidden" id="bookTotalPrice" value="0" />
+
+                <!-- 入住日期 -->
+                <!-- 入住日期输入组 -->
+                <div class="form-group">
+                    <!-- 入住日期标签 -->
+                    <label for="checkInDate">入住日期</label>
+                    <!-- 入住日期输入框（日期选择器），必填字段 -->
+                    <input type="date" id="checkInDate" required />
+                </div>
+
+                <!-- 离店日期 -->
+                <!-- 离店日期输入组 -->
+                <div class="form-group">
+                    <!-- 离店日期标签 -->
+                    <label for="checkOutDate">离店日期</label>
+                    <!-- 离店日期输入框（日期选择器），必填字段 -->
+                    <input type="date" id="checkOutDate" required />
+                </div>
+
+                <!-- 入住人数选择组 -->
+                <div class="form-group">
+                    <!-- 入住人数标签 -->
+                    <label for="guests">入住人数</label>
+                    <!-- 入住人数下拉选择框，必填字段，默认选中2人 -->
+                    <select id="guests" required>
+                        <!-- 1人选项 -->
+                        <option value="1">1人</option>
+                        <!-- 2人选项（默认选中） -->
+                        <option value="2" selected>2人</option>
+                        <!-- 3人选项 -->
+                        <option value="3">3人</option>
+                        <!-- 4人选项 -->
+                        <option value="4">4人</option>
+                        <!-- 5人及以上选项 -->
+                        <option value="5+">5人及以上</option>
+                    </select>
+                </div>
+
+                <!-- 联系人姓名输入组 -->
+                <div class="form-group">
+                    <!-- 联系人姓名标签 -->
+                    <label for="contactName">联系人姓名</label>
+                    <!-- 联系人姓名输入框，必填字段 -->
+                    <input type="text" id="contactName" required />
+                </div>
+
+                <!-- 联系电话输入组 -->
+                <div class="form-group">
+                    <!-- 联系电话标签 -->
+                    <label for="contactPhone">联系电话</label>
+                    <!-- 联系电话输入框（电话类型），必填字段 -->
+                    <input type="tel" id="contactPhone" required />
+                </div>
+
+                <!-- 特殊要求输入组 -->
+                <div class="form-group">
+                    <!-- 特殊要求标签（选填） -->
+                    <label for="notes">特殊要求 (选填)</label>
+                    <!-- 特殊要求文本域，3行高度，非必填字段 -->
+                    <textarea id="notes" rows="3"></textarea>
+                </div>
+
+                <!-- 订单摘要 -->
+                <!-- 订单摘要区域，显示订单的详细信息（酒店名称、房型、单价、入住天数、总计等） -->
+                <div class="summary">
+                    <!-- 订单摘要标题 -->
+                    <h4>订单摘要</h4>
+                    <!-- 酒店名称摘要项 -->
+                    <div class="summary-item">
+                        <!-- 摘要项标签 -->
+                        <span>酒店名称</span>
+                        <!-- 摘要项值，使用Thymeleaf动态显示酒店名称 -->
+                        <span id="summaryHotelName" th:text="${m.name}">酒店名称</span>
+                    </div>
+                    <!-- 房型摘要项 -->
+                    <div class="summary-item">
+                        <!-- 摘要项标签 -->
+                        <span>房型</span>
+                        <!-- 摘要项值，通过JavaScript动态更新 -->
+                        <span id="summaryRoomName">标准间</span>
+                    </div>
+                    <!-- 单价摘要项 -->
+                    <div class="summary-item">
+                        <!-- 摘要项标签 -->
+                        <span>单价</span>
+                        <!-- 摘要项值，通过JavaScript动态更新 -->
+                        <span id="summaryPrice">¥788/晚</span>
+                    </div>
+                    <!-- 入住天数摘要项 -->
+                    <div class="summary-item">
+                        <!-- 摘要项标签 -->
+                        <span>入住天数</span>
+                        <!-- 摘要项值，通过JavaScript动态计算并更新 -->
+                        <span id="summaryDays">0晚</span>
+                    </div>
+                    <!-- 总计摘要项（突出显示） -->
+                    <div class="summary-item summary-total">
+                        <!-- 摘要项标签 -->
+                        <span>总计</span>
+                        <!-- 摘要项值，通过JavaScript动态计算并更新 -->
+                        <span id="summaryTotal">¥0</span>
+                    </div>
+                </div>
+
+                <!-- 确认预订按钮 -->
+                <button type="submit" class="submit-btn">
+                    <!-- 确认图标 -->
+                    <i class="fa fa-check mr-1"></i> 
+                    <!-- 确认按钮文本 -->
+                    确认预订
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 移除了不存在的JS文件引用 -->
+<!-- 注意：此页面的JavaScript功能由外部文件 /js/hotelManyInfo.js 提供，该文件已在其他地方引用 -->
+</body>
+</html>

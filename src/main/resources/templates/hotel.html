@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>酒店列表</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/navbar.css">
+  <script src="/js/jquery-1.8.3.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+</head>
+<body>
+  <!-- 页面头部 -->
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <i class="fa fa-building-o"></i>
+        <h1>游市生活酒店预订平台</h1>
+      </div>
+      <nav class="nav-links">
+        <a href="/">首页</a>
+        <a href="#" class="active">酒店</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-btn">
+          <i class="fa fa-search mr-1"></i> <a href="/">搜索</a>
+        </button>
+        <button class="md:hidden">
+          <i class="fa fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+  <!-- 主内容区 -->
+  <main>
+    <div class="page-title">
+      <h2>酒店列表</h2>
+      <p>为您找到 <span id="count">3</span> 家符合条件的酒店，点击筛选按钮查看更多选项</p>
+    </div>
+    <!-- 筛选导航栏 -->
+    <div class="filter-nav" id="filterNav">
+      <div class="filter-grid">
+        <!-- 省市筛选 -->
+<!-- 省市联动选择模块 -->
+<div class="filter-item province-city-selector">
+  <label>省/市</label>
+  <div class="filter-select">
+    <select id="provinceSelect" class="province-select">
+      <option value="">请选择省份</option>
+      <!-- 省份选项将通过JavaScript动态生成 -->
+    </select>
+  </div>
+</div>
+
+<div class="filter-item province-city-selector" style="display: none;">
+  <label>城市</label>
+  <div class="filter-select">
+    <select id="citySelect" class="city-select">
+      <option value="">请选择城市</option>
+      <!-- 城市选项将通过JavaScript动态生成 -->
+    </select>
+  </div>
+</div>
+
+        <!-- 价格区间筛选 -->
+        <div class="filter-item">
+          <label>价格区间</label>
+          <div class="filter-select">
+            <select id="priceFilter">
+              <option value="">全部价格</option>
+              <option value="0-200">¥300以下</option>
+              <option value="200-500">¥300-500</option>
+              <option value="500-1000">¥500-1000</option>
+              <option value="1000-2000">¥1000-2000</option>
+              <option value="2000+">¥2000以上</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 酒店类型筛选 -->
+        <div class="filter-item">
+          <label>酒店类型</label>
+          <div class="filter-select">
+            <select id="typeFilter">
+              <option value="">全部类型</option>
+              <option value="三星级">三星级</option>
+              <option value="四星级">四星级</option>
+              <option value="五星级">五星级</option>
+              <option value="民宿">民宿</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 筛选按钮 -->
+        <div class="filter-btn">
+          <button id="filterBtn">
+            <i class="fa fa-filter mr-2"></i> 点击筛选酒店
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 酒店列表 -->
+    <div class="hotel-list" id="hotelList">
+      <!-- 酒店项将通过JavaScript动态生成 -->
+    </div>
+  </main>
+
+  <!-- 页脚 -->
+  <footer>
+    <div class="footer-container">
+      <div class="footer-about">
+        <div class="footer-logo">
+          <i class="fa fa-building-o"></i>
+          <h3>酒店预订平台</h3>
+        </div>
+        <p>为您提供全球优质酒店预订服务，让旅行更舒适、更便捷。</p>
+        <div class="footer-social">
+          <a href="#"><i class="fa fa-weibo"></i></a>
+          <a href="#"><i class="fa fa-wechat"></i></a>
+          <a href="#"><i class="fa fa-instagram"></i></a>
+          <a href="#"><i class="fa fa-twitter"></i></a>
+        </div>
+      </div>
+      <div class="footer-section">
+        <h4>快速链接</h4>
+        <ul>
+          <li><a href="#">首页</a></li>
+          <li><a href="#">酒店</a></li>
+          <li><a href="#">景点</a></li>
+          <li><a href="#">攻略</a></li>
+          <li><a href="#">关于我们</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>热门目的地</h4>
+        <ul>
+          <li><a href="#">北京酒店</a></li>
+          <li><a href="#">上海酒店</a></li>
+          <li><a href="#">广州酒店</a></li>
+          <li><a href="#">深圳酒店</a></li>
+          <li><a href="#">成都酒店</a></li>
+        </ul>
+      </div>
+      <div class="footer-section footer-contact">
+        <h4>客户服务</h4>
+        <ul>
+          <li><a href="#">常见问题</a></li>
+          <li><a href="#">联系我们</a></li>
+          <li><a href="#">隐私政策</a></li>
+          <li><a href="#">服务条款</a></li>
+          <li>客服电话: 400-123-4567</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-copyright">
+      <p>© 2025 酒店预订平台 版权所有</p>
+    </div>
+  </footer>
+  <script src="/js/allHotel.js"></script>
+</body>
+</html>

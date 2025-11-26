@@ -1,0 +1,1984 @@
+<!--
+    文件名称：hotelInfo.html
+    文件功能：酒店详情页面模板（单房型酒店）
+    功能概述：
+        1. 显示酒店详细信息，包括酒店图片、名称、评分、地址、描述等
+        2. 显示酒店设施信息
+        3. 显示房型选择列表（从后端动态加载）
+        4. 提供预订功能，包括预订弹窗、表单验证、订单摘要计算等
+        5. 集成客户评价展示功能
+        6. 响应式设计，支持PC端和移动端访问
+    技术栈：HTML5 + CSS3 + JavaScript + Thymeleaf模板引擎
+    依赖文件：
+        - /css/navbar.css（导航栏样式）
+        - /css/hotelManyInfo.css（酒店详情样式）
+        - Font Awesome图标库（CDN）
+    作者：游市生活开发团队
+    创建日期：2024年
+    最后更新：2024年
+-->
+<!DOCTYPE html>
+<!-- HTML5文档类型声明，标识这是一个HTML5文档 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<!-- 
+    HTML根元素
+    lang="zh-CN"：设置页面语言为简体中文
+    xmlns:th="http://www.thymeleaf.org"：声明Thymeleaf命名空间，用于模板引擎语法
+-->
+<head>
+    <!-- HTML文档头部，包含元数据和样式表引用 -->
+    <!-- 字符编码声明，指定页面使用UTF-8编码，支持中文等多语言字符 -->
+    <meta charset="UTF-8">
+    <!-- 视口元数据，设置页面在移动设备上的显示方式，width=device-width表示宽度自适应设备宽度，initial-scale=1.0表示初始缩放比例为1.0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题，使用Thymeleaf动态显示酒店名称 -->
+    <title th:text="'游市生活 - ' + ${hotel.name}">游市生活 - 酒店信息</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/hotelManyInfo.css">
+    <style>
+        body {
+            background-color: #f9f9f9;
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            margin-top: 90px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 20px;
+        }
+
+        /* 酒店英雄区域 */
+        .hotel-hero {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            min-height: 500px;
+        }
+
+        .hotel-gallery {
+            position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .main-image {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 500px;
+        }
+
+        .main-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .rating-badge {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: bold;
+            color: #FF6600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .hotel-details {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hotel-header {
+            margin-bottom: 20px;
+        }
+
+        .hotel-name {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            line-height: 1.2;
+        }
+
+        .hotel-meta {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .rating-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stars {
+            display: flex;
+            gap: 2px;
+        }
+
+        .stars i {
+            color: #ddd;
+            font-size: 16px;
+        }
+
+        .stars i.filled {
+            color: #FFD700;
+        }
+
+        .rating-text {
+            font-weight: bold;
+            color: #FF6600;
+            font-size: 1.1rem;
+        }
+
+        .hotel-level {
+            background: linear-gradient(45deg, #FF6600, #FF8C00);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .hotel-location {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .hotel-location i {
+            color: #FF6600;
+        }
+
+        .hotel-contact {
+            margin-bottom: 20px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .contact-item i {
+            color: #FF6600;
+        }
+
+        .hotel-description {
+            color: #777;
+            line-height: 1.7;
+            font-size: 16px;
+            margin-bottom: 30px;
+            flex: 1;
+        }
+
+        .hotel-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .price-section {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+
+        .price-label {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .price-amount {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #FF6600;
+        }
+
+        .price-unit {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .book-btn {
+            background: linear-gradient(45deg, #FF6600, #FF8C00);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .book-btn:hover {
+            background: linear-gradient(45deg, #e55a00, #e67e00);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 102, 0, 0.3);
+        }
+
+        /* 设施区域样式 */
+        .facilities-section, .reviews-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .section-header h2 i {
+            color: #FF6600;
+        }
+
+        .section-header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .facility-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .facility-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+        }
+
+        .facility-card:hover {
+            background: #fff;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .facility-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #FF6600, #FF8C00);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .facility-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .facility-info p {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+        }
+
+        /* 评价区域样式 */
+        .rating-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .rating-summary-left {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .overall-rating {
+            font-size: 48px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .rating-stars-summary {
+            display: flex;
+            gap: 5px;
+            font-size: 20px;
+        }
+
+        .rating-stars-summary i {
+            color: #FFD700;
+        }
+
+        .rating-count {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .rating-summary-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .add-review-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .add-review-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .add-review-btn i {
+            font-size: 18px;
+        }
+
+        /* 评价筛选区域 */
+        .review-filters {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #333;
+            margin-right: 5px;
+        }
+
+        .filter-btn {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 20px;
+            padding: 8px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .filter-btn:hover {
+            border-color: #FF6600;
+            color: #FF6600;
+        }
+
+        .filter-btn.active {
+            background: #FF6600;
+            border-color: #FF6600;
+            color: white;
+        }
+
+        /* 评价列表 */
+        .reviews-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .review-item {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .review-item:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .review-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .review-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #FF6600, #FF8C00);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .review-user-info {
+            flex: 1;
+        }
+
+        .review-username {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .review-rating {
+            display: flex;
+            gap: 3px;
+        }
+
+        .review-rating i {
+            color: #FFD700;
+            font-size: 14px;
+        }
+
+        .review-date {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .review-content {
+            color: #666;
+            line-height: 1.8;
+            font-size: 15px;
+            margin-top: 10px;
+        }
+
+        .no-reviews {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .no-reviews i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .no-reviews p {
+            font-size: 16px;
+            margin: 0;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {            
+            .main-content {
+                padding: 15px;
+            }
+            
+            .hotel-hero {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+            
+            .hotel-details {
+                padding: 30px 20px;
+            }
+            
+            .hotel-name {
+                font-size: 1.8rem;
+            }
+            
+            .facility-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .review-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 - 与首页一致 -->
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo">
+                <i class="fas fa-city"></i>
+                游市生活
+            </a>
+                    <ul class="nav-links">
+                <li><a href="/">首页</a></li>
+                <li><a href="/hc/f2">住宿服务</a></li>
+            <li><a href="/travel">出行服务</a></li>
+                <li><a href="/food">美食服务</a></li>
+                <li><a href="/shopping">购物服务</a></li>
+                <li><a href="/payment">生活缴费</a></li>
+        </ul>
+            <div class="user-actions">
+                <div th:if="${session.user == null}">
+                    <a href="/user/login" class="login-btn">登录</a>
+                    <a href="/user/register" class="register-btn">注册</a>
+                </div>
+                <div th:if="${session.user != null}">
+                    <a href="/unified-new/orders" style="color: #FF6600; text-decoration: none; font-weight: 500; margin-right: 15px;">
+                        <i class="fas fa-list-alt"></i>
+                        我的订单
+                    </a>
+                    <a href="/user/profile" style="color: #FF6600; text-decoration: none; font-weight: 500;">
+                        <i class="fas fa-user-circle"></i>
+                        <span th:text="${session.user.nickname ?: session.user.username}">用户</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container py-4">
+        <!-- 返回按钮 -->
+        <div class="mb-4">
+            <a href="javascript:history.back()" class="text-primary">
+                <i class="fas fa-arrow-left mr-1"></i> 返回酒店列表
+            </a>
+        </div>
+
+        <!-- 酒店基本信息 -->
+        <section class="hotel-hero">
+            <div class="hotel-gallery">
+                <div class="main-image">
+                    <img th:src="${hotel.img}" alt="酒店外观" />
+                </div>
+            </div>
+            
+            <div class="hotel-details">
+                <div class="hotel-header">
+                    <h1 class="hotel-name" th:text="${hotel.name}">酒店名称</h1>
+                    <div class="hotel-meta">
+                        <div class="rating-display">
+                            <div class="stars" id="ratingStars">
+                                <!-- 星级将通过JavaScript根据评分动态生成 -->
+                            </div>
+                            <span class="rating-text" id="ratingScore" th:text="${hotel.score != null ? (hotel.score + '分') : '暂无评分'}">4.5分</span>
+                        </div>
+                        <div class="hotel-level" th:text="${hotel.level}">五星级</div>
+                    </div>
+                </div>
+                
+                <div class="hotel-location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span th:text="${hotel.address}">地址</span>
+                </div>
+                
+                <div class="hotel-contact">
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <span th:text="${hotel.tel}">0411-77771111</span>
+                    </div>
+                </div>
+                
+                <div class="hotel-description" th:text="${hotel.content}">
+                    豪华商务度假综合体，配备米其林餐厅、空中花园及24小时管家服务。
+                </div>
+                
+                <div class="hotel-actions">
+                    <div class="price-section">
+                        <div class="price-label">起价</div>
+                        <div class="price-amount">¥<span id="minPrice" th:text="${hotel.minPrice}">788</span></div>
+                        <div class="price-unit">/晚</div>
+                    </div>
+                    <button id="bookNowBtn" class="book-btn">
+                        <i class="fas fa-calendar-check"></i>
+                        立即预订
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 酒店设施 -->
+        <section class="facilities-section">
+            <div class="section-header">
+                <h2><i class="fas fa-cog"></i> 酒店设施</h2>
+                <p>为您提供舒适便捷的住宿体验</p>
+            </div>
+            <div class="facility-grid">
+                <div class="facility-card">
+                    <div class="facility-icon">
+                        <i class="fas fa-wifi"></i>
+                    </div>
+                    <div class="facility-info">
+                        <h4>免费WiFi</h4>
+                        <p>高速无线网络覆盖</p>
+                    </div>
+                </div>
+                <div class="facility-card">
+                    <div class="facility-icon">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <div class="facility-info">
+                        <h4>餐厅</h4>
+                        <p>精致美食体验</p>
+                    </div>
+                </div>
+                <div class="facility-card">
+                    <div class="facility-icon">
+                        <i class="fas fa-volume-mute"></i>
+                    </div>
+                    <div class="facility-info">
+                        <h4>超强隔音</h4>
+                        <p>安静舒适的睡眠环境</p>
+                    </div>
+                </div>
+                <div class="facility-card">
+                    <div class="facility-icon">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <div class="facility-info">
+                        <h4>停车场</h4>
+                        <p>免费停车服务</p>
+                    </div>
+                </div>
+                <div class="facility-card">
+                    <div class="facility-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="facility-info">
+                        <h4>健身房</h4>
+                        <p>24小时健身设施</p>
+                    </div>
+                </div>
+                <div class="facility-card">
+                    <div class="facility-icon">
+                        <i class="fas fa-bath"></i>
+                    </div>
+                    <div class="facility-info">
+                        <h4>独立卫浴</h4>
+                        <p>豪华卫浴设施</p>
+                    </div>
+                </div>
+                <div class="facility-card">
+                    <div class="facility-icon">
+                        <i class="fas fa-tv"></i>
+                    </div>
+                    <div class="facility-info">
+                        <h4>智能电视</h4>
+                        <p>高清娱乐体验</p>
+                    </div>
+                </div>
+                <div class="facility-card">
+                    <div class="facility-icon">
+                        <i class="fas fa-thermometer-half"></i>
+                    </div>
+                    <div class="facility-info">
+                        <h4>中央空调</h4>
+                        <p>恒温舒适环境</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 客户评价 -->
+        <section class="reviews-section">
+            <div class="section-header">
+                <h2><i class="fas fa-comment"></i> 客户评价</h2>
+                <p>真实用户反馈，为您提供参考</p>
+            </div>
+            
+            <!-- 评分摘要区域 -->
+            <div class="rating-summary">
+                <div class="rating-summary-left">
+                    <div class="overall-rating" th:text="${ratingStats?.avgRating != null ? #numbers.formatDecimal(ratingStats.avgRating, 1, 1) : (hotel.score != null ? #numbers.formatDecimal(hotel.score, 1, 1) : '0.0')}">4.5</div>
+                    <div class="rating-stars-summary" id="ratingStarsSummary">
+                        <!-- 星级将通过JavaScript动态生成 -->
+                    </div>
+                    <div class="rating-count" th:text="'基于 ' + ${ratingStats?.reviewCount != null ? ratingStats.reviewCount : 0} + ' 条评价'">基于 0 条评价</div>
+                </div>
+                <div class="rating-summary-right">
+                    <button id="addReviewBtn" class="add-review-btn">
+                        <i class="fas fa-edit"></i>
+                        <span>写评价</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 评价筛选区域 -->
+            <div class="review-filters">
+                <span class="filter-label">筛选：</span>
+                <button class="filter-btn active" data-rating="all">全部</button>
+                <button class="filter-btn" data-rating="5">5星</button>
+                <button class="filter-btn" data-rating="4">4星</button>
+                <button class="filter-btn" data-rating="3">3星</button>
+                <button class="filter-btn" data-rating="2">2星</button>
+                <button class="filter-btn" data-rating="1">1星</button>
+            </div>
+            
+            <!-- 评价列表 -->
+            <div id="reviews" class="reviews-list">
+                <!-- 评论将通过Thymeleaf从后端加载 -->
+                <div th:each="review : ${reviews}" class="review-item" th:data-rating="${review.rating}">
+                    <div class="review-header">
+                        <div class="review-avatar" th:text="${review.username != null ? #strings.substring(review.username, 0, 1) : 'U'}">U</div>
+                        <div class="review-user-info">
+                            <div class="review-username" th:text="${review.username}">用户名</div>
+                            <div class="review-rating" th:data-rating="${review.rating}">
+                                <!-- 星级将通过JavaScript动态生成 -->
+                            </div>
+                        </div>
+                        <div class="review-date" th:text="${review.createTime != null ? #temporals.format(review.createTime, 'yyyy-MM-dd') : ''}">2024-01-01</div>
+                    </div>
+                    <div class="review-content" th:text="${review.content}">评论内容</div>
+                </div>
+                <!-- 如果没有评论 -->
+                <div th:if="${reviews == null || #lists.isEmpty(reviews)}" class="no-reviews">
+                    <i class="fas fa-comment-slash"></i>
+                    <p>暂无评价，快来成为第一个评价的用户吧！</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 添加评论弹窗 -->
+    <div id="reviewModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">添加评论</h3>
+                <span id="closeReviewModal" class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="reviewForm">
+                    <input type="hidden" id="reviewHotelId" th:value="${hotel.id}" />
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 10px; font-weight: 600;">评分 <span id="selectedRating" style="color: #FF6600; margin-left: 10px;"></span></label>
+                        <div class="star-rating" style="display: flex; gap: 8px; font-size: 32px; margin: 15px 0; align-items: center;">
+                            <input type="radio" id="star5" name="rating" value="5" style="display: none;" />
+                            <label for="star5" class="star" style="cursor: pointer; color: #ddd; transition: all 0.2s ease; user-select: none;">★</label>
+                            <input type="radio" id="star4" name="rating" value="4" style="display: none;" />
+                            <label for="star4" class="star" style="cursor: pointer; color: #ddd; transition: all 0.2s ease; user-select: none;">★</label>
+                            <input type="radio" id="star3" name="rating" value="3" style="display: none;" />
+                            <label for="star3" class="star" style="cursor: pointer; color: #ddd; transition: all 0.2s ease; user-select: none;">★</label>
+                            <input type="radio" id="star2" name="rating" value="2" style="display: none;" />
+                            <label for="star2" class="star" style="cursor: pointer; color: #ddd; transition: all 0.2s ease; user-select: none;">★</label>
+                            <input type="radio" id="star1" name="rating" value="1" style="display: none;" />
+                            <label for="star1" class="star" style="cursor: pointer; color: #ddd; transition: all 0.2s ease; user-select: none;">★</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="reviewContent">评论内容</label>
+                        <textarea id="reviewContent" rows="5" required placeholder="请输入您的评论..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 20px; background: #FF6600; color: white; border: none; border-radius: 5px; cursor: pointer;">提交评论</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预订弹窗 -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">填写预订信息</h3>
+                <span id="closeModal" class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="bookingForm">
+                    <input type="hidden" id="bookHotelId" value="" />
+                    <input type="hidden" id="bookRoomId" value="" />
+                    <input type="hidden" id="bookRoomName" value="" />
+                    <input type="hidden" id="bookRoomPrice" value="" />
+                    <input type="hidden" id="bookTotalPrice" value="0" />
+
+                    <!-- 入住日期 -->
+                    <div class="form-group">
+                        <label for="checkInDate">入住日期</label>
+                        <input type="date" id="checkInDate" required />
+                    </div>
+
+                    <!-- 离店日期 -->
+                    <div class="form-group">
+                        <label for="checkOutDate">离店日期</label>
+                        <input type="date" id="checkOutDate" required />
+                    </div>
+
+                    <!-- 房型选择 -->
+                    <div class="form-group">
+                        <label for="roomType">选择房型</label>
+                        <select id="roomType" required>
+                            <option value="">请选择房型</option>
+                            <!-- 房型选项将通过JavaScript动态加载 -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="guests">入住人数</label>
+                        <select id="guests" required>
+                            <option value="1">1人</option>
+                            <option value="2" selected>2人</option>
+                            <option value="3">3人</option>
+                            <option value="4">4人</option>
+                            <option value="5">5人</option>
+                            <option value="6">6人</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contactName">联系人姓名</label>
+                        <input type="text" id="contactName" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contactPhone">联系电话</label>
+                        <input type="tel" id="contactPhone" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">特殊要求 (选填)</label>
+                        <textarea id="notes" rows="3"></textarea>
+                    </div>
+
+                    <div class="summary">
+                        <h4>订单摘要</h4>
+                        <div class="summary-item">
+                            <span>酒店名称</span>
+                            <span id="summaryHotelName" th:text="${hotel.name}">酒店名称</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>房型</span>
+                            <span id="summaryRoomName">请选择房型</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>入住人数</span>
+                            <span id="summaryGuests">2人</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>单价</span>
+                            <span id="summaryPrice">¥0/晚</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>入住天数</span>
+                            <span id="summaryDays">0晚</span>
+                        </div>
+                        <div class="summary-item summary-total">
+                            <span>总计</span>
+                            <span id="summaryTotal">¥0</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-check mr-1"></i> 确认预订
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 
+        JavaScript代码块
+        功能概述：实现酒店详情页面的交互功能，包括预订弹窗控制、房型数据加载、表单验证、订单摘要计算等
+    -->
+    <script>
+        /**
+         * 文件级注释：酒店详情页面JavaScript功能模块
+         * 功能概述：
+         *   1. 预订弹窗控制功能（打开、关闭、外部点击关闭）
+         *   2. 房型数据加载功能（从后端API获取房型数据）
+         *   3. 订单摘要更新功能（根据日期、房型、人数计算总价）
+         *   4. 表单验证功能（必填字段、日期验证、手机号验证等）
+         *   5. 预订表单提交功能（发送预订请求到后端，处理响应并跳转）
+         *   6. 客户评价生成功能（动态生成评价列表）
+         *   7. 入住人数验证功能（验证入住人数是否超过房型限制）
+         */
+        
+        // ==================== 预订弹窗功能模块 ====================
+        /**
+         * 预订弹窗功能
+         * 功能概述：监听DOMContentLoaded事件，初始化预订弹窗相关的所有功能
+         */
+        // 监听DOMContentLoaded事件，当DOM加载完成后触发
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取立即预订按钮元素
+            const bookBtn = document.getElementById('bookNowBtn');
+            // 获取预订弹窗模态框元素
+            const modal = document.getElementById('bookingModal');
+            // 获取关闭弹窗按钮元素
+            const closeModal = document.getElementById('closeModal');
+            // 获取预订表单元素
+            const bookingForm = document.getElementById('bookingForm');
+            // 获取入住日期输入框元素
+            const checkInDate = document.getElementById('checkInDate');
+            // 获取离店日期输入框元素
+            const checkOutDate = document.getElementById('checkOutDate');
+
+            /**
+             * 打开预订弹窗
+             * 功能概述：当点击立即预订按钮时，打开预订弹窗，设置默认日期，加载房型数据，更新订单摘要
+             */
+            // 监听立即预订按钮的click事件，当点击按钮时触发
+            bookBtn.addEventListener('click', function() {
+                // 显示预订弹窗（设置display为block）
+                modal.style.display = 'block';
+                
+                // 设置酒店ID
+                // 从URL获取酒店ID
+                const hotelId = getHotelIdFromUrl();
+                // 判断酒店ID是否存在
+                if (hotelId) {
+                    // 如果酒店ID存在，设置隐藏字段bookHotelId的值
+                    document.getElementById('bookHotelId').value = hotelId;
+                }
+                
+                // 设置默认日期
+                // 创建今天的日期对象
+                const today = new Date();
+                // 创建明天的日期对象（今天加1天）
+                const tomorrow = new Date(today);
+                // 设置明天的日期为今天加1天
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                
+                // 设置入住日期为今天（格式化为YYYY-MM-DD）
+                checkInDate.value = today.toISOString().split('T')[0];
+                // 设置离店日期为明天（格式化为YYYY-MM-DD）
+                checkOutDate.value = tomorrow.toISOString().split('T')[0];
+                
+                // 加载房型数据
+                // 调用loadRoomTypes函数，从后端API获取房型数据
+                loadRoomTypes();
+                
+                // 更新订单摘要
+                // 调用updateSummary函数，根据当前选择的日期、房型、人数更新订单摘要
+                updateSummary();
+            });
+
+            /**
+             * 关闭预订弹窗
+             * 功能概述：当点击关闭按钮时，关闭预订弹窗
+             */
+            // 监听关闭按钮的click事件，当点击关闭按钮时触发
+            closeModal.addEventListener('click', function() {
+                // 隐藏预订弹窗（设置display为none）
+                modal.style.display = 'none';
+            });
+
+            /**
+             * 点击弹窗外部关闭
+             * 功能概述：当点击弹窗外部区域（遮罩层）时，自动关闭预订弹窗
+             */
+            // 监听window的click事件，当点击页面任意位置时触发
+            window.addEventListener('click', function(event) {
+                // 判断点击位置是否为弹窗本身（遮罩层），而不是弹窗内容区域
+                if (event.target === modal) {
+                    // 如果点击位置为弹窗本身（遮罩层），隐藏预订弹窗
+                    modal.style.display = 'none';
+                }
+            });
+
+            /**
+             * 日期变化时更新摘要
+             * 功能概述：当入住日期或离店日期发生变化时，自动更新订单摘要
+             */
+            // 监听入住日期输入框的change事件，当日期改变时触发
+            checkInDate.addEventListener('change', updateSummary);
+            // 监听离店日期输入框的change事件，当日期改变时触发
+            checkOutDate.addEventListener('change', updateSummary);
+            
+            /**
+             * 房型选择变化时更新摘要
+             * 功能概述：当房型选择或入住人数发生变化时，自动更新订单摘要并验证入住人数
+             */
+            // 获取房型选择下拉框元素
+            const roomTypeSelect = document.getElementById('roomType');
+            // 获取入住人数选择下拉框元素
+            const guestsSelect = document.getElementById('guests');
+            // 监听房型选择下拉框的change事件，当房型改变时触发
+            roomTypeSelect.addEventListener('change', function() {
+                // 更新订单摘要
+                updateSummary();
+                // 验证入住人数是否超过房型限制
+                validateGuestCount();
+            });
+            // 监听入住人数选择下拉框的change事件，当人数改变时触发
+            guestsSelect.addEventListener('change', function() {
+                // 更新订单摘要
+                updateSummary();
+                // 验证入住人数是否超过房型限制
+                validateGuestCount();
+            });
+            
+            // 加载房型数据
+            // 页面加载时调用loadRoomTypes函数，从后端API获取房型数据
+            loadRoomTypes();
+
+            // ==================== 订单摘要更新功能模块 ====================
+            /**
+             * 更新订单摘要
+             * 功能概述：根据当前选择的入住日期、离店日期、房型、入住人数，计算并更新订单摘要信息（入住天数、房型名称、单价、总价等）
+             */
+            function updateSummary() {
+                // 获取入住日期对象
+                const checkIn = new Date(checkInDate.value);
+                // 获取离店日期对象
+                const checkOut = new Date(checkOutDate.value);
+                // 获取选中的房型ID
+                const selectedRoom = document.getElementById('roomType').value;
+                // 获取选中的入住人数
+                const selectedGuests = document.getElementById('guests').value;
+                
+                // 更新入住人数显示
+                // 设置订单摘要中的入住人数显示文本
+                document.getElementById('summaryGuests').textContent = selectedGuests + '人';
+                
+                // 判断入住日期和离店日期是否有效，且离店日期晚于入住日期
+                if (checkIn && checkOut && checkOut > checkIn) {
+                    // 计算入住天数（使用Math.ceil向上取整，确保即使不足一天也算一天）
+                    const days = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+                    // 设置订单摘要中的入住天数显示文本
+                    document.getElementById('summaryDays').textContent = days + '晚';
+                    
+                    // 判断是否选择了房型
+                    if (selectedRoom) {
+                        // 如果选择了房型，获取房型数据
+                        const roomData = getRoomData(selectedRoom);
+                        // 判断房型数据是否存在
+                        if (roomData) {
+                            // 如果房型数据存在，更新订单摘要中的房型名称
+                            document.getElementById('summaryRoomName').textContent = roomData.name;
+                            // 更新订单摘要中的单价显示文本
+                            document.getElementById('summaryPrice').textContent = '¥' + roomData.price + '/晚';
+                            
+                            // 计算总价（入住天数乘以房型单价）
+                            const total = days * roomData.price;
+                            // 设置订单摘要中的总价显示文本
+                            document.getElementById('summaryTotal').textContent = '¥' + total;
+                            // 设置隐藏字段bookTotalPrice的值（用于表单提交）
+                            document.getElementById('bookTotalPrice').value = total;
+                            // 设置隐藏字段bookRoomId的值（用于表单提交）
+                            document.getElementById('bookRoomId').value = roomData.id;
+                            // 设置隐藏字段bookRoomName的值（用于表单提交）
+                            document.getElementById('bookRoomName').value = roomData.name;
+                            // 设置隐藏字段bookRoomPrice的值（用于表单提交）
+                            document.getElementById('bookRoomPrice').value = roomData.price;
+                        }
+                    // 如果未选择房型
+                    } else {
+                        // 设置订单摘要中的房型名称为"请选择房型"
+                        document.getElementById('summaryRoomName').textContent = '请选择房型';
+                        // 设置订单摘要中的单价显示为"¥0/晚"
+                        document.getElementById('summaryPrice').textContent = '¥0/晚';
+                        // 设置订单摘要中的总价显示为"¥0"
+                        document.getElementById('summaryTotal').textContent = '¥0';
+                        // 设置隐藏字段bookTotalPrice的值为0
+                        document.getElementById('bookTotalPrice').value = 0;
+                    }
+                }
+            }
+
+            // ==================== 预订表单提交模块 ====================
+            /**
+             * 预订表单提交
+             * 功能概述：监听预订表单的提交事件，验证表单数据，格式化时间，发送预订请求到后端，处理响应并跳转到支付页面
+             */
+            // 监听预订表单的submit事件，当表单提交时触发
+            bookingForm.addEventListener('submit', function(e) {
+                // 阻止表单的默认提交行为（页面跳转）
+                e.preventDefault();
+                
+                // 表单验证
+                // 调用validateBookingForm函数验证表单数据
+                if (!validateBookingForm()) {
+                    // 如果表单验证失败，直接返回，不执行后续操作
+                    return;
+                }
+                
+                // 格式化当前时间为后端期望的格式
+                // 创建当前时间的Date对象
+                const now = new Date();
+                // 格式化时间为"YYYY-MM-DD HH:mm:ss"格式
+                const formattedTime = now.getFullYear() + '-' + 
+                    String(now.getMonth() + 1).padStart(2, '0') + '-' +  // 月份（补零到2位）
+                    String(now.getDate()).padStart(2, '0') + ' ' +  // 日期（补零到2位）
+                    String(now.getHours()).padStart(2, '0') + ':' +  // 小时（补零到2位）
+                    String(now.getMinutes()).padStart(2, '0') + ':' +  // 分钟（补零到2位）
+                    String(now.getSeconds()).padStart(2, '0');  // 秒（补零到2位）
+                
+                // 构建表单数据对象
+                const formData = {
+                    hid: parseInt(document.getElementById('bookHotelId').value),  // 酒店ID（转换为整数）
+                    rid: parseInt(document.getElementById('bookRoomId').value),  // 房型ID（转换为整数）
+                    uid: 1,  // 临时用户ID，实际应该从登录状态获取
+                    rname: document.getElementById('bookRoomName').value,  // 房型名称
+                    indate: checkInDate.value,  // 入住日期
+                    outdate: checkOutDate.value,  // 离店日期
+                    guests: parseInt(document.getElementById('guests').value),  // 入住人数（转换为整数）
+                    name: document.getElementById('contactName').value,  // 联系人姓名
+                    tel: document.getElementById('contactPhone').value,  // 联系电话
+                    notes: document.getElementById('notes').value || '',  // 特殊要求（如果为空则使用空字符串）
+                    status: 0,  // 待确认状态（0表示待确认）
+                    creatTime: formattedTime,  // 创建时间（格式化后的时间字符串）
+                    price: parseFloat(document.getElementById('bookTotalPrice').value)  // 订单总价（转换为浮点数）
+                };
+                
+                // 打印预订信息到控制台，用于调试
+                console.log('预订信息:', formData);
+                
+                // 使用AJAX向后端提交数据
+                // 使用fetch API发送POST请求到后端预订接口
+                fetch('/hc/bookings', {
+                    method: 'POST',  // 请求方法为POST
+                    headers: {
+                        'Content-Type': 'application/json',  // 设置请求头，指定内容类型为JSON
+                    },
+                    body: JSON.stringify(formData)  // 将表单数据对象转换为JSON字符串，作为请求体
+                })
+                .then(response => {
+                    // 打印HTTP状态码到控制台，用于调试
+                    console.log('📨 HTTP状态码:', response.status);
+                    // 打印响应状态文本到控制台，用于调试
+                    console.log('📨 响应状态:', response.statusText);
+                    
+                    // 检查响应是否为JSON
+                    // 获取响应头中的content-type
+                    const contentType = response.headers.get('content-type');
+                    // 判断content-type是否包含application/json
+                    if (!contentType || !contentType.includes('application/json')) {
+                        // 如果响应不是JSON格式，打印错误信息到控制台
+                        console.error('❌ 响应不是JSON格式:', contentType);
+                        // 将响应转换为文本并打印错误信息
+                        return response.text().then(text => {
+                            console.error('❌ 响应内容:', text);
+                            // 抛出错误，提示服务器返回了非JSON格式的响应
+                            throw new Error('服务器返回了非JSON格式的响应');
+                        });
+                    }
+                    
+                    // 将响应转换为JSON对象
+                    return response.json();
+                })
+                .then(data => {
+                    // 打印预订提交响应到控制台，用于调试
+                    console.log('📨 预订提交响应:', data);
+                    // 打印响应类型到控制台，用于调试
+                    console.log('📨 响应类型:', typeof data);
+                    // 打印响应内容（JSON字符串）到控制台，用于调试
+                    console.log('📨 响应内容:', JSON.stringify(data));
+                    
+                    // 判断后端是否返回成功（响应码为200）
+                    if (data.code === 200) {
+                        // 如果预订成功，打印成功信息到控制台
+                        console.log('✅ 预订提交成功!');
+                        // 打印订单号到控制台（优先使用orderNo，否则使用data）
+                        console.log('📋 订单号 (order_no):', data.orderNo || data.data);
+                        // 打印统一订单号到控制台
+                        console.log('🔗 统一订单号:', data.unifiedOrderNo);
+                        // 打印跳转链接到控制台
+                        console.log('🌐 跳转链接:', data.redirectUrl);
+                        
+                        // 获取订单号（优先使用 orderNo，否则使用 data）
+                        const orderNo = data.orderNo || data.data;
+                        
+                        // 显示订单号提示
+                        // 使用alert显示预订成功消息和订单号
+                        alert('预订成功！订单号：' + orderNo);
+                        
+                        // 关闭预订弹窗
+                        // 隐藏预订弹窗模态框
+                        modal.style.display = 'none';
+                        
+                        // 优先使用 redirectUrl 跳转到支付页面
+                        // 判断后端是否返回redirectUrl
+                        if (data.redirectUrl) {
+                            // 如果返回redirectUrl，打印跳转信息到控制台
+                            console.log('🚀 正在跳转到支付页面:', data.redirectUrl);
+                            // 跳转到支付页面
+                            window.location.href = data.redirectUrl;
+                        // 判断后端是否返回unifiedOrderNo
+                        } else if (data.unifiedOrderNo) {
+                            // 如果没有 redirectUrl 但有 unifiedOrderNo，手动构建跳转链接
+                            // 构建支付页面跳转链接，包含统一订单号参数
+                            const redirectUrl = '/unified-new/payment/checkout?orderNo=' + encodeURIComponent(data.unifiedOrderNo);
+                            // 打印手动构建的跳转链接到控制台
+                            console.log('🔧 手动构建跳转链接:', redirectUrl);
+                            // 跳转到支付页面
+                            window.location.href = redirectUrl;
+                        // 如果既没有redirectUrl也没有unifiedOrderNo
+                        } else {
+                            // 否则显示成功消息并询问是否查看订单管理
+                            // 打印警告信息到控制台
+                            console.warn('⚠️ 没有跳转链接，显示确认对话框');
+                            // 显示确认对话框，询问用户是否查看订单管理页面
+                            if (confirm('是否立即查看订单管理页面？')) {
+                                // 如果用户确认，跳转到订单管理页面
+                                window.location.href = '/unified-new/orders';
+                            } else {
+                                // 如果用户取消，显示提示消息
+                                alert('您可以随时在顶部导航栏中查看订单管理！');
+                            }
+                        }
+                        
+                        // 清空表单
+                        // 重置预订表单，清空所有输入字段
+                        bookingForm.reset();
+                    // 如果后端返回失败
+                    } else {
+                        // 打印预订失败信息到控制台
+                        console.error('❌ 预订失败，响应码:', data.code);
+                        // 打印错误信息到控制台
+                        console.error('❌ 错误信息:', data.message);
+                        // 使用alert显示预订失败消息
+                        alert('预订失败：' + (data.message || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    // 如果发生网络错误或其他异常，打印详细错误信息到控制台
+                    console.error('❌ 预订提交失败!');
+                    // 打印错误类型到控制台
+                    console.error('❌ 错误类型:', error.name);
+                    // 打印错误信息到控制台
+                    console.error('❌ 错误信息:', error.message);
+                    // 打印错误堆栈到控制台
+                    console.error('❌ 错误堆栈:', error.stack);
+                    // 使用alert显示预订提交失败消息
+                    alert('预订提交失败：' + error.message);
+                });
+            });
+            
+            // ==================== 表单验证功能模块 ====================
+            /**
+             * 表单验证函数
+             * 功能概述：验证预订表单的所有必填字段、房型选择、日期有效性、手机号格式等
+             * @return {Boolean} 如果表单验证通过返回true，否则返回false
+             */
+            function validateBookingForm() {
+                // 检查必填字段
+                // 定义必填字段ID数组
+                const requiredFields = ['contactName', 'contactPhone', 'checkInDate', 'checkOutDate', 'guests'];
+                // 遍历必填字段数组，检查每个字段是否已填写
+                for (let fieldId of requiredFields) {
+                    // 获取字段元素
+                    const field = document.getElementById(fieldId);
+                    // 判断字段元素是否存在，且字段值去除首尾空格后不为空
+                    if (!field || !field.value.trim()) {
+                        // 如果有必填字段为空，显示错误提示
+                        alert('请填写所有必填项');
+                        // 聚焦到该字段，方便用户输入
+                        field.focus();
+                        // 返回false，表示表单验证失败
+                        return false;
+                    }
+                }
+                
+                // 检查房型选择
+                // 获取房型选择下拉框元素
+                const roomType = document.getElementById('roomType');
+                // 判断房型选择下拉框是否存在，且是否已选择房型
+                if (!roomType || !roomType.value) {
+                    // 如果未选择房型，显示错误提示
+                    alert('请选择房型');
+                    // 聚焦到房型选择下拉框
+                    roomType.focus();
+                    // 返回false，表示表单验证失败
+                    return false;
+                }
+                
+                // 检查隐藏字段
+                // 获取酒店ID隐藏字段元素
+                const bookHotelId = document.getElementById('bookHotelId');
+                // 获取房型ID隐藏字段元素
+                const bookRoomId = document.getElementById('bookRoomId');
+                // 判断酒店ID和房型ID是否都存在
+                if (!bookHotelId.value || !bookRoomId.value) {
+                    // 如果酒店ID或房型ID为空，显示错误提示
+                    alert('房型信息不完整，请重新选择房型');
+                    // 返回false，表示表单验证失败
+                    return false;
+                }
+                
+                // 验证日期
+                // 获取入住日期对象
+                const checkIn = new Date(checkInDate.value);
+                // 获取离店日期对象
+                const checkOut = new Date(checkOutDate.value);
+                // 创建今天的日期对象
+                const today = new Date();
+                // 将今天的日期时间设置为00:00:00，用于日期比较
+                today.setHours(0, 0, 0, 0);
+                
+                // 判断入住日期是否早于今天
+                if (checkIn < today) {
+                    // 如果入住日期早于今天，显示错误提示
+                    alert('入住日期不能早于今天');
+                    // 返回false，表示表单验证失败
+                    return false;
+                }
+                
+                // 判断离店日期是否晚于或等于入住日期
+                if (checkOut <= checkIn) {
+                    // 如果离店日期不晚于入住日期，显示错误提示
+                    alert('退房日期必须晚于入住日期');
+                    // 返回false，表示表单验证失败
+                    return false;
+                }
+                
+                // 验证手机号 - 只检查是否为11位数字
+                // 获取联系电话输入框的值
+                const phoneValue = document.getElementById('contactPhone').value;
+                // 判断手机号格式是否正确（11位数字）
+                if (!/^\d{11}$/.test(phoneValue)) {
+                    // 如果手机号格式不正确，显示错误提示
+                    alert('请输入11位数字的手机号码');
+                    // 返回false，表示表单验证失败
+                    return false;
+                }
+                
+                // 如果所有验证都通过，返回true
+                return true;
+            }
+
+            // 生成随机评价
+            generateReviews();
+        });
+        
+        // ==================== 房型数据管理模块 ====================
+        /**
+         * 房型数据存储
+         * 功能概述：存储从后端API获取的房型数据列表
+         */
+        // 房型数据数组，初始值为空数组
+        let roomTypes = [];
+        
+        /**
+         * 加载房型数据
+         * 功能概述：从URL获取酒店ID，调用后端API获取房型数据，如果失败则显示无房型提示
+         */
+        function loadRoomTypes() {
+            // 从后端API获取真实的房型数据
+            // 从URL获取酒店ID
+            const hotelId = getHotelIdFromUrl();
+            // 判断酒店ID是否存在
+            if (!hotelId) {
+                // 如果酒店ID不存在，打印错误信息到控制台
+                console.error('无法获取酒店ID');
+                // 直接返回，不执行后续操作
+                return;
+            }
+            
+            // 使用现有的findByMany接口获取数据
+            // 使用fetch API发送GET请求到后端findByMany接口
+            fetch(`/hc/findByMany?id=${hotelId}`)
+                .then(response => {
+                    // 判断响应是否成功（状态码200-299）
+                    if (response.ok) {
+                        // 如果响应成功，返回HTML页面内容（findByMany返回的是HTML页面）
+                        return response.text();
+                    // 如果响应失败
+                    } else {
+                        // 打印警告信息到控制台
+                        console.warn('API请求失败');
+                        // 显示无房型数据提示
+                        showNoRoomMessage();
+                        // 返回null
+                        return null;
+                    }
+                })
+                .then(htmlContent => {
+                    // 判断是否获取到HTML内容
+                    if (htmlContent) {
+                        // 如果获取到HTML内容，打印内容长度到控制台
+                        console.log('获取到HTML内容，长度:', htmlContent.length);
+                        
+                        // 由于findByMany返回的是HTML页面，我们需要使用不同的方法
+                        // 暂时使用默认数据，但应该从数据库获取
+                        // 调用loadRoomTypesFromDatabase函数，从数据库API获取房型数据
+                        loadRoomTypesFromDatabase(hotelId);
+                    }
+                })
+                .catch(error => {
+                    // 如果发生网络错误或其他异常，打印错误信息到控制台
+                    console.error('获取房型数据失败:', error);
+                    // 显示无房型数据提示
+                    showNoRoomMessage();
+                });
+        }
+        
+        /**
+         * 获取酒店ID
+         * 功能概述：从URL查询参数中获取酒店ID
+         * @return {String|null} 酒店ID，如果不存在则返回null
+         */
+        function getHotelIdFromUrl() {
+            // 创建URLSearchParams对象，解析URL查询参数
+            const urlParams = new URLSearchParams(window.location.search);
+            // 获取id参数的值
+            return urlParams.get('id');
+        }
+        
+        /**
+         * 填充房型选择框
+         * 功能概述：将房型数据填充到房型选择下拉框中，并为每个选项添加事件监听器
+         */
+        function populateRoomSelect() {
+            // 获取房型选择下拉框元素
+            const roomTypeSelect = document.getElementById('roomType');
+            // 清空房型选择下拉框，并添加默认选项
+            roomTypeSelect.innerHTML = '<option value="">请选择房型</option>';
+            
+            // 遍历房型数据数组，为每个房型创建选项
+            roomTypes.forEach(room => {
+                // 检查房型是否满人（full=1表示满人）
+                const isFull = room.full === 1 || room.full === '1' || room.full === true;
+                
+                // 如果房型满人，不显示该选项（或者显示但标记为禁用）
+                // 根据用户需求，这里选择不显示满人房型
+                if (isFull) {
+                    return; // 跳过满人房型，不添加到下拉框
+                }
+                
+                // 创建option元素
+                const option = document.createElement('option');
+                // 设置option的value为房型ID
+                option.value = room.id;
+                // 设置option的文本内容为"房型名称 - 价格/晚 (最多人数人)"
+                option.textContent = `${room.name} - ¥${room.price}/晚 (最多${room.maxGuests}人)`;
+                // 将option添加到房型选择下拉框中
+                roomTypeSelect.appendChild(option);
+            });
+            
+            // 添加房型选择事件监听器
+            // 监听房型选择下拉框的change事件，当房型改变时触发
+            roomTypeSelect.addEventListener('change', function() {
+                // 获取选中的房型ID
+                const selectedRoomId = this.value;
+                // 判断是否选择了房型
+                if (selectedRoomId) {
+                    // 如果选择了房型，从roomTypes数组中查找对应的房型数据
+                    const selectedRoom = roomTypes.find(room => room.id == selectedRoomId);
+                    // 判断是否找到房型数据
+                    if (selectedRoom) {
+                        // 检查房型是否满人（full=1表示满人）
+                        const isFull = selectedRoom.full === 1 || selectedRoom.full === '1' || selectedRoom.full === true || selectedRoom.full === 'true';
+                        
+                        // 如果房型满人，显示提示并阻止选择
+                        if (isFull) {
+                            window.alert('该房型已经满人，不可选择！');
+                            // 重置选择为空
+                            this.value = '';
+                            // 清空隐藏字段
+                            document.getElementById('bookRoomId').value = '';
+                            document.getElementById('bookRoomName').value = '';
+                            document.getElementById('bookRoomPrice').value = '';
+                            return; // 阻止继续执行
+                        }
+                        
+                        // 如果找到房型数据，设置隐藏字段的值
+                        // 设置隐藏字段bookRoomId的值
+                        document.getElementById('bookRoomId').value = selectedRoom.id;
+                        // 设置隐藏字段bookRoomName的值
+                        document.getElementById('bookRoomName').value = selectedRoom.name;
+                        // 设置隐藏字段bookRoomPrice的值
+                        document.getElementById('bookRoomPrice').value = selectedRoom.price;
+                        
+                        // 更新订单摘要 - 直接在这里更新，不调用外部函数
+                        // 调用updateOrderSummaryDirectly函数，直接更新订单摘要
+                        updateOrderSummaryDirectly(selectedRoom);
+                    }
+                }
+            });
+            
+            /**
+             * 直接更新订单摘要的函数
+             * 功能概述：根据选中的房型数据，直接更新订单摘要信息（不调用外部updateSummary函数）
+             * @param {Object} roomData - 房型数据对象，包含id、name、price等属性
+             */
+            function updateOrderSummaryDirectly(roomData) {
+                // 获取入住日期对象
+                const checkIn = new Date(document.getElementById('checkInDate').value);
+                // 获取离店日期对象
+                const checkOut = new Date(document.getElementById('checkOutDate').value);
+                // 获取选中的入住人数
+                const selectedGuests = document.getElementById('guests').value;
+                
+                // 更新入住人数显示
+                // 设置订单摘要中的入住人数显示文本
+                document.getElementById('summaryGuests').textContent = selectedGuests + '人';
+                
+                // 判断入住日期和离店日期是否有效，且离店日期晚于入住日期
+                if (checkIn && checkOut && checkOut > checkIn) {
+                    // 计算入住天数（使用Math.ceil向上取整）
+                    const days = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+                    // 设置订单摘要中的入住天数显示文本
+                    document.getElementById('summaryDays').textContent = days + '晚';
+                    
+                    // 判断房型数据是否存在
+                    if (roomData) {
+                        // 如果房型数据存在，更新订单摘要中的房型名称
+                        document.getElementById('summaryRoomName').textContent = roomData.name;
+                        // 更新订单摘要中的单价显示文本
+                        document.getElementById('summaryPrice').textContent = '¥' + roomData.price + '/晚';
+                        
+                        // 计算总价（入住天数乘以房型单价）
+                        const total = days * roomData.price;
+                        // 设置订单摘要中的总价显示文本
+                        document.getElementById('summaryTotal').textContent = '¥' + total;
+                        // 设置隐藏字段bookTotalPrice的值（用于表单提交）
+                        document.getElementById('bookTotalPrice').value = total;
+                    }
+                // 如果日期无效
+                } else {
+                    // 设置订单摘要中的房型名称为"请选择房型"
+                    document.getElementById('summaryRoomName').textContent = '请选择房型';
+                    // 设置订单摘要中的单价显示为"¥0/晚"
+                    document.getElementById('summaryPrice').textContent = '¥0/晚';
+                    // 设置订单摘要中的总价显示为"¥0"
+                    document.getElementById('summaryTotal').textContent = '¥0';
+                    // 设置隐藏字段bookTotalPrice的值为0
+                    document.getElementById('bookTotalPrice').value = 0;
+                }
+            }
+        }
+        
+        /**
+         * 显示无房型数据提示
+         * 功能概述：当无法获取房型数据时，显示"暂无可用房型"提示，并禁用房型选择下拉框
+         */
+        function showNoRoomMessage() {
+            // 获取房型选择下拉框元素
+            const roomTypeSelect = document.getElementById('roomType');
+            // 清空房型选择下拉框，并添加"暂无可用房型"选项
+            roomTypeSelect.innerHTML = '<option value="">暂无可用房型</option>';
+            // 禁用房型选择下拉框，防止用户选择
+            roomTypeSelect.disabled = true;
+        }
+        
+        /**
+         * 从数据库获取房型数据
+         * 功能概述：调用后端API接口，从数据库获取指定酒店的房型数据
+         * @param {String} hotelId - 酒店ID
+         */
+        function loadRoomTypesFromDatabase(hotelId) {
+            // 使用我们之前添加的API接口
+            // 使用fetch API发送GET请求到后端房型API接口
+            fetch(`/hc/api/rooms/${hotelId}`)
+                .then(response => response.json())  // 将响应转换为JSON对象
+                .then(data => {
+                    // 打印从API获取的房型数据到控制台，用于调试
+                    console.log('从API获取的房型数据:', data);
+                    // 判断API返回的数据是否有效，且包含房型列表
+                    if (data && data.length > 0 && data[0].rList) {
+                        // 如果数据有效，将房型列表转换为roomTypes数组格式
+                        roomTypes = data[0].rList.map(room => ({
+                            id: room.id,  // 房型ID
+                            name: room.name,  // 房型名称
+                            price: room.price,  // 房型价格
+                            maxGuests: 4,  // 默认最大人数，实际应该从数据库获取
+                            amenities: room.content || '标准设施',  // 房型设施（如果为空则使用"标准设施"）
+                            full: room.full || 0  // 房型是否满人（0=未满人，1=已满人）
+                        }));
+                        // 填充房型选择下拉框
+                        populateRoomSelect();
+                    // 如果API返回的数据为空
+                    } else {
+                        // 打印警告信息到控制台
+                        console.warn('API返回的房型数据为空');
+                        // 显示无房型数据提示
+                        showNoRoomMessage();
+                    }
+                })
+                .catch(error => {
+                    // 如果发生网络错误或其他异常，打印错误信息到控制台
+                    console.error('从API获取房型数据失败:', error);
+                    // 显示无房型数据提示
+                    showNoRoomMessage();
+                });
+        }
+        
+        /**
+         * 获取房型数据
+         * 功能概述：根据房型ID从roomTypes数组中查找对应的房型数据
+         * @param {String|Number} roomId - 房型ID
+         * @return {Object|undefined} 房型数据对象，如果不存在则返回undefined
+         */
+        function getRoomData(roomId) {
+            // 从roomTypes数组中查找id等于roomId的房型数据
+            return roomTypes.find(room => room.id == roomId);
+        }
+        
+        // ==================== 入住人数验证功能模块 ====================
+        /**
+         * 验证入住人数是否超过房型限制
+         * 功能概述：验证选中的入住人数是否超过房型的最大入住人数限制，如果超过则提示用户并自动调整
+         */
+        function validateGuestCount() {
+            // 获取选中的房型ID
+            const selectedRoom = document.getElementById('roomType').value;
+            // 获取选中的入住人数（转换为整数）
+            const selectedGuests = parseInt(document.getElementById('guests').value);
+            
+            // 判断是否选择了房型
+            if (selectedRoom) {
+                // 如果选择了房型，获取房型数据
+                const roomData = getRoomData(selectedRoom);
+                // 判断房型数据是否存在，且入住人数是否超过房型的最大入住人数
+                if (roomData && selectedGuests > roomData.maxGuests) {
+                    // 如果入住人数超过房型的最大入住人数，显示错误提示
+                    alert(`该房型最多只能入住${roomData.maxGuests}人，请重新选择房型或调整入住人数。`);
+                    // 自动将入住人数调整为房型的最大入住人数
+                    document.getElementById('guests').value = roomData.maxGuests;
+                    // 更新订单摘要
+                    updateSummary();
+                }
+            }
+        }
+
+        // ==================== 客户评价功能模块 ====================
+        /**
+         * 渲染星级评分
+         * 功能概述：根据评分值渲染星级显示
+         */
+        function renderStarRating(element, rating) {
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+            let starsHtml = '';
+            for (let i = 0; i < fullStars; i++) {
+                starsHtml += '<i class="fas fa-star" style="color: #FFD700;"></i>';
+            }
+            if (hasHalfStar) {
+                starsHtml += '<i class="fas fa-star-half-alt" style="color: #FFD700;"></i>';
+            }
+            const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+            for (let i = 0; i < emptyStars; i++) {
+                starsHtml += '<i class="far fa-star" style="color: #FFD700;"></i>';
+            }
+            element.innerHTML = starsHtml;
+        }
+        
+        /**
+         * 渲染所有评论的星级
+         * 功能概述：遍历所有评论元素，渲染星级显示
+         */
+        function renderAllReviewRatings() {
+            document.querySelectorAll('.review-rating[data-rating]').forEach(element => {
+                const rating = parseFloat(element.getAttribute('data-rating'));
+                if (!isNaN(rating)) {
+                    renderStarRating(element, rating);
+                }
+            });
+        }
+        
+        /**
+         * 渲染酒店评分星级
+         * 功能概述：根据酒店评分渲染星级显示
+         */
+        function renderHotelRating() {
+            const ratingScore = document.getElementById('ratingScore');
+            const ratingStars = document.getElementById('ratingStars');
+            if (ratingScore && ratingStars) {
+                const scoreText = ratingScore.textContent.replace('分', '').trim();
+                const score = parseFloat(scoreText);
+                if (!isNaN(score)) {
+                    renderStarRating(ratingStars, score);
+                }
+            }
+            
+            // 渲染评分摘要区域的星级
+            const ratingStarsSummary = document.getElementById('ratingStarsSummary');
+            if (ratingStarsSummary) {
+                const overallRating = document.querySelector('.overall-rating');
+                if (overallRating) {
+                    const score = parseFloat(overallRating.textContent);
+                    if (!isNaN(score)) {
+                        renderStarRating(ratingStarsSummary, score);
+                    }
+                }
+            }
+        }
+        
+        /**
+         * 评价筛选功能
+         * 功能概述：根据选择的评分筛选评价列表
+         */
+        function initReviewFilters() {
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const reviewItems = document.querySelectorAll('.review-item');
+            
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 移除所有按钮的active类
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    // 为当前按钮添加active类
+                    this.classList.add('active');
+                    
+                    const rating = this.getAttribute('data-rating');
+                    
+                    // 筛选评价
+                    reviewItems.forEach(item => {
+                        if (rating === 'all') {
+                            item.style.display = 'block';
+                        } else {
+                            const itemRating = Math.floor(parseFloat(item.getAttribute('data-rating')));
+                            if (itemRating == rating) {
+                                item.style.display = 'block';
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        }
+                    });
+                });
+            });
+        }
+        
+        /**
+         * 显示添加评论弹窗
+         * 功能概述：显示添加评论的弹窗
+         */
+        function showAddReviewModal() {
+            const modal = document.getElementById('reviewModal');
+            if (modal) {
+                modal.style.display = 'block';
+                // 初始化星级选择交互（延迟执行，确保DOM已渲染）
+                setTimeout(function() {
+                    initStarRating();
+                }, 100);
+            }
+        }
+        
+        /**
+         * 隐藏添加评论弹窗
+         * 功能概述：隐藏添加评论的弹窗
+         */
+        function hideAddReviewModal() {
+            const modal = document.getElementById('reviewModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.getElementById('reviewForm').reset();
+                // 重置星级显示
+                resetStarRating();
+            }
+        }
+        
+        /**
+         * 初始化星级选择交互
+         * 功能概述：为星级选择添加鼠标悬停和点击交互效果
+         */
+        function initStarRating() {
+            const starLabels = document.querySelectorAll('.star-rating label.star');
+            const starInputs = document.querySelectorAll('.star-rating input[type="radio"]');
+            
+            if (starLabels.length === 0) return;
+            
+            // 为每个星级标签添加事件
+            starLabels.forEach((label, index) => {
+                const starIndex = 5 - index; // 从5星到1星
+                const input = document.getElementById(`star${starIndex}`);
+                
+                // 鼠标悬停效果
+                label.addEventListener('mouseenter', function() {
+                    highlightStars(starIndex);
+                });
+                
+                // 鼠标离开效果
+                label.addEventListener('mouseleave', function() {
+                    const checked = document.querySelector('.star-rating input[type="radio"]:checked');
+                    if (checked) {
+                        const checkedValue = parseInt(checked.value);
+                        highlightStars(checkedValue);
+                    } else {
+                        resetStarRating();
+                    }
+                });
+                
+                // 点击选择
+                label.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // 取消所有radio的选中状态
+                    starInputs.forEach(inp => {
+                        if (inp) inp.checked = false;
+                    });
+                    // 选中当前radio
+                    if (input) {
+                        input.checked = true;
+                        highlightStars(starIndex);
+                        console.log('选中评分:', starIndex);
+                    }
+                });
+            });
+        }
+        
+        /**
+         * 高亮显示星级
+         * 功能概述：根据选中的星级数量，高亮显示对应的星星
+         * @param {number} rating - 星级数量（1-5）
+         */
+        function highlightStars(rating) {
+            const starLabels = document.querySelectorAll('.star-rating label.star');
+            const selectedRatingSpan = document.getElementById('selectedRating');
+            
+            starLabels.forEach((label, index) => {
+                const starIndex = 5 - index; // 从5星到1星
+                if (starIndex <= rating) {
+                    label.style.color = '#FFD700'; // 金色
+                    label.style.transform = 'scale(1.1)'; // 稍微放大
+                } else {
+                    label.style.color = '#ddd'; // 灰色
+                    label.style.transform = 'scale(1)'; // 恢复原大小
+                }
+            });
+            
+            // 更新显示的评分文字
+            if (selectedRatingSpan) {
+                selectedRatingSpan.textContent = rating + '分';
+            }
+        }
+        
+        /**
+         * 重置星级显示
+         * 功能概述：将所有星星重置为灰色
+         */
+        function resetStarRating() {
+            const starLabels = document.querySelectorAll('.star-rating label.star');
+            const selectedRatingSpan = document.getElementById('selectedRating');
+            
+            starLabels.forEach(label => {
+                label.style.color = '#ddd';
+                label.style.transform = 'scale(1)';
+            });
+            
+            // 清空显示的评分文字
+            if (selectedRatingSpan) {
+                selectedRatingSpan.textContent = '';
+            }
+        }
+        
+        /**
+         * 提交评论
+         * 功能概述：提交评论到后端
+         */
+        function submitReview(event) {
+            event.preventDefault();
+            const hotelId = document.getElementById('reviewHotelId').value;
+            const rating = document.querySelector('input[name="rating"]:checked');
+            const content = document.getElementById('reviewContent').value;
+            
+            if (!rating) {
+                alert('请选择评分');
+                return;
+            }
+            
+            if (!content.trim()) {
+                alert('请输入评论内容');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('hotelId', hotelId);
+            formData.append('rating', rating.value);
+            formData.append('content', content);
+            
+            fetch('/hc/review/submit', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('评论提交成功！');
+                    hideAddReviewModal();
+                    location.reload(); // 重新加载页面以显示新评论
+                } else {
+                    alert('评论提交失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('评论提交失败，请稍后重试');
+            });
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 渲染所有评论的星级
+            renderAllReviewRatings();
+            // 渲染酒店评分星级
+            renderHotelRating();
+            // 初始化评价筛选功能
+            initReviewFilters();
+            
+            // 添加评论按钮事件
+            const addReviewBtn = document.getElementById('addReviewBtn');
+            if (addReviewBtn) {
+                addReviewBtn.addEventListener('click', showAddReviewModal);
+            }
+            
+            // 关闭评论弹窗按钮事件
+            const closeReviewModal = document.getElementById('closeReviewModal');
+            if (closeReviewModal) {
+                closeReviewModal.addEventListener('click', hideAddReviewModal);
+            }
+            
+            // 评论表单提交事件
+            const reviewForm = document.getElementById('reviewForm');
+            if (reviewForm) {
+                reviewForm.addEventListener('submit', submitReview);
+            }
+        });
+    </script>
+</body>
+</html>

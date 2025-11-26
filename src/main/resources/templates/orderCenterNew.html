@@ -1,0 +1,779 @@
+<!--
+    文件名称：orderCenterNew.html
+    文件功能：统一订单中心页面模板
+    功能概述：
+        1. 显示用户的所有订单列表，支持按状态筛选（全部、待支付、已支付、已取消、已完成）
+        2. 支持按订单类型筛选（全部、美食外卖、酒店预订、购物商城、景点旅游、生活缴费）
+        3. 提供订单操作功能（继续支付、取消订单、删除订单、查看详情）
+        4. 动态加载订单数据，支持分页和筛选
+        5. 响应式设计，支持PC端和移动端访问
+    技术栈：HTML5 + CSS3 + JavaScript + Thymeleaf模板引擎
+    依赖文件：无外部JavaScript文件依赖
+    作者：游市生活开发团队
+    创建日期：2024年
+    最后更新：2024年
+-->
+<!DOCTYPE html>
+<!-- HTML5文档类型声明，标识这是一个HTML5文档 -->
+<html xmlns:th="http://www.thymeleaf.org">
+<!-- 
+    HTML根元素
+    xmlns:th="http://www.thymeleaf.org"：声明Thymeleaf命名空间，用于模板引擎语法
+-->
+<head>
+    <!-- HTML文档头部，包含元数据和样式表引用 -->
+    <!-- 字符编码声明，指定页面使用UTF-8编码，支持中文等多语言字符 -->
+    <meta charset="UTF-8">
+    <!-- 视口元数据，设置页面在移动设备上的显示方式，width=device-width表示宽度自适应设备宽度，initial-scale=1.0表示初始缩放比例为1.0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题 -->
+    <title>我的订单 - 西湖旅游</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .order-center-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .page-header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .page-header p {
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #666;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .filter-tab:hover {
+            background: #f8f9fa;
+            border-color: #007bff;
+        }
+
+        .filter-tab.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .order-list {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .order-card {
+            border-bottom: 1px solid #eee;
+            padding: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .order-card:hover {
+            background-color: #f8f9fa;
+        }
+
+        .order-card:last-child {
+            border-bottom: none;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .order-number {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+
+        .order-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-unpaid {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-paid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-completed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .order-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .order-info {
+            flex: 1;
+        }
+
+        .order-type {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .order-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .order-description {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .order-amount {
+            font-size: 20px;
+            font-weight: 700;
+            color: #e74c3c;
+        }
+
+        .order-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .order-time {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #6c757d;
+            border: 1px solid #6c757d;
+        }
+
+        .btn-outline:hover {
+            background: #6c757d;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state-desc {
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #dc3545;
+        }
+
+        @media (max-width: 768px) {
+            .order-center-container {
+                padding: 10px;
+            }
+
+            .order-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .order-body {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .order-footer {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .filter-tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="order-center-container">
+        <div class="page-header">
+            <h1>我的订单</h1>
+            <p>管理您的所有订单</p>
+        </div>
+
+        <!-- 筛选器 -->
+        <!-- 订单筛选区域，包含按状态筛选和按类型筛选两个筛选标签组 -->
+        <div class="filters">
+            <!-- 状态筛选标签组 -->
+            <div class="filter-tabs">
+                <!-- 全部状态筛选按钮（默认激活） -->
+                <button class="filter-tab active" onclick="filterByStatus(null, this)">全部</button>
+                <!-- 待支付状态筛选按钮 -->
+                <button class="filter-tab" onclick="filterByStatus(0, this)">待支付</button>
+                <!-- 已支付状态筛选按钮 -->
+                <button class="filter-tab" onclick="filterByStatus(1, this)">已支付</button>
+                <!-- 已取消状态筛选按钮 -->
+                <button class="filter-tab" onclick="filterByStatus(2, this)">已取消</button>
+                <!-- 已完成状态筛选按钮 -->
+                <button class="filter-tab" onclick="filterByStatus(3, this)">已完成</button>
+            </div>
+            <!-- 类型筛选标签组 -->
+            <div class="filter-tabs">
+                <!-- 所有类型筛选按钮（默认激活） -->
+                <button class="filter-tab active" onclick="filterByType(null, this)">所有类型</button>
+                <!-- 美食外卖类型筛选按钮 -->
+                <button class="filter-tab" onclick="filterByType('FOOD', this)">美食外卖</button>
+                <!-- 酒店预订类型筛选按钮 -->
+                <button class="filter-tab" onclick="filterByType('HOTEL', this)">酒店预订</button>
+                <!-- 购物商城类型筛选按钮 -->
+                <button class="filter-tab" onclick="filterByType('SHOPPING', this)">购物商城</button>
+                <!-- 景点旅游类型筛选按钮 -->
+                <button class="filter-tab" onclick="filterByType('TRAVEL', this)">景点旅游</button>
+                <!-- 生活缴费类型筛选按钮 -->
+                <button class="filter-tab" onclick="filterByType('PAYMENT', this)">生活缴费</button>
+            </div>
+        </div>
+
+        <!-- 订单列表 -->
+        <!-- 订单列表容器，订单卡片将通过JavaScript动态生成 -->
+        <div class="order-list">
+            <!-- 订单列表容器，用于动态插入订单卡片 -->
+            <div id="orderListContainer">
+                <!-- 加载提示（初始显示） -->
+                <div class="loading">
+                    <!-- 加载提示文本 -->
+                    <div>加载中...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 
+        JavaScript代码块
+        功能概述：实现订单中心页面的交互功能，包括订单列表加载、筛选、订单操作等
+    -->
+    <script>
+        /**
+         * 文件级注释：统一订单中心页面JavaScript功能模块
+         * 功能概述：
+         *   1. 订单列表加载功能（从后端API获取订单数据）
+         *   2. 订单筛选功能（按状态筛选、按类型筛选）
+         *   3. 订单渲染功能（动态生成订单卡片）
+         *   4. 订单操作功能（继续支付、取消订单、删除订单、查看详情）
+         *   5. 状态和类型转换功能（将状态码和类型码转换为文本）
+         */
+        
+        // ==================== 全局变量 ====================
+        /**
+         * 当前筛选的状态
+         * 功能概述：存储当前选中的订单状态筛选条件（null表示全部，0表示待支付，1表示已支付，2表示已取消，3表示已完成）
+         */
+        // 当前筛选的状态，初始值为null（表示全部）
+        let currentStatus = null;
+        /**
+         * 当前筛选的类型
+         * 功能概述：存储当前选中的订单类型筛选条件（null表示全部，'FOOD'表示美食外卖，'HOTEL'表示酒店预订，'SHOPPING'表示购物商城，'TRAVEL'表示景点旅游，'PAYMENT'表示生活缴费）
+         */
+        // 当前筛选的类型，初始值为null（表示全部）
+        let currentType = null;
+
+        // ==================== 页面初始化功能模块 ====================
+        /**
+         * 页面加载时获取订单列表
+         * 功能概述：监听DOMContentLoaded事件，当DOM加载完成后自动加载订单列表
+         */
+        // 监听DOMContentLoaded事件，当DOM加载完成后触发
+        document.addEventListener('DOMContentLoaded', () => {
+            // 调用loadOrders函数，加载订单列表
+            loadOrders();
+        });
+
+        // ==================== 订单列表加载功能模块 ====================
+        /**
+         * 加载订单列表
+         * 功能概述：根据当前筛选条件（状态和类型），从后端API获取订单列表数据并渲染
+         */
+        function loadOrders() {
+            // 获取订单列表容器元素
+            const container = document.getElementById('orderListContainer');
+            // 显示加载提示
+            container.innerHTML = '<div class="loading"><div>加载中...</div></div>';
+
+            // 构建请求URL
+            // 订单列表API接口地址
+            let url = '/unified-new/order/list';
+            // 创建URLSearchParams对象，用于构建查询参数
+            const params = new URLSearchParams();
+            // 判断当前筛选的状态是否不为null
+            if (currentStatus !== null) {
+                // 如果当前筛选的状态不为null，添加paymentStatus参数
+                params.append('paymentStatus', currentStatus);
+            }
+            // 判断当前筛选的类型是否不为null
+            if (currentType !== null) {
+                // 如果当前筛选的类型不为null，添加orderType参数
+                params.append('orderType', currentType);
+            }
+            // 判断是否有查询参数
+            if (params.toString()) {
+                // 如果有查询参数，将查询参数追加到URL后面
+                url += '?' + params.toString();
+            }
+
+            // 使用fetch API发送GET请求到后端订单列表接口
+            fetch(url, { credentials: 'include' })  // 包含Cookie，用于身份验证
+                .then(response => response.json())  // 将响应转换为JSON对象
+                .then(data => {
+                    // 判断后端是否返回成功
+                    if (data.success) {
+                        // 如果加载成功，调用renderOrders函数渲染订单列表
+                        renderOrders(data.data);
+                    // 如果加载失败
+                    } else {
+                        // 显示错误消息
+                        container.innerHTML = `
+                            <div class="error">
+                                <div>加载失败: ${data.message}</div>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    // 如果发生网络错误或其他异常，打印错误信息到控制台
+                    console.error('加载订单失败:', error);
+                    // 显示错误消息
+                    container.innerHTML = `
+                        <div class="error">
+                            <div>加载失败，请刷新页面重试</div>
+                        </div>
+                    `;
+                });
+        }
+
+        // ==================== 订单渲染功能模块 ====================
+        /**
+         * 渲染订单列表
+         * 功能概述：将订单数据数组渲染为HTML订单卡片列表
+         * @param {Array} orders - 订单数据数组
+         */
+        function renderOrders(orders) {
+            // 获取订单列表容器元素
+            const container = document.getElementById('orderListContainer');
+            
+            // 判断订单数组是否为空
+            if (orders.length === 0) {
+                // 如果订单数组为空，显示空状态提示
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <div class="empty-state-text">暂无订单</div>
+                        <div class="empty-state-desc">您还没有任何订单</div>
+                    </div>
+                `;
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 初始化HTML字符串
+            let html = '';
+            // 遍历订单数组，为每个订单生成HTML卡片
+            orders.forEach(order => {
+                // 调用renderOrderCard函数生成订单卡片的HTML，并追加到html字符串中
+                html += renderOrderCard(order);
+            });
+            // 将生成的HTML设置到容器中
+            container.innerHTML = html;
+        }
+
+        /**
+         * 渲染订单卡片
+         * 功能概述：根据订单数据生成订单卡片的HTML字符串
+         * @param {Object} order - 订单数据对象，包含orderNo、paymentStatus、orderType、orderTitle、orderDescription、totalAmount、createTime等属性
+         * @return {String} 订单卡片的HTML字符串
+         */
+        function renderOrderCard(order) {
+            // 获取订单状态的样式类名
+            const statusClass = getStatusClass(order.paymentStatus);
+            // 获取订单状态的文本
+            const statusText = getStatusText(order.paymentStatus);
+            // 获取订单类型的文本
+            const typeText = getTypeText(order.orderType);
+            // 格式化创建时间（转换为中文本地化格式）
+            const createTime = new Date(order.createTime).toLocaleString('zh-CN');
+            
+            // 格式化金额（处理 null 值）
+            // 判断订单总金额是否不为null，如果不为null则格式化为两位小数，否则使用'0.00'
+            const totalAmount = order.totalAmount != null ? parseFloat(order.totalAmount).toFixed(2) : '0.00';
+
+            // 根据订单状态生成操作按钮
+            // 初始化操作按钮HTML字符串
+            let actions = '';
+            // 判断订单支付状态是否为0（待支付）
+            if (order.paymentStatus === 0) {
+                // 如果订单状态为待支付，显示"继续支付"和"取消订单"按钮
+                actions = `
+                    <button class="btn btn-primary" onclick="continuePayment('${order.orderNo}')">继续支付</button>
+                    <button class="btn btn-danger" onclick="cancelOrder('${order.orderNo}')">取消订单</button>
+                `;
+            // 判断订单支付状态是否为2（已取消）
+            } else if (order.paymentStatus === 2) {
+                // 如果订单状态为已取消，显示"删除订单"按钮
+                actions = `
+                    <button class="btn btn-outline" onclick="deleteOrder('${order.orderNo}')">删除订单</button>
+                `;
+            // 其他状态（已支付、已完成）
+            } else {
+                // 如果订单状态为已支付或已完成，显示"查看详情"按钮
+                actions = `
+                    <button class="btn btn-outline" onclick="viewDetail('${order.orderNo}')">查看详情</button>
+                `;
+            }
+
+            // 返回订单卡片的HTML字符串
+            return `
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-number">订单号: ${order.orderNo}</div>
+                        <div class="order-status ${statusClass}">${statusText}</div>
+                    </div>
+                    <div class="order-body">
+                        <div class="order-info">
+                            <div class="order-type">${typeText}</div>
+                            <div class="order-title">${order.orderTitle || '订单'}</div>
+                            <div class="order-description">${order.orderDescription || ''}</div>
+                        </div>
+                        <div class="order-amount">¥${totalAmount}</div>
+                    </div>
+                    <div class="order-footer">
+                        <div class="order-time">${createTime}</div>
+                        <div class="order-actions">
+                            ${actions}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ==================== 状态和类型转换功能模块 ====================
+        /**
+         * 获取状态样式类
+         * 功能概述：根据订单支付状态码返回对应的CSS样式类名
+         * @param {Number} status - 订单支付状态码（0表示待支付，1表示已支付，2表示已取消，3表示已完成）
+         * @return {String} 状态样式类名
+         */
+        function getStatusClass(status) {
+            // 使用switch语句根据状态码返回对应的样式类名
+            switch (status) {
+                case 0: return 'status-unpaid';  // 待支付样式类
+                case 1: return 'status-paid';  // 已支付样式类
+                case 2: return 'status-cancelled';  // 已取消样式类
+                case 3: return 'status-completed';  // 已完成样式类
+                default: return 'status-unpaid';  // 默认返回待支付样式类
+            }
+        }
+
+        /**
+         * 获取状态文本
+         * 功能概述：根据订单支付状态码返回对应的状态文本
+         * @param {Number} status - 订单支付状态码（0表示待支付，1表示已支付，2表示已取消，3表示已完成）
+         * @return {String} 状态文本
+         */
+        function getStatusText(status) {
+            // 使用switch语句根据状态码返回对应的状态文本
+            switch (status) {
+                case 0: return '待支付';  // 待支付文本
+                case 1: return '已支付';  // 已支付文本
+                case 2: return '已取消';  // 已取消文本
+                case 3: return '已完成';  // 已完成文本
+                default: return '未知状态';  // 默认返回未知状态文本
+            }
+        }
+
+        /**
+         * 获取类型文本
+         * 功能概述：根据订单类型码返回对应的类型文本
+         * @param {String} type - 订单类型码（'FOOD'表示美食外卖，'HOTEL'表示酒店预订，'SHOPPING'表示购物商城，'TRAVEL'表示景点旅游，'PAYMENT'表示生活缴费）
+         * @return {String} 类型文本
+         */
+        function getTypeText(type) {
+            // 使用switch语句根据类型码返回对应的类型文本
+            switch (type) {
+                case 'FOOD': return '美食外卖';  // 美食外卖文本
+                case 'HOTEL': return '酒店预订';  // 酒店预订文本
+                case 'SHOPPING': return '购物商城';  // 购物商城文本
+                case 'TRAVEL': return '景点旅游';  // 景点旅游文本
+                case 'PAYMENT': return '生活缴费';  // 生活缴费文本
+                default: return '未知类型';  // 默认返回未知类型文本
+            }
+        }
+
+        // ==================== 订单筛选功能模块 ====================
+        /**
+         * 按状态筛选
+         * 功能概述：根据订单支付状态筛选订单列表
+         * @param {Number|null} status - 订单支付状态码（null表示全部，0表示待支付，1表示已支付，2表示已取消，3表示已完成）
+         * @param {HTMLElement} element - 触发筛选的按钮元素
+         */
+        function filterByStatus(status, element) {
+            // 更新当前筛选的状态
+            currentStatus = status;
+            // 更新状态筛选标签的激活状态
+            updateFilterTabs('.filter-tabs:first-child .filter-tab', element);
+            // 重新加载订单列表
+            loadOrders();
+        }
+
+        /**
+         * 按类型筛选
+         * 功能概述：根据订单类型筛选订单列表
+         * @param {String|null} type - 订单类型码（null表示全部，'FOOD'表示美食外卖，'HOTEL'表示酒店预订，'SHOPPING'表示购物商城，'TRAVEL'表示景点旅游，'PAYMENT'表示生活缴费）
+         * @param {HTMLElement} element - 触发筛选的按钮元素
+         */
+        function filterByType(type, element) {
+            // 更新当前筛选的类型
+            currentType = type;
+            // 更新类型筛选标签的激活状态
+            updateFilterTabs('.filter-tabs:last-child .filter-tab', element);
+            // 重新加载订单列表
+            loadOrders();
+        }
+
+        /**
+         * 更新筛选标签状态
+         * 功能概述：更新筛选标签的激活状态，移除所有标签的active类，为当前选中的标签添加active类
+         * @param {String} selector - 筛选标签的选择器
+         * @param {HTMLElement} activeElement - 当前选中的标签元素
+         */
+        function updateFilterTabs(selector, activeElement) {
+            // 遍历所有筛选标签，移除active类，取消激活状态
+            document.querySelectorAll(selector).forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // 为当前选中的标签添加active类，激活选中状态
+            activeElement.classList.add('active');
+        }
+
+        // ==================== 订单操作功能模块 ====================
+        /**
+         * 继续支付
+         * 功能概述：跳转到支付页面，继续支付待支付的订单
+         * @param {String} orderNo - 订单号
+         */
+        function continuePayment(orderNo) {
+            // 跳转到支付页面，传递订单号参数
+            window.location.href = `/unified-new/payment/checkout?orderNo=${orderNo}`;
+        }
+
+        /**
+         * 取消订单
+         * 功能概述：取消待支付的订单，发送取消请求到后端
+         * @param {String} orderNo - 订单号
+         */
+        function cancelOrder(orderNo) {
+            // 显示确认对话框，询问用户是否确定取消订单
+            if (confirm('确定要取消这个订单吗？')) {
+                // 如果用户确认，使用fetch API发送POST请求到后端取消订单接口
+                fetch('/unified-new/order/cancel', {
+                    method: 'POST',  // 请求方法为POST
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'  // 设置请求头，指定内容类型为表单数据
+                    },
+                    body: `orderNo=${orderNo}`,  // 将订单号编码后作为请求体
+                    credentials: 'include'  // 包含Cookie，用于身份验证
+                })
+                .then(response => response.json())  // 将响应转换为JSON对象
+                .then(data => {
+                    // 判断后端是否返回成功
+                    if (data.success) {
+                        // 如果取消成功，显示成功消息
+                        alert('订单已取消');
+                        // 重新加载订单列表
+                        loadOrders();
+                    // 如果取消失败
+                    } else {
+                        // 显示失败消息
+                        alert('取消失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    // 如果发生网络错误或其他异常，显示错误消息
+                    alert('取消失败: ' + error.message);
+                });
+            }
+        }
+
+        /**
+         * 删除订单
+         * 功能概述：删除已取消的订单，发送删除请求到后端
+         * @param {String} orderNo - 订单号
+         */
+        function deleteOrder(orderNo) {
+            // 显示确认对话框，询问用户是否确定删除订单（删除后无法恢复）
+            if (confirm('确定要删除这个订单吗？删除后无法恢复。')) {
+                // 如果用户确认，使用fetch API发送POST请求到后端删除订单接口
+                fetch('/unified-new/order/delete', {
+                    method: 'POST',  // 请求方法为POST
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'  // 设置请求头，指定内容类型为表单数据
+                    },
+                    body: `orderNo=${orderNo}`,  // 将订单号编码后作为请求体
+                    credentials: 'include'  // 包含Cookie，用于身份验证
+                })
+                .then(response => response.json())  // 将响应转换为JSON对象
+                .then(data => {
+                    // 判断后端是否返回成功
+                    if (data.success) {
+                        // 如果删除成功，显示成功消息
+                        alert('订单已删除');
+                        // 重新加载订单列表
+                        loadOrders();
+                    // 如果删除失败
+                    } else {
+                        // 显示失败消息
+                        alert('删除失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    // 如果发生网络错误或其他异常，显示错误消息
+                    alert('删除失败: ' + error.message);
+                });
+            }
+        }
+
+        /**
+         * 查看详情
+         * 功能概述：跳转到支付页面查看订单详情（已支付的订单也可以查看）
+         * @param {String} orderNo - 订单号
+         */
+        function viewDetail(orderNo) {
+            // 跳转到支付页面查看详情（已支付的订单也可以查看）
+            // 跳转到支付页面，传递订单号参数
+            window.location.href = `/unified-new/payment/checkout?orderNo=${orderNo}`;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1182 @@
+<!--
+    文件名称：register.html
+    文件功能：用户注册页面模板
+    功能概述：
+        1. 提供用户注册功能，包括用户名、手机号、验证码、密码等字段
+        2. 支持发送短信验证码功能，包含倒计时功能
+        3. 实现密码强度检测功能（弱、中、强）
+        4. 实现确认密码验证功能
+        5. 实现表单验证和错误提示功能
+        6. 集成用户协议和隐私政策模态框
+        7. 集成鼠标跟随光效动画
+        8. 响应式设计，支持PC端和移动端访问
+    技术栈：HTML5 + CSS3 + JavaScript + Thymeleaf模板引擎
+    依赖文件：
+        - Font Awesome图标库（CDN）
+    作者：游市生活开发团队
+    创建日期：2024年
+    最后更新：2024年
+-->
+<!DOCTYPE html>
+<!-- HTML5文档类型声明，标识这是一个HTML5文档 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<!-- 
+    HTML根元素
+    lang="zh-CN"：设置页面语言为简体中文
+    xmlns:th="http://www.thymeleaf.org"：声明Thymeleaf命名空间，用于模板引擎语法
+-->
+<head>
+    <!-- HTML文档头部，包含元数据和样式表引用 -->
+    <!-- 字符编码声明，指定页面使用UTF-8编码，支持中文等多语言字符 -->
+    <meta charset="UTF-8">
+    <!-- 视口元数据，设置页面在移动设备上的显示方式，width=device-width表示宽度自适应设备宽度，initial-scale=1.0表示初始缩放比例为1.0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题，显示在浏览器标签页上 -->
+    <title>用户注册 - 游市生活</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #00CED1 0%, #48D1CC 25%, #AFEEEE 50%, #48D1CC 75%, #00CED1 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 动态粒子背景 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="1" fill="rgba(255,255,255,0.2)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.15)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.2)"/><circle cx="90" cy="90" r="1" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            animation: floatParticles 20s linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes floatParticles {
+            0% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-20px) translateX(10px); }
+            100% { transform: translateY(0) translateX(0); }
+        }
+
+        .register-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            width: 480px;
+            max-width: 100%;
+            position: relative;
+            z-index: 2;
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .register-header {
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+            text-align: center;
+            padding: 50px 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .register-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+            animation: shimmer 4s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .logo-icon {
+            display: inline-block;
+            font-size: 48px;
+            margin-bottom: 15px;
+            animation: logoFloat 3s ease-in-out infinite;
+            position: relative;
+            z-index: 2;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-8px) scale(1.05); }
+        }
+
+        .register-header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+        }
+
+        .register-header p {
+            opacity: 0.95;
+            font-size: 18px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .register-form {
+            padding: 50px 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00CED1;
+            box-shadow: 0 0 0 4px rgba(0, 206, 209, 0.1);
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        .sms-group {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .sms-group input {
+            flex: 1;
+        }
+
+        .send-sms-btn {
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: 600;
+            white-space: nowrap;
+            min-width: 120px;
+            box-shadow: 0 4px 15px rgba(0, 206, 209, 0.3);
+        }
+
+        .send-sms-btn:hover {
+            background: linear-gradient(135deg, #20B2AA, #00CED1);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 206, 209, 0.4);
+        }
+
+        .send-sms-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .password-strength {
+            margin-top: 12px;
+            font-size: 13px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .strength-weak { 
+            color: #dc2626; 
+            background: #fff5f5;
+            border: 2px solid #fed7d7;
+        }
+        .strength-medium { 
+            color: #d97706; 
+            background: #fffbeb;
+            border: 2px solid #fed7aa;
+        }
+        .strength-strong { 
+            color: #059669; 
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+        }
+
+        .register-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            margin-top: 15px;
+            box-shadow: 0 6px 20px rgba(0, 206, 209, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .register-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .register-btn:hover::before {
+            left: 100%;
+        }
+
+        .register-btn:hover {
+            background: linear-gradient(135deg, #20B2AA, #00CED1);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 206, 209, 0.4);
+        }
+
+        .register-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .form-links {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .form-links a {
+            color: #00CED1;
+            text-decoration: none;
+            margin: 0 20px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .form-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #00CED1;
+            transition: width 0.3s ease;
+        }
+
+        .form-links a:hover::after {
+            width: 100%;
+        }
+
+        .form-links a:hover {
+            color: #20B2AA;
+            transform: translateY(-2px);
+        }
+
+        .message {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-size: 15px;
+            font-weight: 500;
+            display: none;
+            animation: slideInDown 0.3s ease-out;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message {
+            background: #fff5f5;
+            color: #dc2626;
+            border: 2px solid #fed7d7;
+        }
+
+        .success-message {
+            background: #f0fff4;
+            color: #059669;
+            border: 2px solid #9ae6b4;
+        }
+
+        .agreement {
+            font-size: 14px;
+            color: #666;
+            margin: 25px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .agreement:hover {
+            border-color: #00CED1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 206, 209, 0.1);
+        }
+
+        .agreement input {
+            margin-right: 10px;
+            transform: scale(1.2);
+            accent-color: #00CED1;
+        }
+
+        .agreement a {
+            color: #00CED1;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .agreement a:hover {
+            color: #20B2AA;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .register-container {
+                width: 100%;
+                margin: 10px;
+            }
+            
+            .register-form {
+                padding: 40px 25px;
+            }
+
+            .register-header {
+                padding: 40px 25px;
+            }
+
+            .register-header h1 {
+                font-size: 28px;
+            }
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 表单验证样式 */
+        .form-group input.error {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+            background: #fff5f5;
+        }
+
+        .form-group input.success {
+            border-color: #059669;
+            box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
+            background: #f0fff4;
+        }
+
+        /* 鼠标跟随效果 */
+        .cursor-glow {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+        }
+
+        /* 弹窗样式 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #00CED1;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .modal-close {
+            background: #00CED1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .modal-close:hover {
+            background: #20B2AA;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <!-- 鼠标跟随光效 -->
+    <div class="cursor-glow" id="cursorGlow"></div>
+
+    <div class="register-container">
+        <div class="register-header">
+            <div class="logo-icon">
+                <i class="fas fa-city"></i>
+            </div>
+            <h1>加入游市生活</h1>
+            <p>注册新账户，享受专业生活服务</p>
+        </div>
+
+        <div class="register-form">
+            <div id="error-message" class="message error-message"></div>
+            <div id="success-message" class="message success-message"></div>
+
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" placeholder="请输入2-20位用户名" required minlength="2" maxlength="20">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">手机号</label>
+                    <input type="tel" id="phone" name="phone" placeholder="请输入11位手机号" required maxlength="11">
+                </div>
+
+                <div class="form-group">
+                    <label for="sms-code">短信验证码</label>
+                    <div class="sms-group">
+                        <input type="text" id="sms-code" name="smsCode" placeholder="请输入6位验证码" required maxlength="6">
+                        <button type="button" class="send-sms-btn" onclick="sendSmsCode()">发送验证码</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">设置密码</label>
+                    <input type="password" id="password" name="password" placeholder="请输入6-20位密码" required minlength="6" maxlength="20">
+                    <div id="password-strength" class="password-strength"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm-password">确认密码</label>
+                    <input type="password" id="confirm-password" name="confirmPassword" placeholder="请再次输入密码" required>
+                </div>
+
+                <div class="agreement">
+                    <label>
+                        <input type="checkbox" id="agree-terms" required>
+                        我已阅读并同意 <a href="#" onclick="showTerms()">《用户服务协议》</a> 和 <a href="#" onclick="showPrivacy()">《隐私政策》</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="register-btn">立即注册</button>
+            </form>
+
+            <div class="form-links">
+                <a href="/user/login">已有账户？立即登录</a>
+                <a href="/">返回首页</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户协议模态框 -->
+    <div id="termsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>用户服务协议</h3>
+            </div>
+            <div class="modal-body">
+                <p>欢迎使用游市生活服务！</p>
+                <p>本协议是您与游市生活之间关于您使用游市生活服务的法律协议。</p>
+                <h4>1. 服务内容</h4>
+                <p>游市生活为用户提供本地生活服务信息，包括但不限于住宿、餐饮、出行等服务。</p>
+                <h4>2. 用户责任</h4>
+                <p>用户应确保注册信息真实有效，不得恶意使用服务或损害他人权益。</p>
+                <h4>3. 隐私保护</h4>
+                <p>我们将严格保护用户隐私，不向第三方泄露用户个人信息。</p>
+                <h4>4. 免责声明</h4>
+                <p>游市生活对第三方服务提供商的服务质量不承担直接责任。</p>
+                <p>如有疑问，请联系客服：400-888-8888</p>
+            </div>
+            <button class="modal-close" onclick="closeModal('termsModal')">我已了解</button>
+        </div>
+    </div>
+
+    <!-- 隐私政策模态框 -->
+    <div id="privacyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>隐私政策</h3>
+            </div>
+            <div class="modal-body">
+                <p>游市生活重视用户隐私保护。</p>
+                <h4>1. 信息收集</h4>
+                <p>我们收集您主动提供的注册信息、使用偏好等，用于提供更好的服务。</p>
+                <h4>2. 信息使用</h4>
+                <p>收集的信息仅用于服务提供、账户管理、安全保障和服务改进。</p>
+                <h4>3. 信息保护</h4>
+                <p>我们采用行业标准的安全措施保护您的个人信息安全。</p>
+                <h4>4. 信息分享</h4>
+                <p>未经您同意，我们不会向第三方出售、交易或转让您的个人信息。</p>
+                <h4>5. Cookie使用</h4>
+                <p>我们使用Cookie来改善用户体验，您可以通过浏览器设置管理Cookie。</p>
+                <p>如有隐私相关问题，请联系我们：privacy@youshishenghua.com</p>
+            </div>
+            <button class="modal-close" onclick="closeModal('privacyModal')">我已了解</button>
+        </div>
+    </div>
+
+    <!-- 
+        JavaScript代码块
+        功能概述：实现注册页面的交互功能，包括短信验证码发送、密码强度检测、表单提交、消息提示、模态框控制等
+    -->
+    <script>
+        /**
+         * 文件级注释：注册页面JavaScript功能模块
+         * 功能概述：
+         *   1. 鼠标跟随光效动画
+         *   2. 短信验证码发送功能（包含倒计时）
+         *   3. 密码强度检测功能（弱、中、强）
+         *   4. 确认密码验证功能
+         *   5. 注册表单提交功能
+         *   6. 消息提示功能（错误消息、成功消息）
+         *   7. 用户协议和隐私政策模态框控制
+         *   8. 表单验证功能
+         */
+        
+        // ==================== 鼠标跟随光效模块 ====================
+        /**
+         * 鼠标跟随光效功能
+         * 功能概述：实现鼠标跟随光效动画，光效元素跟随鼠标移动，带有平滑过渡效果
+         */
+        // 获取鼠标跟随光效元素
+        const cursorGlow = document.getElementById('cursorGlow');
+        // 鼠标当前X坐标，初始值为0
+        let mouseX = 0;
+        // 鼠标当前Y坐标，初始值为0
+        let mouseY = 0;
+        // 光效元素当前X坐标，初始值为0
+        let currentX = 0;
+        // 光效元素当前Y坐标，初始值为0
+        let currentY = 0;
+
+        /**
+         * 监听鼠标移动事件
+         * 功能概述：实时更新鼠标坐标，用于计算光效元素的目标位置
+         */
+        // 监听document的mousemove事件，当鼠标移动时触发
+        document.addEventListener('mousemove', (e) => {
+            // 更新鼠标当前X坐标（相对于浏览器窗口的X坐标）
+            mouseX = e.clientX;
+            // 更新鼠标当前Y坐标（相对于浏览器窗口的Y坐标）
+            mouseY = e.clientY;
+        });
+
+        /**
+         * 更新光效元素位置
+         * 功能概述：使用平滑插值算法更新光效元素位置，实现跟随鼠标的平滑动画效果
+         */
+        function updateCursor() {
+            // 使用线性插值算法，平滑更新光效元素X坐标（每次移动10%的距离，实现平滑跟随效果）
+            currentX += (mouseX - currentX) * 0.1;
+            // 使用线性插值算法，平滑更新光效元素Y坐标（每次移动10%的距离，实现平滑跟随效果）
+            currentY += (mouseY - currentY) * 0.1;
+            
+            // 设置光效元素左偏移量（减去10px是为了让光效元素中心点对齐鼠标位置）
+            cursorGlow.style.left = currentX - 10 + 'px';
+            // 设置光效元素上偏移量（减去10px是为了让光效元素中心点对齐鼠标位置）
+            cursorGlow.style.top = currentY - 10 + 'px';
+            
+            // 使用requestAnimationFrame递归调用updateCursor函数，实现平滑动画循环（60fps）
+            requestAnimationFrame(updateCursor);
+        }
+        // 立即调用updateCursor函数，启动鼠标跟随光效动画
+        updateCursor();
+
+        // ==================== 倒计时变量 ====================
+        /**
+         * 倒计时变量
+         * 功能概述：存储短信验证码发送后的倒计时秒数，用于控制发送按钮的禁用状态
+         */
+        // 倒计时秒数，初始值为0
+        let countdown = 0;
+
+        // ==================== 短信验证码发送功能模块 ====================
+        /**
+         * 发送短信验证码
+         * 功能概述：验证手机号格式，发送短信验证码请求到后端，成功后启动倒计时功能
+         */
+        function sendSmsCode() {
+            // 获取手机号输入框元素
+            const phoneInput = document.getElementById('phone');
+            // 获取手机号输入框的值并去除首尾空格
+            const phone = phoneInput.value.trim();
+            // 获取触发发送的按钮元素（event.target是触发事件的元素）
+            const btn = event.target;
+
+            // 判断手机号是否为空
+            if (!phone) {
+                // 如果手机号为空，显示错误消息
+                showError('请输入手机号');
+                // 聚焦手机号输入框，方便用户输入
+                phoneInput.focus();
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 判断手机号格式是否正确（1开头，第二位为3-9，共11位数字）
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                // 如果手机号格式不正确，显示错误消息
+                showError('请输入正确的手机号格式');
+                // 聚焦手机号输入框，方便用户输入
+                phoneInput.focus();
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 禁用发送按钮，防止重复发送
+            btn.disabled = true;
+            // 更新按钮文本，显示加载动画和"发送中"文字
+            btn.innerHTML = '<span class="loading"></span>发送中';
+
+            // 使用fetch API发送POST请求到后端短信发送接口
+            fetch('/user/sendSms', {
+                method: 'POST',  // 请求方法为POST
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',  // 设置请求头，指定内容类型为表单数据
+                },
+                body: `phone=${encodeURIComponent(phone)}&type=register`  // 将手机号和类型（register）编码后作为请求体
+            })
+            .then(response => response.json())  // 将响应转换为JSON对象
+            .then(data => {
+                // 判断后端是否返回成功
+                if (data.success) {
+                    // 如果发送成功，显示成功消息
+                    showSuccess(data.message);
+                    // 启动倒计时功能，禁用发送按钮60秒
+                    startCountdown(btn);
+                } else {
+                    // 如果发送失败，显示错误消息
+                    showError(data.message);
+                    // 重新启用发送按钮
+                    btn.disabled = false;
+                    // 恢复按钮文本为"发送验证码"
+                    btn.textContent = '发送验证码';
+                }
+            })
+            .catch(error => {
+                // 如果发生网络错误或其他异常，打印错误信息到控制台
+                console.error('Error:', error);
+                // 显示网络错误消息
+                showError('网络错误，请重试');
+                // 重新启用发送按钮
+                btn.disabled = false;
+                // 恢复按钮文本为"发送验证码"
+                btn.textContent = '发送验证码';
+            });
+        }
+
+        /**
+         * 启动倒计时
+         * 功能概述：启动60秒倒计时，在倒计时期间禁用发送按钮，倒计时结束后恢复按钮可用状态
+         * @param {HTMLElement} btn - 发送验证码按钮元素
+         */
+        function startCountdown(btn) {
+            // 设置倒计时初始值为60秒
+            countdown = 60;
+            // 使用setInterval创建定时器，每1000毫秒（1秒）执行一次
+            const timer = setInterval(() => {
+                // 倒计时减1
+                countdown--;
+                // 更新按钮文本，显示剩余秒数
+                btn.textContent = `${countdown}s后重发`;
+                
+                // 判断倒计时是否结束
+                if (countdown <= 0) {
+                    // 如果倒计时结束，清除定时器
+                    clearInterval(timer);
+                    // 重新启用发送按钮
+                    btn.disabled = false;
+                    // 恢复按钮文本为"发送验证码"
+                    btn.textContent = '发送验证码';
+                }
+            }, 1000);
+        }
+
+        // ==================== 密码强度检测功能模块 ====================
+        /**
+         * 密码强度检测
+         * 功能概述：监听密码输入框的输入事件，实时检测密码强度（弱、中、强），并显示相应的提示信息
+         */
+        // 监听密码输入框的input事件，当用户输入密码时触发
+        document.getElementById('password').addEventListener('input', function() {
+            // 获取密码输入框的值
+            const password = this.value;
+            // 获取密码强度提示div元素
+            const strengthDiv = document.getElementById('password-strength');
+            
+            // 判断密码是否为空
+            if (password.length === 0) {
+                // 如果密码为空，清空强度提示文本
+                strengthDiv.textContent = '';
+                // 移除强度提示div的所有类名，恢复默认样式
+                strengthDiv.className = 'password-strength';
+                // 移除密码输入框的error和success类
+                this.classList.remove('error', 'success');
+                // 直接返回，不执行后续操作
+                return;
+            }
+            
+            // 密码强度评分，初始值为0
+            let strength = 0;
+            // 提示信息数组（暂时未使用）
+            let tips = [];
+            
+            // 判断密码长度是否大于等于6位
+            if (password.length >= 6) {
+                // 如果密码长度大于等于6位，强度加1
+                strength++;
+            } else {
+                // 如果密码长度小于6位，添加提示信息（暂时未使用）
+                tips.push('至少6位');
+            }
+            
+            // 判断密码是否包含小写字母
+            if (/[a-z]/.test(password)) strength++;
+            // 判断密码是否包含大写字母
+            if (/[A-Z]/.test(password)) strength++;
+            // 判断密码是否包含数字
+            if (/[0-9]/.test(password)) strength++;
+            // 判断密码是否包含特殊字符（非字母数字字符）
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            // 根据强度评分显示不同的提示信息
+            // 判断强度评分是否小于等于2（弱）
+            if (strength <= 2) {
+                // 如果强度弱，显示弱强度提示信息
+                strengthDiv.textContent = '密码强度：弱 (建议包含大小写字母、数字)';
+                // 设置强度提示div的类名为弱强度样式
+                strengthDiv.className = 'password-strength strength-weak';
+                // 为密码输入框添加error类，显示错误样式
+                this.classList.add('error');
+                // 移除密码输入框的success类
+                this.classList.remove('success');
+            // 判断强度评分是否小于等于3（中等）
+            } else if (strength <= 3) {
+                // 如果强度中等，显示中等强度提示信息
+                strengthDiv.textContent = '密码强度：中等';
+                // 设置强度提示div的类名为中等强度样式
+                strengthDiv.className = 'password-strength strength-medium';
+                // 移除密码输入框的error和success类，显示默认样式
+                this.classList.remove('error', 'success');
+            // 如果强度评分大于3（强）
+            } else {
+                // 如果强度强，显示强强度提示信息
+                strengthDiv.textContent = '密码强度：强';
+                // 设置强度提示div的类名为强强度样式
+                strengthDiv.className = 'password-strength strength-strong';
+                // 为密码输入框添加success类，显示成功样式
+                this.classList.add('success');
+                // 移除密码输入框的error类
+                this.classList.remove('error');
+            }
+        });
+
+        // ==================== 确认密码验证功能模块 ====================
+        /**
+         * 确认密码验证
+         * 功能概述：监听确认密码输入框的输入事件，实时验证确认密码是否与密码一致
+         */
+        // 监听确认密码输入框的input事件，当用户输入确认密码时触发
+        document.getElementById('confirm-password').addEventListener('input', function() {
+            // 获取密码输入框的值
+            const password = document.getElementById('password').value;
+            // 获取确认密码输入框的值
+            const confirmPassword = this.value;
+            
+            // 判断确认密码是否不为空且与密码不一致
+            if (confirmPassword && confirmPassword !== password) {
+                // 如果确认密码不为空且与密码不一致，为确认密码输入框添加error类，显示错误样式
+                this.classList.add('error');
+                // 移除确认密码输入框的success类
+                this.classList.remove('success');
+            // 判断确认密码是否不为空且与密码一致
+            } else if (confirmPassword && confirmPassword === password) {
+                // 如果确认密码不为空且与密码一致，为确认密码输入框添加success类，显示成功样式
+                this.classList.add('success');
+                // 移除确认密码输入框的error类
+                this.classList.remove('error');
+            // 如果确认密码为空
+            } else {
+                // 移除确认密码输入框的error和success类，显示默认样式
+                this.classList.remove('error', 'success');
+            }
+        });
+
+        // ==================== 注册表单提交模块 ====================
+        /**
+         * 注册表单提交
+         * 功能概述：监听注册表单的提交事件，验证表单数据，发送注册请求到后端，处理注册结果
+         */
+        // 监听注册表单的submit事件，当表单提交时触发
+        document.getElementById('register-form').addEventListener('submit', function(e) {
+            // 阻止表单的默认提交行为（页面跳转）
+            e.preventDefault();
+            
+            // 创建FormData对象，获取表单数据
+            const formData = new FormData(this);
+            // 从表单数据中获取用户名并去除首尾空格
+            const username = formData.get('username').trim();
+            // 从表单数据中获取手机号并去除首尾空格
+            const phone = formData.get('phone').trim();
+            // 从表单数据中获取短信验证码并去除首尾空格
+            const smsCode = formData.get('smsCode').trim();
+            // 从表单数据中获取密码
+            const password = formData.get('password');
+            // 从表单数据中获取确认密码
+            const confirmPassword = formData.get('confirmPassword');
+            // 获取用户协议复选框的选中状态
+            const agreeTerms = document.getElementById('agree-terms').checked;
+
+            // 表单验证
+            // 判断所有必填字段是否为空
+            if (!username || !phone || !smsCode || !password || !confirmPassword) {
+                // 如果有必填字段为空，显示错误消息
+                showError('请填写完整的注册信息');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 判断用户名长度是否小于2个字符
+            if (username.length < 2) {
+                // 如果用户名长度小于2个字符，显示错误消息
+                showError('用户名至少2个字符');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 判断手机号格式是否正确（1开头，第二位为3-9，共11位数字）
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                // 如果手机号格式不正确，显示错误消息
+                showError('请输入正确的手机号格式');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 判断验证码格式是否正确（6位数字）
+            if (!/^\d{6}$/.test(smsCode)) {
+                // 如果验证码格式不正确，显示错误消息
+                showError('请输入6位验证码');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 判断密码长度是否小于6位
+            if (password.length < 6) {
+                // 如果密码长度小于6位，显示错误消息
+                showError('密码长度不能少于6位');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 判断密码和确认密码是否一致
+            if (password !== confirmPassword) {
+                // 如果密码和确认密码不一致，显示错误消息
+                showError('两次输入的密码不一致');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 判断用户是否同意用户协议和隐私政策
+            if (!agreeTerms) {
+                // 如果用户未同意用户协议和隐私政策，显示错误消息
+                showError('请阅读并同意用户协议和隐私政策');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 获取提交按钮元素
+            const submitBtn = this.querySelector('.register-btn');
+            // 禁用提交按钮，防止重复提交
+            submitBtn.disabled = true;
+            // 更新按钮文本，显示加载动画和"注册中"文字
+            submitBtn.innerHTML = '<span class="loading"></span>注册中';
+
+            // 使用fetch API发送POST请求到后端注册接口
+            fetch('/user/doRegister', {
+                method: 'POST',  // 请求方法为POST
+                body: new URLSearchParams(formData)  // 将表单数据转换为URL编码格式作为请求体
+            })
+            .then(response => response.json())  // 将响应转换为JSON对象
+            .then(data => {
+                // 判断后端是否返回成功
+                if (data.success) {
+                    // 如果注册成功，显示成功消息
+                    showSuccess(data.message);
+                    // 延迟2000毫秒后跳转到登录页面
+                    setTimeout(() => {
+                        // 跳转到登录页面
+                        window.location.href = '/user/login';
+                    }, 2000);
+                } else {
+                    // 如果注册失败，显示错误消息
+                    showError(data.message);
+                }
+            })
+            .catch(error => {
+                // 如果发生网络错误或其他异常，打印错误信息到控制台
+                console.error('Error:', error);
+                // 显示网络错误消息
+                showError('注册失败，请重试');
+            })
+            .finally(() => {
+                // 无论成功或失败，都执行以下操作
+                // 重新启用提交按钮
+                submitBtn.disabled = false;
+                // 恢复按钮文本为"立即注册"
+                submitBtn.textContent = '立即注册';
+            });
+        });
+
+        // ==================== 消息提示功能模块 ====================
+        /**
+         * 显示错误消息
+         * 功能概述：显示错误消息提示，隐藏成功消息，5秒后自动隐藏错误消息
+         * @param {String} message - 错误消息文本
+         */
+        function showError(message) {
+            // 获取错误消息div元素
+            const errorDiv = document.getElementById('error-message');
+            // 获取成功消息div元素
+            const successDiv = document.getElementById('success-message');
+            
+            // 隐藏成功消息
+            successDiv.style.display = 'none';
+            // 设置错误消息文本内容
+            errorDiv.textContent = message;
+            // 显示错误消息
+            errorDiv.style.display = 'block';
+            
+            // 延迟5000毫秒（5秒）后自动隐藏错误消息
+            setTimeout(() => {
+                // 隐藏错误消息
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        /**
+         * 显示成功消息
+         * 功能概述：显示成功消息提示，隐藏错误消息，3秒后自动隐藏成功消息
+         * @param {String} message - 成功消息文本
+         */
+        function showSuccess(message) {
+            // 获取成功消息div元素
+            const successDiv = document.getElementById('success-message');
+            // 获取错误消息div元素
+            const errorDiv = document.getElementById('error-message');
+            
+            // 隐藏错误消息
+            errorDiv.style.display = 'none';
+            // 设置成功消息文本内容
+            successDiv.textContent = message;
+            // 显示成功消息
+            successDiv.style.display = 'block';
+            
+            // 延迟3000毫秒（3秒）后自动隐藏成功消息
+            setTimeout(() => {
+                // 隐藏成功消息
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // ==================== 模态框控制功能模块 ====================
+        /**
+         * 显示用户协议模态框
+         * 功能概述：显示用户协议模态框，供用户查看用户服务协议内容
+         */
+        function showTerms() {
+            // 为用户协议模态框添加show类，显示模态框
+            document.getElementById('termsModal').classList.add('show');
+        }
+
+        /**
+         * 显示隐私政策模态框
+         * 功能概述：显示隐私政策模态框，供用户查看隐私政策内容
+         */
+        function showPrivacy() {
+            // 为隐私政策模态框添加show类，显示模态框
+            document.getElementById('privacyModal').classList.add('show');
+        }
+
+        /**
+         * 关闭模态框
+         * 功能概述：关闭指定ID的模态框
+         * @param {String} modalId - 模态框的ID（'termsModal'表示用户协议模态框，'privacyModal'表示隐私政策模态框）
+         */
+        function closeModal(modalId) {
+            // 为指定ID的模态框移除show类，隐藏模态框
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        /**
+         * 点击模态框外部关闭
+         * 功能概述：监听所有模态框的点击事件，当点击模态框外部区域（遮罩层）时，自动关闭模态框
+         */
+        // 获取所有模态框元素，遍历每个模态框并添加点击事件监听器
+        document.querySelectorAll('.modal').forEach(modal => {
+            /**
+             * 模态框点击事件处理
+             * 功能概述：当点击模态框外部区域（遮罩层）时，关闭模态框
+             */
+            // 监听模态框的click事件，当点击模态框时触发
+            modal.addEventListener('click', function(e) {
+                // 判断点击位置是否为模态框本身（遮罩层），而不是模态框内容区域
+                if (e.target === this) {
+                    // 如果点击位置为模态框本身（遮罩层），移除show类，关闭模态框
+                    this.classList.remove('show');
+                }
+            });
+        });
+
+        // ==================== 输入格式化功能模块 ====================
+        /**
+         * 手机号和验证码格式化
+         * 功能概述：监听手机号和验证码输入框的输入事件，自动过滤非数字字符，只允许输入数字
+         */
+        // 监听手机号输入框的input事件，当用户输入时触发
+        document.getElementById('phone').addEventListener('input', function() {
+            // 使用正则表达式替换所有非数字字符为空字符串，只保留数字
+            this.value = this.value.replace(/\D/g, '');
+        });
+
+        // 监听验证码输入框的input事件，当用户输入时触发
+        document.getElementById('sms-code').addEventListener('input', function() {
+            // 使用正则表达式替换所有非数字字符为空字符串，只保留数字
+            this.value = this.value.replace(/\D/g, '');
+        });
+    </script>
+</body>
+</html> 

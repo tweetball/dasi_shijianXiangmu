@@ -1,0 +1,159 @@
+<!--
+    文件名称：myHotelOrder.html
+    文件功能：我的酒店订单页面模板
+    功能概述：
+        1. 显示用户的酒店订单列表
+        2. 提供返回按钮（返回上一页）
+        3. 显示加载状态（正在加载订单）
+        4. 显示空状态（没有订单时显示）
+        5. 订单列表通过外部JavaScript文件（myHotelOrders.js）动态加载
+        6. 响应式设计，支持PC端和移动端访问
+    技术栈：HTML5 + CSS3 + JavaScript + jQuery + Thymeleaf模板引擎
+    依赖文件：
+        - jQuery库（/js/jquery-1.8.3.js）
+        - Font Awesome图标库（CDN）
+        - /css/navbar.css（导航栏样式）
+        - /js/myHotelOrders.js（酒店订单JavaScript功能，通过外部文件引用）
+    作者：游市生活开发团队
+    创建日期：2024年
+    最后更新：2024年
+-->
+<!DOCTYPE html>
+<!-- HTML5文档类型声明，标识这是一个HTML5文档 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<!-- 
+    HTML根元素
+    lang="zh-CN"：设置页面语言为简体中文
+    xmlns:th="http://www.thymeleaf.org"：声明Thymeleaf命名空间，用于模板引擎语法
+-->
+<head>
+    <!-- HTML文档头部，包含元数据和样式表引用 -->
+    <!-- 字符编码声明，指定页面使用UTF-8编码，支持中文等多语言字符 -->
+    <meta charset="UTF-8">
+    <!-- 视口元数据，设置页面在移动设备上的显示方式，width=device-width表示宽度自适应设备宽度，initial-scale=1.0表示初始缩放比例为1.0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题 -->
+    <title>我的订单</title>
+    <!-- jQuery库（本地文件） -->
+    <script src="/js/jquery-1.8.3.js"></script>
+    <!-- jQuery库（CDN，已注释，使用本地文件） -->
+    <!--    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>-->
+    <!-- Font Awesome图标库（CDN） -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 导航栏样式表 -->
+    <link rel="stylesheet" href="/css/navbar.css">
+</head>
+<body>
+    <!-- 页面主体 -->
+    <!-- 统一导航栏 -->
+    <!-- 页面头部导航栏 -->
+    <header class="header">
+        <!-- 导航栏容器 -->
+        <nav class="nav">
+            <!-- 网站Logo链接 -->
+            <a href="/" class="logo">
+                <!-- 城市图标 -->
+                <i class="fas fa-city"></i>
+                <!-- 网站名称 -->
+                游市生活
+            </a>
+            <!-- 导航链接列表 -->
+            <ul class="nav-links">
+                <!-- 首页导航链接 -->
+                <li><a href="/">首页</a></li>
+                <!-- 住宿服务导航链接 -->
+                <li><a href="/hc/f2">住宿服务</a></li>
+                <!-- 出行服务导航链接 -->
+                <li><a href="/travel">出行服务</a></li>
+                <!-- 美食服务导航链接 -->
+                <li><a href="/food">美食服务</a></li>
+                <!-- 购物服务导航链接 -->
+                <li><a href="/shopping">购物服务</a></li>
+                <!-- 生活缴费导航链接 -->
+                <li><a href="/payment">生活缴费</a></li>
+            </ul>
+            <!-- 用户操作区域 -->
+            <div class="user-actions">
+                <!-- 未登录状态显示 -->
+                <!-- 使用Thymeleaf判断用户是否未登录 -->
+                <div th:if="${session.user == null}">
+                    <!-- 登录按钮链接 -->
+                    <a href="/user/login" class="login-btn">登录</a>
+                    <!-- 注册按钮链接 -->
+                    <a href="/user/register" class="register-btn">注册</a>
+                </div>
+                <!-- 已登录状态显示 -->
+                <!-- 使用Thymeleaf判断用户是否已登录 -->
+                <div th:if="${session.user != null}">
+                    <!-- 我的订单链接（统一订单中心） -->
+                    <a href="/unified-new/orders" style="color: #FF6600; text-decoration: none; font-weight: 500; margin-right: 15px;">
+                        <!-- 订单列表图标 -->
+                        <i class="fas fa-list-alt"></i>
+                        <!-- 我的订单文本 -->
+                        我的订单
+                    </a>
+                    <!-- 个人中心链接 -->
+                    <a href="/user/profile" style="color: #FF6600; text-decoration: none; font-weight: 500;">
+                        <!-- 用户图标 -->
+                        <i class="fas fa-user-circle"></i>
+                        <!-- 用户昵称或用户名（使用Thymeleaf动态显示，优先显示昵称，如果没有则显示用户名） -->
+                        <span th:text="${session.user.nickname ?: session.user.username}">用户</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 主要内容 -->
+    <!-- 我的酒店订单页面主要内容区域 -->
+    <main class="container py-4">
+        <!-- 返回按钮 -->
+        <!-- 返回按钮区域 -->
+        <div class="mb-4">
+            <!-- 返回按钮链接（点击后返回上一页，使用JavaScript的history.back()方法） -->
+            <a href="javascript:history.back()" class="text-primary">
+                <!-- 返回箭头图标 -->
+                <i class="fa fa-arrow-left mr-1"></i> 
+                <!-- 返回文本 -->
+                返回
+            </a>
+        </div>
+
+        <!-- 页面标题 -->
+        <!-- 我的订单标题 -->
+        <h1 class="mb-4">我的订单</h1>
+
+        <!-- 加载状态 -->
+        <!-- 加载状态提示（初始显示，通过JavaScript控制显示/隐藏） -->
+        <div id="loading" class="loading">
+            <!-- 加载动画图标（旋转动画） -->
+            <i class="fa fa-spinner fa-spin fa-2x"></i>
+            <!-- 加载提示文本 -->
+            <p>正在加载订单...</p>
+        </div>
+
+        <!-- 空状态 -->
+        <!-- 空状态提示（初始隐藏，通过JavaScript控制显示/隐藏，当没有订单时显示） -->
+        <div id="noOrders" class="no-orders" style="display: none;">
+            <!-- 空状态图标（收件箱图标） -->
+            <i class="fa fa-inbox fa-4x text-muted mb-3"></i>
+            <!-- 空状态提示文本 -->
+            <p>您还没有任何订单</p>
+            <!-- 立即预订按钮链接（跳转到酒店列表页面） -->
+            <a href="/hc/fAll" class="btn btn-primary mt-2">
+                <!-- 搜索图标 -->
+                <i class="fa fa-search mr-1"></i> 
+                <!-- 立即预订文本 -->
+                立即预订
+            </a>
+        </div>
+
+        <!-- 订单列表 -->
+        <!-- 订单列表容器（初始隐藏，通过JavaScript动态加载订单数据） -->
+        <div id="orderList" class="order-list" style="display: none;"></div>
+    </main>
+
+    <!-- 移除了不存在的JS文件引用 -->
+    <!-- 注意：订单列表的加载逻辑在外部JavaScript文件（myHotelOrders.js）中实现 -->
+</body>
+</html> 

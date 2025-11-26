@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的订单 - 西湖旅游</title>
+    <link rel="stylesheet" href="/css/order-center.css">
+</head>
+<body>
+    <div class="order-center-container">
+        <div class="page-header">
+            <h1>我的订单</h1>
+        </div>
+
+        <!-- 筛选器 -->
+        <div class="filters">
+            <div class="filter-tabs">
+                <button class="filter-tab active" onclick="filterByStatus(null, this)">全部</button>
+                <button class="filter-tab" onclick="filterByStatus(0, this)">待支付</button>
+                <button class="filter-tab" onclick="filterByStatus(1, this)">已支付</button>
+                <button class="filter-tab" onclick="filterByStatus(2, this)">已取消</button>
+            </div>
+            <div class="filter-tabs">
+                <button class="filter-tab active" onclick="filterByType(null, this)">所有类型</button>
+                <button class="filter-tab" onclick="filterByType('FOOD', this)">美食外卖</button>
+                <button class="filter-tab" onclick="filterByType('HOTEL', this)">酒店预订</button>
+                <button class="filter-tab" onclick="filterByType('SHOPPING', this)">购物商城</button>
+                <button class="filter-tab" onclick="filterByType('TRAVEL', this)">景点旅游</button>
+                <button class="filter-tab" onclick="filterByType('PAYMENT', this)">生活缴费</button>
+            </div>
+        </div>
+
+        <!-- 订单列表 -->
+        <div class="order-list">
+            <div id="orderListContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📦</div>
+                    <div class="empty-state-text">加载中...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStatus = null;
+        let currentType = null;
+
+        // 页面加载时获取订单列表
+        document.addEventListener('DOMContentLoaded', () => {
+            loadOrders();
+        });
+
+        // 按状态筛选
+        function filterByStatus(status, element) {
+            // 更新状态标签
+            document.querySelectorAll('.filter-tabs')[0].querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            element.classList.add('active');
+
+            currentStatus = status;
+            loadOrders();
+        }
+
+        // 按类型筛选
+        function filterByType(type, element) {
+            // 更新类型标签
+            document.querySelectorAll('.filter-tabs')[1].querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            element.classList.add('active');
+
+            currentType = type;
+            loadOrders();
+        }
+
+        // 加载订单列表
+        function loadOrders() {
+            let url = '/unified/order/list?';
+            if (currentType) url += 'orderType=' + currentType + '&';
+            if (currentStatus !== null) url += 'paymentStatus=' + currentStatus;
+
+            fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('orderListContainer');
+                
+                if (data.success && data.list && data.list.length > 0) {
+                    container.innerHTML = data.list.map(order => renderOrderCard(order)).join('');
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📦</div>
+                            <div class="empty-state-text">暂无订单</div>
+                            <div class="empty-state-desc">快去下单吧~</div>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('加载订单失败:', error);
+                const container = document.getElementById('orderListContainer');
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-text">加载失败</div>
+                        <div class="empty-state-desc">请刷新页面重试</div>
+                    </div>
+                `;
+            });
+        }
+
+        // 渲染订单卡片
+        function renderOrderCard(order) {
+            const statusClass = order.paymentStatus === 0 ? 'unpaid' : (order.paymentStatus === 1 ? 'paid' : 'cancelled');
+            const statusText = order.paymentStatusText;
+            const typeText = getTypeText(order.orderType);
+            const createTime = new Date(order.createTime).toLocaleString('zh-CN');
+
+            let actions = '';
+            if (order.paymentStatus === 0) {
+                actions = `
+                    <button class="btn btn-primary" onclick="continuePayment('${order.orderNo}')">继续支付</button>
+                    <button class="btn btn-danger" onclick="cancelOrder('${order.orderNo}')">取消订单</button>
+                `;
+            } else if (order.paymentStatus === 2) {
+                actions = `
+                    <button class="btn btn-outline" onclick="deleteOrder('${order.orderNo}')">删除订单</button>
+                `;
+            } else {
+                actions = `
+                    <button class="btn btn-outline" onclick="viewDetail('${order.orderNo}')">查看详情</button>
+                `;
+            }
+
+            return `
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-number">订单号: ${order.orderNo}</div>
+                        <div class="order-status ${statusClass}">${statusText}</div>
+                    </div>
+                    <div class="order-body">
+                        <div class="order-type">${typeText}</div>
+                        <div class="order-title">${order.orderTitle}</div>
+                        <div class="order-amount">¥${order.totalAmount}</div>
+                    </div>
+                    <div class="order-footer">
+                        <div class="order-time">${createTime}</div>
+                        <div class="order-actions">
+                            ${actions}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 获取类型文本
+        function getTypeText(type) {
+            const typeMap = {
+                'FOOD': '美食外卖',
+                'HOTEL': '酒店预订',
+                'SHOPPING': '购物商城',
+                'TRAVEL': '景点旅游',
+                'PAYMENT': '生活缴费'
+            };
+            return typeMap[type] || '未知类型';
+        }
+
+        // 继续支付
+        function continuePayment(orderNo) {
+            window.location.href = '/unified/payment/checkout?orderNo=' + orderNo;
+        }
+
+        // 取消订单
+        function cancelOrder(orderNo) {
+            if (!confirm('确定要取消这个订单吗?')) return;
+
+            fetch('/unified/order/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderNo: orderNo })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('订单已取消');
+                    loadOrders();
+                } else {
+                    alert('取消失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('取消订单失败:', error);
+                alert('取消失败,请重试');
+            });
+        }
+
+        // 删除订单
+        function deleteOrder(orderNo) {
+            if (!confirm('确定要删除这个订单吗?')) return;
+
+            fetch('/unified/order/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderNo: orderNo })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('订单已删除');
+                    loadOrders();
+                } else {
+                    alert('删除失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('删除订单失败:', error);
+                alert('删除失败,请重试');
+            });
+        }
+
+        // 查看详情
+        function viewDetail(orderNo) {
+            alert('订单详情功能正在开发中...\n订单号: ' + orderNo);
+        }
+    </script>
+</body>
+</html>
+

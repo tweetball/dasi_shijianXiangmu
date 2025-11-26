@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+    TravelMapper XML映射文件
+    功能概述：定义旅游模块相关的数据库查询操作
+    
+    重要说明（2024年修复）：
+      1. travel_destinations表已废弃，相关查询返回空结果
+      2. travel_recommendations表已废弃，相关查询返回空结果
+      3. travel_hotels表已废弃，相关查询返回空结果
+      4. 系统现在使用以下表：
+         - address表：获取省份和城市信息
+         - attractions表：获取景点信息
+         - hotel表：获取酒店信息
+    
+    修复内容：
+      - 修复了travel_destinations表不存在导致的SQL错误
+      - 将所有废弃表的查询改为返回空结果（WHERE 1 = 0）
+      - 保留了查询结构以兼容现有代码，但实际数据来自其他表
+-->
+<mapper namespace="com.icss.xihu.mapper.TravelMapper">
+
+    <!-- TravelDestination结果映射 -->
+    <resultMap id="destinationResultMap" type="com.icss.xihu.model.TravelDestination">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="code" column="code"/>
+        <result property="level" column="level"/>
+        <result property="parentCode" column="parent_code"/>
+        <result property="longitude" column="longitude"/>
+        <result property="latitude" column="latitude"/>
+        <result property="description" column="description"/>
+        <result property="imageUrl" column="image_url"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <!-- TravelRecommendation结果映射 -->
+    <resultMap id="recommendationResultMap" type="com.icss.xihu.model.TravelRecommendation">
+        <id property="id" column="id"/>
+        <result property="destinationCode" column="destination_code"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="category" column="category"/>
+        <result property="imageUrl" column="image_url"/>
+        <result property="rating" column="rating"/>
+        <result property="priceRange" column="price_range"/>
+        <result property="address" column="address"/>
+        <result property="phone" column="phone"/>
+        <result property="openingHours" column="opening_hours"/>
+        <result property="tags" column="tags"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <!-- TravelHotel结果映射 -->
+    <resultMap id="travelHotelResultMap" type="com.icss.xihu.model.TravelHotel">
+        <id property="id" column="id"/>
+        <result property="destinationCode" column="destination_code"/>
+        <result property="name" column="name"/>
+        <result property="starLevel" column="star_level"/>
+        <result property="price" column="price"/>
+        <result property="address" column="address"/>
+        <result property="phone" column="phone"/>
+        <result property="facilities" column="facilities"/>
+        <result property="imageUrl" column="image_url"/>
+        <result property="rating" column="rating"/>
+        <result property="description" column="description"/>
+        <result property="longitude" column="longitude"/>
+        <result property="latitude" column="latitude"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <!-- 获取所有省份（已废弃，返回空列表，因为系统现在使用address表） -->
+    <select id="getAllProvinces" resultMap="destinationResultMap">
+        SELECT NULL as id, NULL as name, NULL as code, NULL as level, NULL as parent_code,
+               NULL as longitude, NULL as latitude, NULL as description, NULL as image_url,
+               NULL as status, NULL as create_time, NULL as update_time
+        WHERE 1 = 0
+    </select>
+
+    <!-- 根据省份编码获取城市列表（已废弃，返回空列表，因为系统现在使用address表） -->
+    <select id="getCitiesByProvinceCode" resultMap="destinationResultMap">
+        SELECT NULL as id, NULL as name, NULL as code, NULL as level, NULL as parent_code,
+               NULL as longitude, NULL as latitude, NULL as description, NULL as image_url,
+               NULL as status, NULL as create_time, NULL as update_time
+        WHERE 1 = 0
+    </select>
+
+    <!-- 根据编码获取目的地信息（已废弃，返回null，因为系统现在使用address表） -->
+    <select id="getDestinationByCode" resultMap="destinationResultMap">
+        SELECT NULL as id, NULL as name, NULL as code, NULL as level, NULL as parent_code,
+               NULL as longitude, NULL as latitude, NULL as description, NULL as image_url,
+               NULL as status, NULL as create_time, NULL as update_time
+        WHERE 1 = 0
+    </select>
+
+    <!-- 根据目的地编码获取推荐信息（已废弃，返回空列表，因为系统现在使用attractions表） -->
+    <select id="getRecommendationsByDestinationCode" resultMap="recommendationResultMap">
+        SELECT NULL as id, NULL as destination_code, NULL as title, NULL as content, NULL as category,
+               NULL as image_url, NULL as rating, NULL as price_range, NULL as address, NULL as phone,
+               NULL as opening_hours, NULL as tags, NULL as sort_order, NULL as status,
+               NULL as create_time, NULL as update_time
+        WHERE 1 = 0
+    </select>
+
+    <!-- 根据目的地编码和分类获取推荐信息（已废弃，返回空列表，因为系统现在使用attractions表） -->
+    <select id="getRecommendationsByDestinationAndCategory" resultMap="recommendationResultMap">
+        SELECT NULL as id, NULL as destination_code, NULL as title, NULL as content, NULL as category,
+               NULL as image_url, NULL as rating, NULL as price_range, NULL as address, NULL as phone,
+               NULL as opening_hours, NULL as tags, NULL as sort_order, NULL as status,
+               NULL as create_time, NULL as update_time
+        WHERE 1 = 0
+    </select>
+
+    <!-- 获取所有酒店列表（已废弃，返回空列表，因为系统现在使用hotel表） -->
+    <select id="getAllHotels" resultMap="travelHotelResultMap">
+        SELECT NULL as id, NULL as destination_code, NULL as name, NULL as star_level, NULL as price,
+               NULL as address, NULL as phone, NULL as facilities, NULL as image_url, NULL as rating,
+               NULL as description, NULL as longitude, NULL as latitude, NULL as sort_order,
+               NULL as status, NULL as create_time, NULL as update_time
+        WHERE 1 = 0
+    </select>
+
+    <!-- 获取推荐酒店（限制数量）（已废弃，返回空列表，因为系统现在使用hotel表） -->
+    <select id="getTopHotels" resultMap="travelHotelResultMap">
+        SELECT NULL as id, NULL as destination_code, NULL as name, NULL as star_level, NULL as price,
+               NULL as address, NULL as phone, NULL as facilities, NULL as image_url, NULL as rating,
+               NULL as description, NULL as longitude, NULL as latitude, NULL as sort_order,
+               NULL as status, NULL as create_time, NULL as update_time
+        WHERE 1 = 0
+    </select>
+
+    <!-- 根据目的地编码获取酒店（已废弃，返回空列表，因为系统现在使用hotel表） -->
+    <select id="getHotelsByDestinationCode" resultMap="travelHotelResultMap">
+        SELECT NULL as id, NULL as destination_code, NULL as name, NULL as star_level, NULL as price,
+               NULL as address, NULL as phone, NULL as facilities, NULL as image_url, NULL as rating,
+               NULL as description, NULL as longitude, NULL as latitude, NULL as sort_order,
+               NULL as status, NULL as create_time, NULL as update_time
+        WHERE 1 = 0
+    </select>
+
+    <!-- 从attractions表获取所有有景点的省份 -->
+    <select id="getProvincesFromAddress" resultType="String">
+        SELECT DISTINCT ext_name FROM address 
+        WHERE deep = 0 
+        AND ext_name IS NOT NULL 
+        AND ext_name != '' 
+        AND ext_name != '国外'
+        ORDER BY ext_name
+    </select>
+
+    <!-- 从address表根据省份获取城市列表 -->
+    <select id="getCitiesFromAddressByProvince" resultType="String">
+        SELECT DISTINCT a2.ext_name FROM address a1
+        INNER JOIN address a2 ON a2.pid = a1.id
+        WHERE a1.deep = 0 AND a1.ext_name = #{province} 
+        AND a2.deep = 1 AND a2.ext_name IS NOT NULL AND a2.ext_name != ''
+        ORDER BY a2.ext_name
+    </select>
+
+    <!-- 根据省份名称获取目的地信息（已废弃，返回null，因为系统现在使用address表） -->
+    <select id="getDestinationByProvinceName" resultMap="destinationResultMap">
+        SELECT NULL as id, NULL as name, NULL as code, NULL as level, NULL as parent_code,
+               NULL as longitude, NULL as latitude, NULL as description, NULL as image_url,
+               NULL as status, NULL as create_time, NULL as update_time
+        WHERE 1 = 0
+    </select>
+
+    <!-- 根据城市名称获取目的地信息（已废弃，返回null，因为系统现在使用address表） -->
+    <select id="getDestinationByCityName" resultMap="destinationResultMap">
+        SELECT NULL as id, NULL as name, NULL as code, NULL as level, NULL as parent_code,
+               NULL as longitude, NULL as latitude, NULL as description, NULL as image_url,
+               NULL as status, NULL as create_time, NULL as update_time
+        WHERE 1 = 0
+    </select>
+
+    <!-- 根据省份和城市名称获取景点推荐（已废弃，返回空列表，因为系统现在使用attractions表） -->
+    <select id="getAttractionsByProvinceAndCity" resultMap="recommendationResultMap">
+        SELECT NULL as id, NULL as destination_code, NULL as title, NULL as content, NULL as category,
+               NULL as image_url, NULL as rating, NULL as price_range, NULL as address, NULL as phone,
+               NULL as opening_hours, NULL as tags, NULL as sort_order, NULL as status,
+               NULL as create_time, NULL as update_time
+        WHERE 1 = 0
+    </select>
+
+    <!-- 根据地区获取address表中的景点（使用province_id和city_id） -->
+    <select id="getAttractionsFromAddress" resultType="map">
+        SELECT 
+            a.id,
+            a.name,
+            a.description,
+            a.rating,
+            a.price_range,
+            a.opening_hours,
+            a.features,
+            a.tips,
+            a.best_season,
+            a.visit_duration,
+            ad_province.ext_name as province,
+            ad_city.ext_name as city,
+            a.district,
+            a.full_address,
+            a.image_url,
+            a.recommend_score,
+            a.view_count,
+            a.like_count
+        FROM attractions a
+        INNER JOIN address ad_province ON ad_province.id = a.province_id
+        INNER JOIN address ad_city ON ad_city.id = a.city_id
+        WHERE a.status = 1
+        <if test="province != null and province != ''">
+            AND ad_province.ext_name = #{province}
+        </if>
+        <if test="city != null and city != ''">
+            AND ad_city.ext_name = #{city}
+        </if>
+        ORDER BY a.recommend_score DESC, a.rating DESC, a.view_count DESC
+    </select>
+
+    <!-- 从attractions表根据地区获取景点（使用province_id和city_id） -->
+    <select id="getAttractionsByLocation" resultType="map">
+        SELECT 
+            a.id,
+            a.name,
+            a.description,
+            a.rating,
+            a.price_range,
+            a.opening_hours,
+            a.features,
+            a.tips,
+            a.best_season,
+            a.visit_duration,
+            ad_province.ext_name as province,
+            ad_city.ext_name as city,
+            a.district,
+            a.full_address,
+            a.image_url,
+            a.recommend_score,
+            a.view_count,
+            a.like_count
+        FROM attractions a
+        INNER JOIN address ad_province ON ad_province.id = a.province_id
+        INNER JOIN address ad_city ON ad_city.id = a.city_id
+        WHERE a.status = 1
+        <if test="province != null and province != ''">
+            AND ad_province.ext_name = #{province}
+        </if>
+        <if test="city != null and city != ''">
+            AND ad_city.ext_name = #{city}
+        </if>
+        ORDER BY a.recommend_score DESC, a.rating DESC, a.view_count DESC
+    </select>
+
+    <!-- 模糊搜索景点 - 根据关键词搜索景点名称、描述、特色（使用province_id和city_id） -->
+    <select id="searchAttractionsByKeyword" resultType="map">
+        SELECT 
+            a.id,
+            a.name,
+            a.description,
+            a.rating,
+            a.price_range,
+            a.opening_hours,
+            a.features,
+            a.tips,
+            a.best_season,
+            a.visit_duration,
+            ad_province.ext_name as province,
+            ad_city.ext_name as city,
+            a.district,
+            a.full_address,
+            a.image_url,
+            a.recommend_score,
+            a.view_count,
+            a.like_count,
+            'attractions' as source_type
+        FROM attractions a
+        INNER JOIN address ad_province ON ad_province.id = a.province_id
+        INNER JOIN address ad_city ON ad_city.id = a.city_id
+        WHERE a.status = 1
+        AND (
+            a.name LIKE CONCAT('%', #{keyword}, '%')
+            OR a.description LIKE CONCAT('%', #{keyword}, '%')
+            OR a.features LIKE CONCAT('%', #{keyword}, '%')
+            OR a.tips LIKE CONCAT('%', #{keyword}, '%')
+            OR a.district LIKE CONCAT('%', #{keyword}, '%')
+            OR a.full_address LIKE CONCAT('%', #{keyword}, '%')
+            OR ad_province.ext_name LIKE CONCAT('%', #{keyword}, '%')
+            OR ad_city.ext_name LIKE CONCAT('%', #{keyword}, '%')
+        )
+        ORDER BY 
+            CASE 
+                WHEN a.name LIKE CONCAT('%', #{keyword}, '%') THEN 1
+                WHEN a.description LIKE CONCAT('%', #{keyword}, '%') THEN 2
+                WHEN a.features LIKE CONCAT('%', #{keyword}, '%') THEN 3
+                ELSE 4
+            END,
+            a.recommend_score DESC, 
+            a.rating DESC, 
+            a.view_count DESC
+    </select>
+
+    <!-- 模糊搜索景点 - 根据关键词和地区搜索（使用province_id和city_id） -->
+    <select id="searchAttractionsByKeywordAndLocation" resultType="map">
+        SELECT 
+            a.id,
+            a.name,
+            a.description,
+            a.rating,
+            a.price_range,
+            a.opening_hours,
+            a.features,
+            a.tips,
+            a.best_season,
+            a.visit_duration,
+            ad_province.ext_name as province,
+            ad_city.ext_name as city,
+            a.district,
+            a.full_address,
+            a.image_url,
+            a.recommend_score,
+            a.view_count,
+            a.like_count,
+            'attractions' as source_type
+        FROM attractions a
+        INNER JOIN address ad_province ON ad_province.id = a.province_id
+        INNER JOIN address ad_city ON ad_city.id = a.city_id
+        WHERE a.status = 1
+        <if test="province != null and province != ''">
+            AND ad_province.ext_name = #{province}
+        </if>
+        <if test="city != null and city != ''">
+            AND ad_city.ext_name = #{city}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                a.name LIKE CONCAT('%', #{keyword}, '%')
+                OR a.description LIKE CONCAT('%', #{keyword}, '%')
+                OR a.features LIKE CONCAT('%', #{keyword}, '%')
+                OR a.tips LIKE CONCAT('%', #{keyword}, '%')
+                OR a.district LIKE CONCAT('%', #{keyword}, '%')
+                OR a.full_address LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        ORDER BY 
+            <if test="keyword != null and keyword != ''">
+                CASE 
+                    WHEN a.name LIKE CONCAT('%', #{keyword}, '%') THEN 1
+                    WHEN a.description LIKE CONCAT('%', #{keyword}, '%') THEN 2
+                    WHEN a.features LIKE CONCAT('%', #{keyword}, '%') THEN 3
+                    ELSE 4
+                END,
+            </if>
+            a.recommend_score DESC, 
+            a.rating DESC, 
+            a.view_count DESC
+    </select>
+
+    <!-- 获取所有景点数据（用于默认显示，使用province_id和city_id） -->
+    <select id="getAllAttractions" resultType="map">
+        SELECT 
+            a.id,
+            a.name,
+            a.description,
+            a.rating,
+            a.price_range,
+            a.opening_hours,
+            a.features,
+            a.tips,
+            a.best_season,
+            a.visit_duration,
+            ad_province.ext_name as province,
+            ad_city.ext_name as city,
+            a.district,
+            a.full_address,
+            a.image_url,
+            a.recommend_score,
+            a.view_count,
+            a.like_count,
+            'attractions' as source_type
+        FROM attractions a
+        INNER JOIN address ad_province ON ad_province.id = a.province_id
+        INNER JOIN address ad_city ON ad_city.id = a.city_id
+        WHERE a.status = 1
+        ORDER BY a.recommend_score DESC, a.rating DESC, a.view_count DESC
+        <if test="limit != null and limit > 0">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <!-- 当选择"所有省份"时，获取所有景点数据（使用province_id和city_id） -->
+    <select id="getAllProvincesAttractions" resultType="map">
+        SELECT 
+            a.id,
+            a.name,
+            a.description,
+            a.rating,
+            a.price_range,
+            a.opening_hours,
+            a.features,
+            a.tips,
+            a.best_season,
+            a.visit_duration,
+            ad_province.ext_name as province,
+            ad_city.ext_name as city,
+            a.district,
+            a.full_address,
+            a.image_url,
+            a.recommend_score,
+            a.view_count,
+            a.like_count,
+            'attractions' as source_type
+        FROM attractions a
+        INNER JOIN address ad_province ON ad_province.id = a.province_id
+        INNER JOIN address ad_city ON ad_city.id = a.city_id
+        WHERE a.status = 1
+        ORDER BY ad_province.ext_name ASC, a.recommend_score DESC, a.rating DESC
+        <if test="limit != null and limit > 0">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <!-- 当选择某个省份但选择"所有城市"时，获取该省份下所有景点（使用province_id和city_id） -->
+    <select id="getProvinceAllCitiesAttractions" resultType="map">
+        SELECT 
+            a.id,
+            a.name,
+            a.description,
+            a.rating,
+            a.price_range,
+            a.opening_hours,
+            a.features,
+            a.tips,
+            a.best_season,
+            a.visit_duration,
+            ad_province.ext_name as province,
+            ad_city.ext_name as city,
+            a.district,
+            a.full_address,
+            a.image_url,
+            a.recommend_score,
+            a.view_count,
+            a.like_count,
+            'attractions' as source_type
+        FROM attractions a
+        INNER JOIN address ad_province ON ad_province.id = a.province_id
+        INNER JOIN address ad_city ON ad_city.id = a.city_id
+        WHERE a.status = 1 AND ad_province.ext_name = #{province}
+        ORDER BY ad_city.ext_name ASC, a.recommend_score DESC, a.rating DESC
+        <if test="limit != null and limit > 0">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <!-- 根据景点ID获取景点详细信息（使用province_id和city_id） -->
+    <select id="getAttractionById" resultType="map">
+        SELECT 
+            a.id,
+            a.name,
+            a.description,
+            a.rating,
+            a.price_range,
+            a.opening_hours,
+            a.features,
+            a.tips,
+            a.best_season,
+            a.visit_duration,
+            ad_province.ext_name as province,
+            ad_city.ext_name as city,
+            a.district,
+            a.full_address,
+            a.image_url,
+            a.recommend_score,
+            a.view_count,
+            a.like_count,
+            a.create_time,
+            a.update_time,
+            'attractions' as source_type
+        FROM attractions a
+        INNER JOIN address ad_province ON ad_province.id = a.province_id
+        INNER JOIN address ad_city ON ad_city.id = a.city_id
+        WHERE a.id = #{id} AND a.status = 1
+    </select>
+
+    <!-- 根据景点名称获取景点详细信息（使用province_id和city_id） -->
+    <select id="getAttractionByName" resultType="map">
+        SELECT 
+            a.id,
+            a.name,
+            a.description,
+            a.rating,
+            a.price_range,
+            a.opening_hours,
+            a.features,
+            a.tips,
+            a.best_season,
+            a.visit_duration,
+            ad_province.ext_name as province,
+            ad_city.ext_name as city,
+            a.district,
+            a.full_address,
+            a.image_url,
+            a.recommend_score,
+            a.view_count,
+            a.like_count,
+            a.create_time,
+            a.update_time,
+            'attractions' as source_type
+        FROM attractions a
+        INNER JOIN address ad_province ON ad_province.id = a.province_id
+        INNER JOIN address ad_city ON ad_city.id = a.city_id
+        WHERE a.name = #{name} AND a.status = 1
+        LIMIT 1
+    </select>
+
+</mapper> 

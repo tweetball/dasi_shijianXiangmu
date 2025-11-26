@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>景点推荐 - 游市生活</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #667eea;
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            padding-top: 110px;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header-section h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-section p {
+            font-size: 20px;
+            opacity: 0.9;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .filter-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .filter-select, .search-input {
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .filter-select:focus, .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-group {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .search-input-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .clear-input-btn {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .clear-input-btn:hover {
+            color: #666;
+        }
+
+        .search-btn, .clear-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .clear-btn {
+            background: linear-gradient(135deg, #6c757d, #495057);
+            color: white;
+        }
+
+        .clear-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        }
+
+        .category-filters {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .category-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #666;
+        }
+
+        .category-btn.active, .category-btn:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-color: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .attractions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .attraction-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .attraction-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 220px;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .attraction-card:hover .card-image img {
+            transform: scale(1.05);
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .rating-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 193, 7, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .card-content {
+            padding: 25px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .card-location {
+            color: #666;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .card-price {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .card-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .tag {
+            background: #f8f9fa;
+            color: #495057;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            border: 1px solid #e9ecef;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .card-stats {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .view-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .loading, .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .loading i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .filter-group, .search-group {
+                width: 100%;
+            }
+
+            .attractions-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .header-section h1 {
+                font-size: 36px;
+            }
+
+            .category-filters {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 统一导航栏 -->
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo">
+                <i class="fas fa-city"></i>
+                游市生活
+            </a>
+            <ul class="nav-links">
+                <li><a href="/">首页</a></li>
+                <li><a href="/hc/f2">住宿服务</a></li>
+                <li><a href="/travel">出行服务</a></li>
+                <li><a href="/food">美食服务</a></li>
+                <li><a href="/shopping">购物服务</a></li>
+                <li><a href="/payment">生活缴费</a></li>
+            </ul>
+            <div class="user-actions">
+                <div th:if="${session.user == null}">
+                    <a href="/user/login" class="login-btn">登录</a>
+                    <a href="/user/register" class="register-btn">注册</a>
+                </div>
+                <div th:if="${session.user != null}">
+                    <a href="/unified-new/orders" style="color: #FF6600; text-decoration: none; font-weight: 500; margin-right: 15px;">
+                        <i class="fas fa-list-alt"></i>
+                        我的订单
+                    </a>
+                    <a href="/user/profile" style="color: #FF6600; text-decoration: none; font-weight: 500;">
+                        <i class="fas fa-user-circle"></i>
+                        <span th:text="${session.user.nickname ?: session.user.username}">用户</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 主要内容 -->
+    <div class="main-container">
+        <!-- 头部标题 -->
+        <div class="header-section">
+            <h1><i class="fas fa-map-pin"></i> 景点推荐</h1>
+            <p>探索精选景点，发现美好旅程</p>
+        </div>
+
+        <!-- 筛选区域 -->
+        <div class="filter-section">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="provinceSelect">选择省份</label>
+                    <select id="provinceSelect" class="filter-select">
+                        <option value="">所有省份</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="citySelect">选择城市</label>
+                    <select id="citySelect" class="filter-select" disabled>
+                        <option value="">请先选择省份</option>
+                    </select>
+                </div>
+                <div class="search-group">
+                    <div class="filter-group">
+                        <label for="searchInput">搜索景点</label>
+                        <div class="search-input-container">
+                            <input type="text" id="searchInput" class="search-input" placeholder="输入景点名称、描述或地区...">
+                            <button type="button" class="clear-input-btn" onclick="clearSearchInput()" title="清空输入">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button class="search-btn" onclick="searchAttractions()">
+                        <i class="fas fa-search"></i> 搜索
+                    </button>
+                    <button class="clear-btn" onclick="clearSearch()" title="清空搜索结果">
+                        <i class="fas fa-redo"></i> 重置
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 分类筛选 -->
+            <div class="category-filters">
+                <button class="category-btn active" data-category="">全部分类</button>
+                <button class="category-btn" data-category="1">自然风光</button>
+                <button class="category-btn" data-category="2">历史文化</button>
+                <button class="category-btn" data-category="3">现代景观</button>
+                <button class="category-btn" data-category="4">宗教场所</button>
+                <button class="category-btn" data-category="5">休闲娱乐</button>
+                <button class="category-btn" data-category="6">美食购物</button>
+            </div>
+        </div>
+
+        <!-- 景点列表 -->
+        <div id="attractionsContainer">
+            <div class="loading">
+                <i class="fas fa-spinner"></i>
+                <div>正在加载景点信息...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentCategory = '';
+        let currentProvince = '';
+        let currentCity = '';
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+        });
+
+        // 初始化页面
+        function initializePage() {
+            loadProvinces();
+            loadAttractions();
+            setupEventListeners();
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 省份选择变化
+            document.getElementById('provinceSelect').addEventListener('change', function() {
+                const province = this.value;
+                currentProvince = province;
+                currentCity = '';
+                
+                if (province) {
+                    loadCities(province);
+                } else {
+                    const citySelect = document.getElementById('citySelect');
+                    citySelect.innerHTML = '<option value="">请先选择省份</option>';
+                    citySelect.disabled = true;
+                }
+                
+                loadAttractions();
+            });
+
+            // 城市选择变化
+            document.getElementById('citySelect').addEventListener('change', function() {
+                currentCity = this.value;
+                loadAttractions();
+            });
+
+            // 分类按钮点击
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentCategory = this.dataset.category;
+                    loadAttractions();
+                });
+            });
+
+            // 搜索输入框回车事件
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchAttractions();
+                }
+            });
+        }
+
+        // 加载省份列表
+        function loadProvinces() {
+            fetch('/travel/api/addressProvinces')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const select = document.getElementById('provinceSelect');
+                        data.provinces.forEach(province => {
+                            const option = document.createElement('option');
+                            option.value = province;
+                            option.textContent = province;
+                            select.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('加载省份失败:', error);
+                    // 添加默认省份数据作为备选
+                    const select = document.getElementById('provinceSelect');
+                    ['Beijing', 'Shanghai', 'Liaoning'].forEach(province => {
+                        const option = document.createElement('option');
+                        option.value = province;
+                        option.textContent = province;
+                        select.appendChild(option);
+                    });
+                });
+        }
+
+        // 加载城市列表
+        function loadCities(province) {
+            const citySelect = document.getElementById('citySelect');
+            citySelect.innerHTML = '<option value="">加载中...</option>';
+            citySelect.disabled = true;
+
+            fetch(`/travel/api/addressCities?province=${encodeURIComponent(province)}`)
+                .then(response => response.json())
+                .then(data => {
+                    citySelect.innerHTML = '<option value="">所有城市</option>';
+                    if (data.success && data.cities.length > 0) {
+                        data.cities.forEach(city => {
+                            const option = document.createElement('option');
+                            option.value = city;
+                            option.textContent = city;
+                            citySelect.appendChild(option);
+                        });
+                        citySelect.disabled = false;
+                    } else {
+                        citySelect.innerHTML = '<option value="">暂无城市数据</option>';
+                    }
+                })
+                .catch(error => {
+                    console.error('加载城市失败:', error);
+                    citySelect.innerHTML = '<option value="">加载失败</option>';
+                });
+        }
+
+        // 加载景点数据
+        function loadAttractions() {
+            showLoading();
+            
+            // 根据选择的条件决定调用哪个API
+            let url;
+            if (currentProvince && currentCity) {
+                // 如果选择了省份和城市，使用地区搜索API
+                url = `/travel/api/searchAttractionsWithLocation?keyword=&province=${encodeURIComponent(currentProvince)}&city=${encodeURIComponent(currentCity)}`;
+            } else if (currentProvince) {
+                // 如果只选择了省份，使用地区搜索API
+                url = `/travel/api/searchAttractionsWithLocation?keyword=&province=${encodeURIComponent(currentProvince)}`;
+            } else {
+                // 默认显示所有景点（空关键词搜索）
+                url = '/travel/api/searchAttractions?keyword=';
+            }
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.attractions && data.attractions.length > 0) {
+                        displayAttractions(data.attractions);
+                        // 显示筛选结果信息
+                        if (currentProvince || currentCity) {
+                            showFilterResults(currentProvince, currentCity, data.attractions.length);
+                        }
+                    } else {
+                        // 如果没有找到数据，显示示例数据
+                        displaySampleAttractions();
+                    }
+                })
+                .catch(error => {
+                    console.error('加载景点失败:', error);
+                    // 网络错误时显示示例数据
+                    displaySampleAttractions();
+                });
+        }
+
+        // 搜索景点
+        function searchAttractions() {
+            const keyword = document.getElementById('searchInput').value.trim();
+            if (!keyword) {
+                alert('请输入搜索关键词');
+                return;
+            }
+            
+            showLoading();
+            
+            // 构建搜索API URL
+            let searchUrl;
+            if (currentProvince || currentCity) {
+                // 如果选择了地区，使用带地区的搜索
+                const params = new URLSearchParams();
+                params.append('keyword', keyword);
+                if (currentProvince) params.append('province', currentProvince);
+                if (currentCity) params.append('city', currentCity);
+                searchUrl = `/travel/api/searchAttractionsWithLocation?${params.toString()}`;
+            } else {
+                // 否则使用全局搜索
+                searchUrl = `/travel/api/searchAttractions?keyword=${encodeURIComponent(keyword)}`;
+            }
+            
+            fetch(searchUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const attractions = data.attractions || [];
+                        if (attractions.length > 0) {
+                            displayAttractions(attractions);
+                            showSearchResults(keyword, attractions.length, data.province, data.city);
+                        } else {
+                            showNoResults(`未找到包含"${keyword}"的景点`);
+                        }
+                    } else {
+                        showNoResults(data.message || '搜索失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('搜索失败:', error);
+                    showNoResults('搜索失败，请稍后重试');
+                });
+        }
+
+        // 清空搜索输入框
+        function clearSearchInput() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchInput').focus(); // 聚焦到输入框
+        }
+
+        // 清空搜索
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            loadAttractions(); // 重新加载默认数据
+        }
+
+        // 显示搜索结果信息
+        function showSearchResults(keyword, count, province, city) {
+            const container = document.getElementById('attractionsContainer');
+            let locationText = '';
+            if (province && city) {
+                locationText = ` 在 ${province} ${city}`;
+            } else if (province) {
+                locationText = ` 在 ${province}`;
+            }
+            
+            const resultInfo = document.createElement('div');
+            resultInfo.style.cssText = `
+                background: rgba(255, 255, 255, 0.9);
+                padding: 15px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+                color: #333;
+                text-align: center;
+                font-size: 16px;
+            `;
+            resultInfo.innerHTML = `
+                <i class="fas fa-search" style="color: #667eea; margin-right: 8px;"></i>
+                搜索"<strong>${keyword}</strong>"${locationText}，找到 <strong>${count}</strong> 个相关景点
+                <button onclick="clearSearch()" style="
+                    margin-left: 15px;
+                    padding: 5px 12px;
+                    background: #f8f9fa;
+                    border: 1px solid #dee2e6;
+                    border-radius: 15px;
+                    color: #6c757d;
+                    cursor: pointer;
+                    font-size: 14px;
+                " onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f8f9fa'">
+                    <i class="fas fa-times"></i> 清空搜索
+                </button>
+            `;
+            
+            container.insertBefore(resultInfo, container.firstChild);
+        }
+
+        // 显示筛选结果信息
+        function showFilterResults(province, city, count) {
+            const container = document.getElementById('attractionsContainer');
+            let locationText = '';
+            if (province && city) {
+                locationText = `${province} ${city}`;
+            } else if (province) {
+                locationText = province;
+            }
+            
+            const resultInfo = document.createElement('div');
+            resultInfo.style.cssText = `
+                background: rgba(255, 255, 255, 0.9);
+                padding: 15px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+                color: #333;
+                text-align: center;
+                font-size: 16px;
+            `;
+            resultInfo.innerHTML = `
+                <i class="fas fa-map-marker-alt" style="color: #667eea; margin-right: 8px;"></i>
+                筛选地区：<strong>${locationText}</strong>，共找到 <strong>${count}</strong> 个景点
+                <button onclick="clearFilter()" style="
+                    margin-left: 15px;
+                    padding: 5px 12px;
+                    background: #f8f9fa;
+                    border: 1px solid #dee2e6;
+                    border-radius: 15px;
+                    color: #6c757d;
+                    cursor: pointer;
+                    font-size: 14px;
+                " onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f8f9fa'">
+                    <i class="fas fa-times"></i> 清空筛选
+                </button>
+            `;
+            
+            container.insertBefore(resultInfo, container.firstChild);
+        }
+
+        // 清空筛选
+        function clearFilter() {
+            document.getElementById('provinceSelect').value = '';
+            document.getElementById('citySelect').innerHTML = '<option value="">请先选择省份</option>';
+            document.getElementById('citySelect').disabled = true;
+            currentProvince = '';
+            currentCity = '';
+            loadAttractions();
+        }
+
+        // 显示示例景点数据（使用address表一致的省市名称）
+        function displaySampleAttractions() {
+            const sampleAttractions = [
+                {
+                    name: '故宫博物院',
+                    province: '北京市',
+                    city: '北京市',
+                    description: '明清两代的皇家宫殿，世界文化遗产，中国古代宫廷建筑的典型代表。',
+                    rating: 4.8,
+                    priceRange: '60元',
+                    imageUrl: 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?ixlib=rb-4.0.3&w=800'
+                },
+                {
+                    name: '长城（八达岭段）',
+                    province: '北京市',
+                    city: '北京市', 
+                    description: '万里长城最著名的段落，世界文化遗产。',
+                    rating: 4.9,
+                    priceRange: '45元',
+                    imageUrl: 'https://images.unsplash.com/photo-1539650116574-75c0c6d34f51?ixlib=rb-4.0.3&w=800'
+                },
+                {
+                    name: '外滩',
+                    province: '上海市',
+                    city: '上海市',
+                    description: '著名的滨水区，拥有殖民地建筑。',
+                    rating: 4.8,
+                    priceRange: '免费',
+                    imageUrl: 'https://images.unsplash.com/photo-1474181487882-5abf3f0ba6c2?ixlib=rb-4.0.3&w=800'
+                },
+                {
+                    name: '老虎滩海洋公园',
+                    province: '辽宁省',
+                    city: '大连市',
+                    description: '中国最大的现代化海洋主题公园。',
+                    rating: 4.6,
+                    priceRange: '220-280元',
+                    imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&w=800'
+                }
+            ];
+            
+            displayAttractions(sampleAttractions);
+        }
+
+        // 显示景点列表
+        function displayAttractions(attractions) {
+            const container = document.getElementById('attractionsContainer');
+            
+            if (!attractions || attractions.length === 0) {
+                showNoResults('暂无景点数据');
+                return;
+            }
+            
+            const grid = document.createElement('div');
+            grid.className = 'attractions-grid';
+            
+            attractions.forEach(attraction => {
+                const card = createAttractionCard(attraction);
+                grid.appendChild(card);
+            });
+            
+            container.innerHTML = '';
+            container.appendChild(grid);
+        }
+
+        // 创建景点卡片
+        function createAttractionCard(attraction) {
+            const card = document.createElement('div');
+            card.className = 'attraction-card';
+            
+            // 处理不同数据源的字段
+            const name = attraction.name || attraction.title || '未知景点';
+            const description = attraction.description || attraction.content || '';
+            const province = attraction.province || '';
+            const city = attraction.city || '';
+            const rating = attraction.rating || '4.5';
+            const priceRange = attraction.priceRange || attraction.price_range || '免费';
+            // 获取图片URL，优先使用景点自带的图片，否则使用默认图片
+            let imageUrl = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&w=800'; // 默认图片
+            if (attraction.images && attraction.images.length > 0) {
+                const coverImage = attraction.images.find(img => img.isCover === 1);
+                imageUrl = coverImage ? coverImage.imageUrl : attraction.images[0].imageUrl;
+            } else if (attraction.imageUrl) {
+                imageUrl = attraction.imageUrl;
+            }
+            
+            card.innerHTML = `
+                <div class="card-image">
+                    <img src="${imageUrl}" alt="${name}" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&w=800'">
+                    <div class="card-badge">热门景点</div>
+                    <div class="rating-badge">
+                        <i class="fas fa-star"></i> ${rating}
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">${name}</div>
+                            <div class="card-location">
+                                <i class="fas fa-map-marker-alt"></i>
+                                ${province} ${city}
+                            </div>
+                        </div>
+                        <div class="card-price">${priceRange}</div>
+                    </div>
+                    <div class="card-description">${description}</div>
+                    <div class="card-tags">
+                        <span class="tag">推荐</span>
+                        <span class="tag">必游</span>
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-eye"></i>
+                                <span>${Math.floor(Math.random() * 1000) + 100}</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-heart"></i>
+                                <span>${Math.floor(Math.random() * 100) + 20}</span>
+                            </div>
+                        </div>
+                        <button class="view-btn" onclick="viewAttractionDetail('${name}')">
+                            查看详情
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // 查看景点详情
+        function viewAttractionDetail(name) {
+            alert(`查看景点详情: ${name}\n\n（详情页面开发中...）`);
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('attractionsContainer').innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-spinner"></i>
+                    <div>正在加载...</div>
+                </div>
+            `;
+        }
+
+        // 显示无结果
+        function showNoResults(message) {
+            document.getElementById('attractionsContainer').innerHTML = `
+                <div class="no-results">
+                    <i class="fas fa-search" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                    <div>${message}</div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html> 

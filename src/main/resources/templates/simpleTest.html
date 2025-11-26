@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单测试页面</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .test-button { padding: 10px 20px; margin: 10px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        .test-button:hover { background: #0056b3; }
+        .result { margin-top: 10px; padding: 10px; border: 1px solid #ddd; background: #f9f9f9; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>简单功能测试</h1>
+        
+        <h2>1. 登录状态检查</h2>
+        <button class="test-button" onclick="checkLoginStatus()">检查登录状态</button>
+        <button class="test-button" onclick="testLogin()">登录测试用户</button>
+        <div id="loginResult" class="result" style="display: none;"></div>
+        
+        <h2>2. 测试页面访问</h2>
+        <button class="test-button" onclick="testPages()">测试页面访问</button>
+        <div id="pageResult" class="result" style="display: none;"></div>
+        
+        <h2>3. 订单中心</h2>
+        <button class="test-button" onclick="window.open('/unified-new/orders', '_blank')">打开订单中心</button>
+        
+        <h2>4. 统一支付</h2>
+        <button class="test-button" onclick="window.open('/unified/payment/checkout?orderNo=UOFFOOD20251024001', '_blank')">打开统一支付</button>
+    </div>
+
+    <script>
+        function showResult(elementId, message, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.innerHTML = message;
+            element.style.color = isSuccess ? 'green' : 'red';
+        }
+
+        function checkLoginStatus() {
+            fetch('/user/profile', { credentials: 'include' })
+            .then(response => {
+                if (response.ok) {
+                    showResult('loginResult', '✅ 已登录状态 - 可以访问需要登录的功能！', true);
+                } else {
+                    showResult('loginResult', '❌ 未登录状态 - 需要先登录', false);
+                }
+            })
+            .catch(error => {
+                showResult('loginResult', '❌ 检查登录状态失败：' + error.message, false);
+            });
+        }
+
+        function testLogin() {
+            // 先检查是否已经登录
+            fetch('/user/profile', { credentials: 'include' })
+            .then(response => {
+                if (response.ok) {
+                    showResult('loginResult', '✅ 已经登录，无需重复登录！', true);
+                    return;
+                }
+                // 如果没有登录，则进行登录
+                return fetch('/user/doLogin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'phone=13000000000&password=123456',
+                    credentials: 'include'
+                });
+            })
+            .then(response => {
+                if (response && response.ok) {
+                    return response.text();
+                }
+            })
+            .then(data => {
+                if (data) {
+                    if (data.includes('登录成功') || data.includes('success')) {
+                        showResult('loginResult', '✅ 登录成功！', true);
+                    } else {
+                        showResult('loginResult', '❌ 登录失败：' + data, false);
+                    }
+                }
+            })
+            .catch(error => {
+                showResult('loginResult', '❌ 登录错误：' + error.message, false);
+            });
+        }
+
+        function testPages() {
+            const pages = [
+                { name: '主页', url: '/' },
+                { name: '登录页面', url: '/user/login' },
+                { name: '订单中心', url: '/unified-new/orders' },
+                { name: '统一支付', url: '/unified/payment/checkout?orderNo=UOFFOOD20251024001' }
+            ];
+            
+            let results = [];
+            let completed = 0;
+            
+            pages.forEach(page => {
+                fetch(page.url, { credentials: 'include' })
+                .then(response => {
+                    results.push(`✅ ${page.name}: ${response.status}`);
+                    completed++;
+                    if (completed === pages.length) {
+                        showResult('pageResult', results.join('<br>'), true);
+                    }
+                })
+                .catch(error => {
+                    results.push(`❌ ${page.name}: ${error.message}`);
+                    completed++;
+                    if (completed === pages.length) {
+                        showResult('pageResult', results.join('<br>'), false);
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>

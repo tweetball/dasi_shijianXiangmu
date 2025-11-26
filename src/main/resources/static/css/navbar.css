@@ -1,0 +1,152 @@
+/* 统一导航栏样式 - 所有页面共用 */
+.header {
+    background: var(--navbar-bg, rgba(255, 255, 255, 0.95));
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--navbar-border, #e0e0e0);
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    box-shadow: var(--navbar-shadow, 0 2px 8px rgba(0, 0, 0, 0.1));
+    transition: all 0.3s ease;
+}
+
+.nav {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    height: 70px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--navbar-brand-color, #FF6600);
+    font-size: 24px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.logo:hover {
+    color: var(--navbar-brand-hover-color, var(--primary-color, #FF6600));
+    transform: translateY(-2px);
+}
+
+.logo i {
+    margin-right: 8px;
+    font-size: 28px;
+    color: var(--navbar-brand-icon-color, var(--primary-color, #FF6600));
+    animation: logoFloat 3s ease-in-out infinite;
+    transition: all 0.3s ease;
+}
+
+@keyframes logoFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-3px); }
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    align-items: center;
+    gap: 40px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--navbar-link-color, #333);
+    font-weight: 500;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    position: relative;
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+.nav-links a:hover {
+    color: var(--navbar-link-hover-color, #333);
+    background: var(--navbar-link-hover-bg, rgba(255, 102, 0, 0.1));
+    transform: translateY(-2px);
+}
+
+.nav-links a.active {
+    color: var(--navbar-link-active-color, var(--primary-color, #FF6600));
+    background: var(--navbar-link-active-bg, rgba(255, 102, 0, 0.15));
+    font-weight: 600;
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: var(--navbar-link-active-indicator, var(--primary-color, #FF6600));
+    transition: width 0.3s ease;
+}
+
+.nav-links a:hover::after,
+.nav-links a.active::after {
+    width: 20px;
+}
+
+.user-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.login-btn, .register-btn {
+    padding: 8px 20px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.login-btn {
+    color: var(--navbar-user-color, var(--primary-color, #FF6600));
+    border-color: var(--navbar-user-hover-border, var(--primary-color, #FF6600));
+}
+
+.login-btn:hover {
+    background: var(--navbar-user-hover-bg, var(--primary-color, #FF6600));
+    color: var(--navbar-user-hover-color, white);
+    transform: translateY(-2px);
+}
+
+.register-btn {
+    background: var(--primary-color, #FF6600);
+    color: white;
+}
+
+.register-btn:hover {
+    background: var(--primary-dark, #e55a00);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .nav {
+        flex-direction: column;
+        height: auto;
+        padding: 15px 20px;
+    }
+
+    .nav-links {
+        gap: 20px;
+        margin: 15px 0;
+    }
+
+    .user-actions {
+        margin-top: 10px;
+    }
+}

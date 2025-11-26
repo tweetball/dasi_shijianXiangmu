@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--        namespace：命名空间-->
+<!--    namespace="代理接口的包名+接口名"-->
+<mapper namespace="com.icss.xihu.mapper.HotelMapper">
+<!--    所有的sql语句，写在mapper标签中-->
+<!--    id:写接口中的对应方法名-->
+<!--    resultMap：结果集，内容自定义-->
+    <select id="findByMany" resultMap="findHotelAndRoom">
+        select h.id as hid,
+               h.name hname,
+               h.tel htel,
+               h.content hcontent,
+               h.img himg,
+               h.score hscore,
+               h.address address,
+               r.id rid,
+               r.name rname,
+               r.content rcontent,
+               r.hid rhid,
+               r.price price,
+               r.img rimg
+        from hotel h left join hotel_room r on r.hid = h.id
+        where h.id = #{value}
+    </select>
+    <!--resultMap标签中id属性值对应select标签中resultMap属性值
+    resultMap标签中type属性指当前方法返回值类型包名+类名
+    column:数据库字段名字，property：实体类中字段名字-->
+    <resultMap id="findHotelAndRoom" type="com.icss.xihu.model.HotelMany">
+        <result column="hid" property="id"></result>
+        <result column="hname" property="name"></result>
+        <result column="htel" property="tel"></result>
+        <result column="hcontent" property="content"></result>
+        <result column="address" property="address"></result>
+        <result column="himg" property="img"></result>
+        <result column="hscore" property="score"></result>
+<!--        一对多查询关键字：collection-->
+<!--        property:定义的实体类中集合对象名-->
+        <collection property="rList" ofType="com.icss.xihu.model.HotelRoom">
+            <result column="rid" property="id"></result>
+            <result column="rname" property="name"></result>
+            <result column="rhid" property="hid"></result>
+            <result column="rcontent" property="content"></result>
+            <result column="price" property="price"></result>
+            <result column="rimg" property="img"></result>
+        </collection>
+    </resultMap>
+    <!-- 模糊搜索SQL -->
+    <select id="searchByKeyword" resultType="com.icss.xihu.model.Hotel">
+        SELECT * FROM hotel
+        WHERE name LIKE #{keyword}
+        OR address LIKE #{keyword}
+    </select>
+    <select id="getHotHotels" resultType="com.icss.xihu.model.Hotel">
+        SELECT * FROM hotel
+        WHERE id IN (1, 2, 3)  -- 假设ID为1、2、3的是热门酒店
+        ORDER BY id ASC
+    </select>
+    <select id="findAllActive" resultType="com.icss.xihu.model.Hotel">
+        SELECT
+        h.*,
+        p.ext_name AS provinceName,
+        c.ext_name AS cityName,
+        MIN(r.price) AS minPrice
+        FROM hotel h
+        LEFT JOIN address p ON h.province = p.ext_name AND p.deep = 0
+        LEFT JOIN address c ON h.city = c.ext_name AND c.deep = 1
+        LEFT JOIN hotel_room r ON h.id = r.hid
+        GROUP BY h.id
+    </select>
+</mapper>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icss.xihu.mapper.HotelOrderMapper">
+    <!-- 插入订单数据已在 Java 接口中使用 @Insert 注解定义，此处不再重复定义 -->
+    
+    <!-- 根据用户ID查询订单列表 -->
+    <select id="selectByUserId" resultType="com.icss.xihu.model.HotelOrder">
+        SELECT
+        ho.*,
+        h.name AS hotelName,
+        h.img AS hotelImg
+        FROM
+        hotel_order ho
+        LEFT JOIN
+        hotel h ON ho.hid = h.id    -- 关联酒店表
+        WHERE
+        ho.uid = #{userId}
+        ORDER BY
+        ho.create_time DESC
+    </select>
+    
+    <!-- 更新订单状态 -->
+    <update id="updateStatus">
+        UPDATE hotel_order
+        SET status = #{status}
+        WHERE id = #{orderId}
+    </update>
+
+    <!-- 根据订单ID更新状态(用于统一支付) -->
+    <update id="updateStatusByOrderNo">
+        UPDATE hotel_order
+        SET status = #{status}
+        WHERE id = #{orderId}
+    </update>
+</mapper> 

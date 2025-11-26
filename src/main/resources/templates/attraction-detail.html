@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>景点详情 - 游市生活</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #667eea;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 206, 209, 0.3);
+        }
+
+        .back-btn:hover {
+            background: linear-gradient(135deg, #20B2AA, #00CED1);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 206, 209, 0.4);
+        }
+
+        .detail-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            padding-top: 110px;
+        }
+
+        .attraction-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .header-image {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+            padding: 40px;
+            color: white;
+        }
+
+        .attraction-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .attraction-location {
+            font-size: 18px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .action-buttons {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            backdrop-filter: blur(10px);
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 206, 209, 0.8);
+            transform: scale(1.1);
+        }
+
+        .action-btn.favorited {
+            background: rgba(220, 53, 69, 0.8);
+        }
+
+        .detail-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: #00CED1;
+            font-size: 24px;
+        }
+
+        .description {
+            color: #666;
+            line-height: 1.8;
+            font-size: 16px;
+            text-indent: 2em;
+            margin-bottom: 25px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .feature-tag {
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0, 206, 209, 0.3);
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .feature-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 206, 209, 0.4);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-value {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .price-highlight {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+
+        .rating-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stars {
+            display: flex;
+            gap: 2px;
+        }
+
+        .star {
+            color: #ffd700;
+            font-size: 16px;
+        }
+
+        .tips-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 25px;
+            border-left: 4px solid #00CED1;
+        }
+
+        .tips-title {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tips-content {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .loading i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .error-message i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+        }
+
+        @media (max-width: 768px) {
+            .detail-content {
+                grid-template-columns: 1fr;
+            }
+
+            .attraction-title {
+                font-size: 28px;
+            }
+
+            .header-stats {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .main-content, .info-card {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 统一导航栏 -->
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo">
+                <i class="fas fa-city"></i>
+                游市生活
+            </a>
+            <ul class="nav-links">
+                <li><a href="/">首页</a></li>
+                <li><a href="/hc/f2">住宿服务</a></li>
+                <li><a href="/travel">出行服务</a></li>
+                <li><a href="/food">美食服务</a></li>
+                <li><a href="/shopping">购物服务</a></li>
+                <li><a href="/payment">生活缴费</a></li>
+            </ul>
+            <div class="user-actions">
+                <div th:if="${session.user == null}">
+                    <a href="/user/login" class="login-btn">登录</a>
+                    <a href="/user/register" class="register-btn">注册</a>
+                </div>
+                <div th:if="${session.user != null}">
+                    <a href="/unified-new/orders" style="color: #FF6600; text-decoration: none; font-weight: 500; margin-right: 15px;">
+                        <i class="fas fa-list-alt"></i>
+                        我的订单
+                    </a>
+                    <a href="/user/profile" style="color: #FF6600; text-decoration: none; font-weight: 500;">
+                        <i class="fas fa-user-circle"></i>
+                        <span th:text="${session.user.nickname ?: session.user.username}">用户</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 主要内容 -->
+    <div class="detail-container">
+        <!-- 加载状态 -->
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner"></i>
+            <div>正在加载景点详情...</div>
+        </div>
+
+        <!-- 错误状态 -->
+        <div id="error" class="error-message" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>加载失败，请稍后重试</div>
+        </div>
+
+        <!-- 景点详情内容 -->
+        <div id="attraction-detail" style="display: none;">
+            <!-- 头部区域 -->
+            <div class="attraction-header">
+                <div class="header-image">
+                    <img id="main-image" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&w=800&h=600&fit=crop" alt="景点图片" onerror="handleImageError(this)">
+                    <div class="image-overlay">
+                        <h1 class="attraction-title" id="attraction-name">景点名称</h1>
+                        <div class="attraction-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span id="attraction-location">位置信息</span>
+                        </div>
+                        <div class="header-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-star"></i>
+                                <span id="attraction-rating">4.5</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-eye"></i>
+                                <span id="view-count">1000</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-heart"></i>
+                                <span id="like-count">100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 操作按钮 -->
+                <div class="action-buttons">
+                    <button class="action-btn" id="favorite-btn" onclick="toggleFavorite()">
+                        <i class="far fa-heart"></i>
+                    </button>
+                    <button class="action-btn" onclick="shareAttraction()">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 详情内容 -->
+            <div class="detail-content">
+                <!-- 主要内容 -->
+                <div class="main-content">
+                    <div class="card-title">
+                        <i class="fas fa-info-circle"></i>
+                        景点介绍
+                    </div>
+                    <div class="description" id="attraction-description">
+                        景点详细介绍将在这里显示...
+                    </div>
+                    
+                    <div class="card-title">
+                        <i class="fas fa-tags"></i>
+                        景点特色
+                    </div>
+                    <div class="features-grid" id="features-container">
+                        <!-- 特色标签将动态生成 -->
+                    </div>
+
+                    <div class="tips-section" id="tips-section" style="display: none;">
+                        <div class="tips-title">
+                            <i class="fas fa-lightbulb"></i>
+                            游玩小贴士
+                        </div>
+                        <div class="tips-content" id="tips-content">
+                            <!-- 小贴士内容 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 侧边栏 -->
+                <div class="sidebar">
+                    <!-- 基本信息 -->
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-clipboard-list"></i>
+                            基本信息
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="fas fa-money-bill-wave"></i>
+                                门票价格
+                            </div>
+                            <div class="info-value">
+                                <span class="price-highlight" id="price-range">免费</span>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="fas fa-clock"></i>
+                                开放时间
+                            </div>
+                            <div class="info-value" id="opening-hours">全天开放</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="fas fa-star"></i>
+                                评分
+                            </div>
+                            <div class="info-value">
+                                <div class="rating-display">
+                                    <div class="stars" id="rating-stars">
+                                        <!-- 星星将动态生成 -->
+                                    </div>
+                                    <span id="rating-text">4.5</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="fas fa-users"></i>
+                                热度
+                            </div>
+                            <div class="info-value" id="popularity">热门景点</div>
+                        </div>
+                    </div>
+
+                    <!-- 快速操作 -->
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-tools"></i>
+                            快速操作
+                        </div>
+                        <button class="feature-tag" onclick="addToFavorites()" style="width: 100%; margin-bottom: 10px;">
+                            <i class="fas fa-heart"></i> 加入收藏
+                        </button>
+                        <button class="feature-tag" onclick="shareAttraction()" style="width: 100%; margin-bottom: 10px;">
+                            <i class="fas fa-share"></i> 分享景点
+                        </button>
+                        <button class="feature-tag" onclick="reportIssue()" style="width: 100%;">
+                            <i class="fas fa-flag"></i> 反馈问题
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== 43张美丽景点图片URL数组 =====
+        const defaultAttractionImages = [
+            // 自然风光类
+            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 山峰
+            'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 森林
+            'https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 湖泊
+            'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 海岸
+            'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 瀑布
+            'https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 雪山
+            'https://images.unsplash.com/photo-1501436513145-30f24e19fcc4?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 沙漠
+            'https://images.unsplash.com/photo-1464822759844-d150f84ad8de?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 峡谷
+            'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 海滩
+            'https://images.unsplash.com/photo-1439066615861-d1af74d74000?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 日出
+            
+            // 古建筑文化类
+            'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古寺庙
+            'https://images.unsplash.com/photo-1471919743851-c4df8b6ee133?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古城墙
+            'https://images.unsplash.com/photo-1545558014-8692077e9b5c?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 宫殿
+            'https://images.unsplash.com/photo-1513415825881-57c6b43bf862?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古塔
+            'https://images.unsplash.com/photo-1559717201-fbb671ff56b7?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 传统建筑
+            'https://images.unsplash.com/photo-1518709268805-4e9042af2ac0?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古桥
+            'https://images.unsplash.com/photo-1574608851747-15d28b7e3d69?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 园林
+            'https://images.unsplash.com/photo-1565967511849-76a60a516170?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 亭台楼阁
+            'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古村落
+            'https://images.unsplash.com/photo-1609948668013-b5e7f3088607?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 故宫
+            
+            // 现代景观类
+            'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 现代建筑
+            'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1f?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 摩天大楼
+            'https://images.unsplash.com/photo-1514924013411-cbf25faa35bb?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 城市夜景
+            'https://images.unsplash.com/photo-1549924231-f129b911e442?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 公园
+            'https://images.unsplash.com/photo-1533587851505-d119e13fa0d7?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 广场
+            'https://images.unsplash.com/photo-1529655683826-3c6b7ded86b6?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 博物馆
+            'https://images.unsplash.com/photo-1429734956993-8a9b0555e122?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 艺术馆
+            'https://images.unsplash.com/photo-1494949649109-ecfc3b8c35df?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 科技馆
+            'https://images.unsplash.com/photo-1518135714426-c18f5ffb6f4d?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 观景台
+            'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 主题公园
+            
+            // 特色景点类
+            'https://images.unsplash.com/photo-1464278533981-50106e6176b1?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 竹林
+            'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 茶园
+            'https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 花田
+            'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 田园风光
+            'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古镇
+            'https://images.unsplash.com/photo-1586511925558-a4c6376fe65f?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 江南水乡
+            'https://images.unsplash.com/photo-1571804499305-1dfe4c7e5d63?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 民俗村
+            'https://images.unsplash.com/photo-1555400113-8a2d1c19f1e1?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 温泉
+            'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 海岛
+            'https://images.unsplash.com/photo-1537225228614-56cc3556d7ed?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 溶洞
+            
+            // 季节特色类
+            'https://images.unsplash.com/photo-1509773896068-7fd415d91e2e?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 春花
+            'https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 夏日海滨
+            'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 秋叶
+            'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?ixlib=rb-4.0.3&w=800&h=600&fit=crop'  // 冬雪
+        ];
+
+        // 获取随机默认图片
+        function getRandomDefaultImage() {
+            const randomIndex = Math.floor(Math.random() * defaultAttractionImages.length);
+            return defaultAttractionImages[randomIndex];
+        }
+
+        // 处理图片加载错误
+        function handleImageError(imgElement) {
+            console.log('⚠️ 图片加载失败，使用随机默认图片');
+            imgElement.src = getRandomDefaultImage();
+            // 防止无限循环，给图片添加标记
+            imgElement.onerror = function() {
+                console.log('⚠️ 默认图片也加载失败，使用本地备用图片');
+                this.src = '/img/1.jpg';
+                this.onerror = null; // 防止无限循环
+            };
+        }
+
+        // localStorage 数据管理器
+        class UserDataManager {
+            constructor() {
+                this.storageKeys = {
+                    browsingHistory: 'xihu_browsing_history',
+                    favoriteAttractions: 'xihu_favorite_attractions'
+                };
+            }
+
+            saveBrowsingHistory(attractionName, attractionData) {
+                try {
+                    let history = this.getBrowsingHistory();
+                    history = history.filter(item => item.name !== attractionName);
+                    
+                    const historyItem = {
+                        name: attractionName,
+                        data: attractionData,
+                        timestamp: Date.now(),
+                        date: new Date().toLocaleDateString('zh-CN')
+                    };
+                    
+                    history.unshift(historyItem);
+                    if (history.length > 50) {
+                        history = history.slice(0, 50);
+                    }
+                    
+                    localStorage.setItem(this.storageKeys.browsingHistory, JSON.stringify(history));
+                    console.log('✅ 浏览历史已保存:', attractionName);
+                } catch (error) {
+                    console.error('❌ 保存浏览历史失败:', error);
+                }
+            }
+
+            getBrowsingHistory() {
+                try {
+                    const data = localStorage.getItem(this.storageKeys.browsingHistory);
+                    return data ? JSON.parse(data) : [];
+                } catch (error) {
+                    console.error('❌ 获取浏览历史失败:', error);
+                    return [];
+                }
+            }
+
+            toggleFavorite(attractionName, attractionData) {
+                try {
+                    let favorites = this.getFavorites();
+                    const index = favorites.findIndex(item => item.name === attractionName);
+                    
+                    if (index > -1) {
+                        favorites.splice(index, 1);
+                        localStorage.setItem(this.storageKeys.favoriteAttractions, JSON.stringify(favorites));
+                        console.log('💔 已取消收藏:', attractionName);
+                        return false;
+                    } else {
+                        favorites.unshift({
+                            name: attractionName,
+                            data: attractionData,
+                            timestamp: Date.now(),
+                            date: new Date().toLocaleDateString('zh-CN')
+                        });
+                        localStorage.setItem(this.storageKeys.favoriteAttractions, JSON.stringify(favorites));
+                        console.log('❤️ 已添加收藏:', attractionName);
+                        return true;
+                    }
+                } catch (error) {
+                    console.error('❌ 操作收藏失败:', error);
+                    return false;
+                }
+            }
+
+            getFavorites() {
+                try {
+                    const data = localStorage.getItem(this.storageKeys.favoriteAttractions);
+                    return data ? JSON.parse(data) : [];
+                } catch (error) {
+                    console.error('❌ 获取收藏列表失败:', error);
+                    return [];
+                }
+            }
+
+            isFavorite(attractionName) {
+                const favorites = this.getFavorites();
+                return favorites.some(item => item.name === attractionName);
+            }
+        }
+
+        // 初始化数据管理器
+        const userDataManager = new UserDataManager();
+        let currentAttraction = null;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 先设置一个默认图片
+            const mainImage = document.getElementById('main-image');
+            mainImage.src = getRandomDefaultImage();
+            console.log('🖼️ 页面初始化，设置默认图片');
+            
+            loadAttractionDetail();
+        });
+
+        // 加载景点详情
+        function loadAttractionDetail() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const attractionName = urlParams.get('name');
+            const attractionId = urlParams.get('id');
+            const tempKey = urlParams.get('tempKey');
+
+            console.log('🔍 开始加载景点详情');
+            console.log('📋 URL参数 - name:', attractionName, 'id:', attractionId, 'tempKey:', tempKey);
+
+            if (!attractionName && !attractionId) {
+                showError('缺少景点信息参数');
+                return;
+            }
+
+            showLoading();
+
+            // 优先尝试从临时localStorage获取数据
+            if (tempKey) {
+                try {
+                    const tempData = localStorage.getItem(tempKey);
+                    if (tempData) {
+                        const attraction = JSON.parse(tempData);
+                        console.log('✅ 从临时localStorage获取到景点数据:', attraction);
+                        
+                        currentAttraction = attraction;
+                        displayAttractionDetail(attraction);
+                        
+                        // 保存浏览历史
+                        userDataManager.saveBrowsingHistory(
+                            attraction.name || attraction.title || attractionName,
+                            attraction
+                        );
+                        
+                        // 清理临时数据
+                        setTimeout(() => {
+                            localStorage.removeItem(tempKey);
+                            console.log('🧹 已清理临时数据');
+                        }, 1000);
+                        
+                        return;
+                    }
+                } catch (error) {
+                    console.warn('⚠️ 获取临时数据失败:', error);
+                }
+            }
+
+            // 如果没有临时数据，则调用API获取
+            console.log('📡 从API获取景点详情');
+            
+            // 构建API URL
+            let apiUrl = '/travel/api/attractionDetail?';
+            if (attractionName) {
+                apiUrl += `name=${encodeURIComponent(attractionName)}`;
+            }
+            if (attractionId) {
+                apiUrl += attractionName ? `&id=${attractionId}` : `id=${attractionId}`;
+            }
+
+            console.log('🌐 API URL:', apiUrl);
+
+            // 调用API获取详情
+            fetch(apiUrl)
+                .then(response => {
+                    console.log('📡 API响应状态:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP错误! 状态: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('📊 API返回数据:', data);
+                    if (data.success && data.attraction) {
+                        currentAttraction = data.attraction;
+                        displayAttractionDetail(data.attraction);
+                        
+                        // 保存浏览历史
+                        userDataManager.saveBrowsingHistory(
+                            data.attraction.name || data.attraction.title,
+                            data.attraction
+                        );
+                    } else {
+                        console.error('❌ API返回失败:', data.message);
+                        showError(data.message || '景点信息不存在');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ 加载景点详情失败:', error);
+                    showError('网络错误，请稍后重试');
+                });
+        }
+
+        // 显示景点详情
+        function displayAttractionDetail(attraction) {
+            console.log('🖼️ 开始显示景点详情，原始数据:', attraction);
+            
+            const name = attraction.name || attraction.title || '未知景点';
+            const description = attraction.description || attraction.content || '暂无详细介绍';
+            const province = attraction.province || '';
+            const city = attraction.city || '';
+            const rating = attraction.rating || '4.5';
+            const priceRange = attraction.priceRange || attraction.price_range || '免费';
+            const features = attraction.features || '';
+            const tips = attraction.tips || '';
+            const openingHours = attraction.opening_hours || attraction.openingHours || '全天开放';
+            const viewCount = attraction.view_count || Math.floor(Math.random() * 5000) + 1000;
+            const likeCount = attraction.like_count || Math.floor(Math.random() * 500) + 100;
+            const imageUrl = attraction.image_url || attraction.imageUrl || getRandomDefaultImage();
+            
+            console.log('📊 处理后的数据:', {
+                name, description, province, city, rating, priceRange, 
+                features, tips, openingHours, viewCount, likeCount, imageUrl
+            });
+
+            // 更新页面标题
+            document.title = `${name} - 景点详情 - 游市生活`;
+
+            // 填充基本信息
+            document.getElementById('attraction-name').textContent = name;
+            document.getElementById('attraction-location').textContent = `${province} ${city}`;
+            document.getElementById('attraction-description').textContent = description;
+            document.getElementById('attraction-rating').textContent = rating;
+            document.getElementById('view-count').textContent = viewCount.toLocaleString();
+            document.getElementById('like-count').textContent = likeCount.toLocaleString();
+            
+            // 设置图片并添加日志
+            const mainImage = document.getElementById('main-image');
+            console.log('🖼️ 设置图片URL:', imageUrl);
+            
+            // 添加图片加载事件监听器
+            mainImage.onload = function() {
+                console.log('✅ 图片加载成功:', this.src);
+            };
+            
+            mainImage.src = imageUrl;
+            mainImage.alt = `${name} - 景点图片`;
+            
+            document.getElementById('price-range').textContent = priceRange;
+            document.getElementById('opening-hours').textContent = openingHours;
+            document.getElementById('rating-text').textContent = rating;
+
+            // 更新收藏按钮状态
+            updateFavoriteButton(name);
+
+            // 生成评分星星
+            generateRatingStars(parseFloat(rating));
+
+            // 生成特色标签
+            generateFeatures(features);
+
+            // 显示小贴士
+            if (tips) {
+                document.getElementById('tips-section').style.display = 'block';
+                document.getElementById('tips-content').textContent = tips;
+            }
+
+            // 生成热度显示
+            const popularity = viewCount > 3000 ? '超人气景点' : viewCount > 1500 ? '热门景点' : '推荐景点';
+            document.getElementById('popularity').textContent = popularity;
+
+            // 隐藏加载，显示内容
+            hideLoading();
+            document.getElementById('attraction-detail').style.display = 'block';
+
+            console.log('✅ 景点详情加载完成:', name);
+        }
+
+        // 生成评分星星
+        function generateRatingStars(rating) {
+            const starsContainer = document.getElementById('rating-stars');
+            starsContainer.innerHTML = '';
+            
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+            
+            for (let i = 0; i < 5; i++) {
+                const star = document.createElement('i');
+                if (i < fullStars) {
+                    star.className = 'fas fa-star star';
+                } else if (i === fullStars && hasHalfStar) {
+                    star.className = 'fas fa-star-half-alt star';
+                } else {
+                    star.className = 'far fa-star star';
+                    star.style.color = '#ddd';
+                }
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // 生成特色标签
+        function generateFeatures(features) {
+            const container = document.getElementById('features-container');
+            container.innerHTML = '';
+            
+            let featureList = [];
+            if (features) {
+                featureList = features.split(',').map(f => f.trim()).filter(f => f);
+            }
+            
+            // 如果没有特色，添加默认标签
+            if (featureList.length === 0) {
+                featureList = ['风景优美', '值得推荐', '历史悠久', '文化深厚'];
+            }
+            
+            featureList.forEach(feature => {
+                const tag = document.createElement('div');
+                tag.className = 'feature-tag';
+                tag.textContent = feature;
+                container.appendChild(tag);
+            });
+        }
+
+        // 更新收藏按钮状态
+        function updateFavoriteButton(attractionName) {
+            const favoriteBtn = document.getElementById('favorite-btn');
+            const icon = favoriteBtn.querySelector('i');
+            
+            if (userDataManager.isFavorite(attractionName)) {
+                icon.className = 'fas fa-heart';
+                favoriteBtn.classList.add('favorited');
+                favoriteBtn.title = '取消收藏';
+            } else {
+                icon.className = 'far fa-heart';
+                favoriteBtn.classList.remove('favorited');
+                favoriteBtn.title = '添加收藏';
+            }
+        }
+
+        // 切换收藏状态
+        function toggleFavorite() {
+            if (!currentAttraction) return;
+            
+            const name = currentAttraction.name || currentAttraction.title;
+            const isFavorited = userDataManager.toggleFavorite(name, currentAttraction);
+            
+            updateFavoriteButton(name);
+            
+            // 显示提示
+            const message = isFavorited ? '已添加到收藏' : '已取消收藏';
+            showToast(message);
+        }
+
+        // 添加到收藏（快速操作按钮）
+        function addToFavorites() {
+            toggleFavorite();
+        }
+
+        // 分享景点
+        function shareAttraction() {
+            if (!currentAttraction) return;
+            
+            const name = currentAttraction.name || currentAttraction.title;
+            const url = window.location.href;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: `${name} - 游市生活`,
+                    text: `推荐一个好地方：${name}`,
+                    url: url
+                }).catch(err => console.log('分享失败:', err));
+            } else {
+                // 复制链接到剪贴板
+                navigator.clipboard.writeText(url).then(() => {
+                    showToast('链接已复制到剪贴板');
+                }).catch(() => {
+                    showToast('分享功能暂不可用');
+                });
+            }
+        }
+
+        // 反馈问题
+        function reportIssue() {
+            const name = currentAttraction ? (currentAttraction.name || currentAttraction.title) : '未知景点';
+            showToast('感谢您的反馈，我们会及时处理');
+            console.log('用户反馈问题:', name);
+        }
+
+        // 显示Toast提示
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 100px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 206, 209, 0.9);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 25px;
+                font-weight: 600;
+                z-index: 9999;
+                backdrop-filter: blur(10px);
+            `;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 2000);
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('attraction-detail').style.display = 'none';
+        }
+
+        // 隐藏加载状态
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // 显示错误状态
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('attraction-detail').style.display = 'none';
+            const errorDiv = document.getElementById('error');
+            errorDiv.style.display = 'block';
+            errorDiv.querySelector('div').textContent = message;
+            
+            // 即使出错也确保有图片显示
+            const mainImage = document.getElementById('main-image');
+            if (mainImage && !mainImage.src.includes('unsplash')) {
+                mainImage.src = getRandomDefaultImage();
+                console.log('❌ 出错时设置默认图片');
+            }
+        }
+
+        // 强制确保图片显示（备用机制）
+        function ensureImageDisplay() {
+            const mainImage = document.getElementById('main-image');
+            if (mainImage && (!mainImage.src || mainImage.src === '' || mainImage.src === window.location.href)) {
+                console.log('🔧 强制设置默认图片');
+                mainImage.src = getRandomDefaultImage();
+            }
+        }
+
+        // 每3秒检查一次图片是否正常显示
+        setInterval(ensureImageDisplay, 3000);
+
+        console.log('🚀 景点详情页面已初始化');
+        console.log('🎲 可用默认图片数量:', defaultAttractionImages.length);
+    </script>
+</body>
+</html> 

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单支付 - 西湖旅游</title>
+    <link rel="stylesheet" href="/css/payment-checkout.css">
+</head>
+<body>
+    <div class="checkout-container">
+        <div class="checkout-header">
+            <h1>订单支付</h1>
+            <p>请确认订单信息并选择支付方式</p>
+        </div>
+
+        <div class="checkout-content">
+            <!-- 订单详情 -->
+            <div class="order-details">
+                <h2>订单详情</h2>
+                <div class="detail-row">
+                    <span class="detail-label">订单号：</span>
+                    <span class="detail-value" th:text="${order.orderNo}">UOF1698123456789</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">订单类型：</span>
+                    <span class="detail-value" th:text="${order.orderType == 'FOOD' ? '美食外卖' : (order.orderType == 'HOTEL' ? '酒店预订' : (order.orderType == 'SHOPPING' ? '购物商城' : (order.orderType == 'TRAVEL' ? '景点旅游' : '生活缴费')))}">美食外卖</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">订单标题：</span>
+                    <span class="detail-value" th:text="${order.orderTitle}">外婆家点餐</span>
+                </div>
+                <div class="detail-row" th:if="${order.orderDescription != null && order.orderDescription != ''}">
+                    <span class="detail-label">订单描述：</span>
+                    <span class="detail-value" th:text="${order.orderDescription}">点了3个菜</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">订单状态：</span>
+                    <span class="detail-value">
+                        <span class="order-status unpaid" th:text="${order.paymentStatusText}">待支付</span>
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">创建时间：</span>
+                    <span class="detail-value" th:text="${#temporals.format(order.createTime, 'yyyy-MM-dd HH:mm:ss')}">2023-10-24 14:30:00</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">订单金额：</span>
+                    <span class="detail-value highlight">¥<span th:text="${order.totalAmount}">128.00</span></span>
+                </div>
+            </div>
+
+            <!-- 支付方式 -->
+            <div class="payment-methods">
+                <h2>选择支付方式</h2>
+                
+                <div class="payment-option" onclick="selectPayment('alipay', this)">
+                    <input type="radio" name="payment" id="alipay" value="alipay">
+                    <label class="payment-option-label" for="alipay">
+                        <div>
+                            <div class="payment-icon">💳</div>
+                        </div>
+                        <div>
+                            <div class="payment-name">支付宝</div>
+                            <div class="payment-desc">快捷支付</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="payment-option" onclick="selectPayment('wechat', this)">
+                    <input type="radio" name="payment" id="wechat" value="wechat">
+                    <label class="payment-option-label" for="wechat">
+                        <div>
+                            <div class="payment-icon">💚</div>
+                        </div>
+                        <div>
+                            <div class="payment-name">微信支付</div>
+                            <div class="payment-desc">扫码支付</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="payment-option" onclick="selectPayment('bank', this)">
+                    <input type="radio" name="payment" id="bank" value="bank">
+                    <label class="payment-option-label" for="bank">
+                        <div>
+                            <div class="payment-icon">🏦</div>
+                        </div>
+                        <div>
+                            <div class="payment-name">银行卡</div>
+                            <div class="payment-desc">储蓄卡/信用卡</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="payment-action">
+                    <button class="pay-btn" onclick="processPay()" disabled id="payBtn">
+                        立即支付
+                    </button>
+                    <div class="pay-amount">
+                        实付金额：<strong>¥<span th:text="${order.totalAmount}">128.00</span></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        let selectedMethod = null;
+        const orderNo = /*[[${order.orderNo}]]*/ 'UOF1698123456789';
+
+        function selectPayment(method, element) {
+            // 移除所有选中状态
+            document.querySelectorAll('.payment-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // 添加选中状态
+            element.classList.add('selected');
+            document.getElementById(method).checked = true;
+            selectedMethod = method;
+            
+            // 启用支付按钮
+            document.getElementById('payBtn').disabled = false;
+        }
+
+        function processPay() {
+            if (!selectedMethod) {
+                alert('请选择支付方式');
+                return;
+            }
+
+            const payBtn = document.getElementById('payBtn');
+            payBtn.disabled = true;
+            payBtn.textContent = '支付中...';
+
+            // 发送支付请求
+            fetch('/unified/payment/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    orderNo: orderNo,
+                    paymentMethod: selectedMethod
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 支付成功,跳转到成功页面
+                    window.location.href = '/unified/payment/success?orderNo=' + orderNo;
+                } else {
+                    alert('支付失败: ' + data.message);
+                    payBtn.disabled = false;
+                    payBtn.textContent = '立即支付';
+                }
+            })
+            .catch(error => {
+                console.error('支付失败:', error);
+                alert('支付失败,请重试');
+                payBtn.disabled = false;
+                payBtn.textContent = '立即支付';
+            });
+        }
+    </script>
+</body>
+</html>
+

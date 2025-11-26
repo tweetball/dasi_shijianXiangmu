@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icss.xihu.mapper.AttractionMapper">
+
+    <!-- AttractionCategory结果映射 -->
+    <resultMap id="categoryResultMap" type="com.icss.xihu.model.AttractionCategory">
+        <id property="id" column="cat_id"/>
+        <result property="name" column="cat_name"/>
+        <result property="code" column="cat_code"/>
+        <result property="description" column="cat_description"/>
+        <result property="iconUrl" column="cat_icon_url"/>
+        <result property="sortOrder" column="cat_sort_order"/>
+        <result property="status" column="cat_status"/>
+        <result property="createTime" column="cat_create_time"/>
+        <result property="updateTime" column="cat_update_time"/>
+    </resultMap>
+
+    <!-- AttractionImage结果映射 -->
+    <resultMap id="imageResultMap" type="com.icss.xihu.model.AttractionImage">
+        <id property="id" column="img_id"/>
+        <result property="attractionId" column="img_attraction_id"/>
+        <result property="imageUrl" column="img_url"/>
+        <result property="imageTitle" column="img_title"/>
+        <result property="imageDescription" column="img_description"/>
+        <result property="isCover" column="img_is_cover"/>
+        <result property="sortOrder" column="img_sort_order"/>
+        <result property="status" column="img_status"/>
+        <result property="createTime" column="img_create_time"/>
+        <result property="updateTime" column="img_update_time"/>
+    </resultMap>
+
+    <!-- AttractionTag结果映射 -->
+    <resultMap id="tagResultMap" type="com.icss.xihu.model.AttractionTag">
+        <id property="id" column="tag_id"/>
+        <result property="name" column="tag_name"/>
+        <result property="color" column="tag_color"/>
+        <result property="description" column="tag_description"/>
+        <result property="status" column="tag_status"/>
+        <result property="createTime" column="tag_create_time"/>
+        <result property="updateTime" column="tag_update_time"/>
+    </resultMap>
+
+    <!-- AttractionRecommendation结果映射 -->
+    <resultMap id="recommendationResultMap" type="com.icss.xihu.model.AttractionRecommendation">
+        <id property="id" column="rec_id"/>
+        <result property="attractionId" column="rec_attraction_id"/>
+        <result property="recommendType" column="rec_type"/>
+        <result property="recommendReason" column="rec_reason"/>
+        <result property="recommendScore" column="rec_score"/>
+        <result property="targetAudience" column="rec_audience"/>
+        <result property="season" column="rec_season"/>
+        <result property="sortOrder" column="rec_sort_order"/>
+        <result property="status" column="rec_status"/>
+        <result property="createTime" column="rec_create_time"/>
+        <result property="updateTime" column="rec_update_time"/>
+    </resultMap>
+
+    <!-- Attraction完整结果映射（包含关联信息） -->
+    <resultMap id="attractionDetailResultMap" type="com.icss.xihu.model.Attraction">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="province" column="province"/>
+        <result property="city" column="city"/>
+        <result property="district" column="district"/>
+        <result property="fullAddress" column="full_address"/>
+        <result property="longitude" column="longitude"/>
+        <result property="latitude" column="latitude"/>
+        <result property="rating" column="rating"/>
+        <result property="priceRange" column="price_range"/>
+        <result property="openingHours" column="opening_hours"/>
+        <result property="phone" column="phone"/>
+        <result property="website" column="website"/>
+        <result property="description" column="description"/>
+        <result property="features" column="features"/>
+        <result property="tips" column="tips"/>
+        <result property="bestSeason" column="best_season"/>
+        <result property="visitDuration" column="visit_duration"/>
+        <result property="trafficInfo" column="traffic_info"/>
+        <result property="ticketInfo" column="ticket_info"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="likeCount" column="like_count"/>
+        <result property="recommendScore" column="recommend_score"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        
+        <!-- 关联分类信息 -->
+        <association property="category" resultMap="categoryResultMap"/>
+        
+        <!-- 关联图片列表 -->
+        <collection property="images" resultMap="imageResultMap"/>
+        
+        <!-- 关联标签列表 -->
+        <collection property="tags" resultMap="tagResultMap"/>
+        
+        <!-- 关联推荐信息 -->
+        <collection property="recommendations" resultMap="recommendationResultMap"/>
+    </resultMap>
+
+    <!-- 简化的Attraction结果映射（不包含关联信息） -->
+    <resultMap id="attractionSimpleResultMap" type="com.icss.xihu.model.Attraction">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="province" column="province"/>
+        <result property="city" column="city"/>
+        <result property="district" column="district"/>
+        <result property="fullAddress" column="full_address"/>
+        <result property="longitude" column="longitude"/>
+        <result property="latitude" column="latitude"/>
+        <result property="rating" column="rating"/>
+        <result property="priceRange" column="price_range"/>
+        <result property="openingHours" column="opening_hours"/>
+        <result property="phone" column="phone"/>
+        <result property="website" column="website"/>
+        <result property="description" column="description"/>
+        <result property="features" column="features"/>
+        <result property="tips" column="tips"/>
+        <result property="bestSeason" column="best_season"/>
+        <result property="visitDuration" column="visit_duration"/>
+        <result property="trafficInfo" column="traffic_info"/>
+        <result property="ticketInfo" column="ticket_info"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="likeCount" column="like_count"/>
+        <result property="recommendScore" column="recommend_score"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <!-- 获取所有景点分类 -->
+    <select id="getAllCategories" resultMap="categoryResultMap">
+        SELECT 
+            id as cat_id, name as cat_name, code as cat_code, 
+            description as cat_description, icon_url as cat_icon_url,
+            sort_order as cat_sort_order, status as cat_status,
+            create_time as cat_create_time, update_time as cat_update_time
+        FROM attraction_categories 
+        WHERE status = 1 
+        ORDER BY sort_order ASC, id ASC
+    </select>
+
+    <!-- 获取所有省份 -->
+    <select id="getAllProvinces" resultType="String">
+        SELECT DISTINCT province 
+        FROM attractions 
+        WHERE status = 1 
+        ORDER BY province
+    </select>
+
+    <!-- 根据省份获取城市列表 -->
+    <select id="getCitiesByProvince" resultType="String">
+        SELECT DISTINCT city 
+        FROM attractions 
+        WHERE province = #{province} AND status = 1 
+        ORDER BY city
+    </select>
+
+    <!-- 获取带完整信息的景点列表 -->
+    <select id="getAttractionsWithDetails" resultMap="attractionDetailResultMap">
+        SELECT 
+            a.*,
+            c.id as cat_id, c.name as cat_name, c.code as cat_code, 
+            c.description as cat_description, c.icon_url as cat_icon_url,
+            img.id as img_id, img.image_url as img_url, img.image_title as img_title,
+            img.image_description as img_description, img.is_cover as img_is_cover,
+            t.id as tag_id, t.name as tag_name, t.color as tag_color,
+            r.id as rec_id, r.recommend_type as rec_type, r.recommend_reason as rec_reason,
+            r.recommend_score as rec_score, r.target_audience as rec_audience
+        FROM attractions a
+        LEFT JOIN attraction_categories c ON a.category_id = c.id
+        LEFT JOIN attraction_images img ON a.id = img.attraction_id AND img.status = 1
+        LEFT JOIN attraction_tag_relations tr ON a.id = tr.attraction_id
+        LEFT JOIN attraction_tags t ON tr.tag_id = t.id AND t.status = 1
+        LEFT JOIN attraction_recommendations r ON a.id = r.attraction_id AND r.status = 1
+        WHERE a.status = 1
+        ORDER BY a.recommend_score DESC, a.rating DESC, a.id ASC
+    </select>
+
+    <!-- 根据省份获取景点列表 -->
+    <select id="getAttractionsByProvince" resultMap="attractionDetailResultMap">
+        SELECT 
+            a.*,
+            c.id as cat_id, c.name as cat_name, c.code as cat_code,
+            img.id as img_id, img.image_url as img_url, img.image_title as img_title, img.is_cover as img_is_cover,
+            t.id as tag_id, t.name as tag_name, t.color as tag_color
+        FROM attractions a
+        LEFT JOIN attraction_categories c ON a.category_id = c.id
+        LEFT JOIN attraction_images img ON a.id = img.attraction_id AND img.status = 1
+        LEFT JOIN attraction_tag_relations tr ON a.id = tr.attraction_id
+        LEFT JOIN attraction_tags t ON tr.tag_id = t.id AND t.status = 1
+        WHERE a.province = #{province} AND a.status = 1
+        ORDER BY a.recommend_score DESC, a.rating DESC
+    </select>
+
+    <!-- 根据省份和城市获取景点列表 -->
+    <select id="getAttractionsByProvinceAndCity" resultMap="attractionDetailResultMap">
+        SELECT 
+            a.*,
+            c.id as cat_id, c.name as cat_name, c.code as cat_code,
+            img.id as img_id, img.image_url as img_url, img.image_title as img_title, img.is_cover as img_is_cover,
+            t.id as tag_id, t.name as tag_name, t.color as tag_color
+        FROM attractions a
+        LEFT JOIN attraction_categories c ON a.category_id = c.id
+        LEFT JOIN attraction_images img ON a.id = img.attraction_id AND img.status = 1
+        LEFT JOIN attraction_tag_relations tr ON a.id = tr.attraction_id
+        LEFT JOIN attraction_tags t ON tr.tag_id = t.id AND t.status = 1
+        WHERE a.province = #{province} AND a.city = #{city} AND a.status = 1
+        ORDER BY a.recommend_score DESC, a.rating DESC
+    </select>
+
+    <!-- 获取推荐景点列表 -->
+    <select id="getRecommendedAttractions" resultMap="attractionDetailResultMap">
+        SELECT 
+            a.*,
+            c.id as cat_id, c.name as cat_name, c.code as cat_code,
+            img.id as img_id, img.image_url as img_url, img.image_title as img_title, img.is_cover as img_is_cover,
+            t.id as tag_id, t.name as tag_name, t.color as tag_color,
+            r.id as rec_id, r.recommend_type as rec_type, r.recommend_reason as rec_reason
+        FROM attractions a
+        LEFT JOIN attraction_categories c ON a.category_id = c.id
+        LEFT JOIN attraction_images img ON a.id = img.attraction_id AND img.status = 1
+        LEFT JOIN attraction_tag_relations tr ON a.id = tr.attraction_id
+        LEFT JOIN attraction_tags t ON tr.tag_id = t.id AND t.status = 1
+        LEFT JOIN attraction_recommendations r ON a.id = r.attraction_id AND r.status = 1
+        WHERE a.status = 1
+        ORDER BY a.recommend_score DESC, a.rating DESC, a.view_count DESC
+        <if test="limit != null">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <!-- 根据景点ID获取图片列表 -->
+    <select id="getImagesByAttractionId" resultMap="imageResultMap">
+        SELECT 
+            id as img_id, attraction_id as img_attraction_id, image_url as img_url,
+            image_title as img_title, image_description as img_description, 
+            is_cover as img_is_cover, sort_order as img_sort_order
+        FROM attraction_images 
+        WHERE attraction_id = #{attractionId} AND status = 1
+        ORDER BY is_cover DESC, sort_order ASC
+    </select>
+
+    <!-- 根据景点ID获取标签列表 -->
+    <select id="getTagsByAttractionId" resultMap="tagResultMap">
+        SELECT 
+            t.id as tag_id, t.name as tag_name, t.color as tag_color, 
+            t.description as tag_description
+        FROM attraction_tags t
+        INNER JOIN attraction_tag_relations tr ON t.id = tr.tag_id
+        WHERE tr.attraction_id = #{attractionId} AND t.status = 1
+        ORDER BY t.id ASC
+    </select>
+
+    <!-- 搜索景点 -->
+    <select id="searchAttractions" resultMap="attractionDetailResultMap">
+        SELECT 
+            a.*,
+            c.id as cat_id, c.name as cat_name, c.code as cat_code,
+            img.id as img_id, img.image_url as img_url, img.image_title as img_title, img.is_cover as img_is_cover
+        FROM attractions a
+        LEFT JOIN attraction_categories c ON a.category_id = c.id
+        LEFT JOIN attraction_images img ON a.id = img.attraction_id AND img.status = 1 AND img.is_cover = 1
+        WHERE a.status = 1 
+        AND (a.name LIKE CONCAT('%', #{keyword}, '%') OR a.description LIKE CONCAT('%', #{keyword}, '%'))
+        ORDER BY a.recommend_score DESC, a.rating DESC
+    </select>
+
+    <!-- 增加浏览次数 -->
+    <update id="increaseViewCount">
+        UPDATE attractions SET view_count = view_count + 1 WHERE id = #{id}
+    </update>
+
+    <!-- 增加点赞数 -->
+    <update id="increaseLikeCount">
+        UPDATE attractions SET like_count = like_count + 1 WHERE id = #{id}
+    </update>
+
+</mapper> 

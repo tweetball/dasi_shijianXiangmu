@@ -1,0 +1,952 @@
+<!--
+    文件名称：login.html
+    文件功能：用户登录页面模板
+    功能概述：
+        1. 提供密码登录和验证码登录两种登录方式
+        2. 支持发送短信验证码功能，包含倒计时功能
+        3. 实现表单验证和错误提示功能
+        4. 集成鼠标跟随光效动画
+        5. 响应式设计，支持PC端和移动端访问
+    技术栈：HTML5 + CSS3 + JavaScript + Thymeleaf模板引擎
+    依赖文件：
+        - Font Awesome图标库（CDN）
+    作者：游市生活开发团队
+    创建日期：2024年
+    最后更新：2024年
+-->
+<!DOCTYPE html>
+<!-- HTML5文档类型声明，标识这是一个HTML5文档 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<!-- 
+    HTML根元素
+    lang="zh-CN"：设置页面语言为简体中文
+    xmlns:th="http://www.thymeleaf.org"：声明Thymeleaf命名空间，用于模板引擎语法
+-->
+<head>
+    <!-- HTML文档头部，包含元数据和样式表引用 -->
+    <!-- 字符编码声明，指定页面使用UTF-8编码，支持中文等多语言字符 -->
+    <meta charset="UTF-8">
+    <!-- 视口元数据，设置页面在移动设备上的显示方式，width=device-width表示宽度自适应设备宽度，initial-scale=1.0表示初始缩放比例为1.0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题，显示在浏览器标签页上 -->
+    <title>用户登录 - 游市生活</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #00CED1 0%, #48D1CC 25%, #AFEEEE 50%, #48D1CC 75%, #00CED1 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 动态粒子背景 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="1" fill="rgba(255,255,255,0.2)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.15)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.2)"/><circle cx="90" cy="90" r="1" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            animation: floatParticles 20s linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes floatParticles {
+            0% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-20px) translateX(10px); }
+            100% { transform: translateY(0) translateX(0); }
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            width: 450px;
+            max-width: 100%;
+            position: relative;
+            z-index: 2;
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+            text-align: center;
+            padding: 50px 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+            animation: shimmer 4s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .logo-icon {
+            display: inline-block;
+            font-size: 48px;
+            margin-bottom: 15px;
+            animation: logoFloat 3s ease-in-out infinite;
+            position: relative;
+            z-index: 2;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-8px) scale(1.05); }
+        }
+
+        .login-header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+        }
+
+        .login-header p {
+            opacity: 0.95;
+            font-size: 18px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .login-form {
+            padding: 50px 40px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 35px;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fafafa;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 600;
+            color: #666;
+            font-size: 16px;
+            position: relative;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(0, 206, 209, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00CED1;
+            box-shadow: 0 0 0 4px rgba(0, 206, 209, 0.1);
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        .sms-group {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .sms-group input {
+            flex: 1;
+        }
+
+        .send-sms-btn {
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: 600;
+            white-space: nowrap;
+            min-width: 120px;
+            box-shadow: 0 4px 15px rgba(0, 206, 209, 0.3);
+        }
+
+        .send-sms-btn:hover {
+            background: linear-gradient(135deg, #20B2AA, #00CED1);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 206, 209, 0.4);
+        }
+
+        .send-sms-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            margin-top: 15px;
+            box-shadow: 0 6px 20px rgba(0, 206, 209, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .login-btn:hover::before {
+            left: 100%;
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(135deg, #20B2AA, #00CED1);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 206, 209, 0.4);
+        }
+
+        .login-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .form-links {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .form-links a {
+            color: #00CED1;
+            text-decoration: none;
+            margin: 0 20px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .form-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #00CED1;
+            transition: width 0.3s ease;
+        }
+
+        .form-links a:hover::after {
+            width: 100%;
+        }
+
+        .form-links a:hover {
+            color: #20B2AA;
+            transform: translateY(-2px);
+        }
+
+        .message {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-size: 15px;
+            font-weight: 500;
+            display: none;
+            animation: slideInDown 0.3s ease-out;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message {
+            background: #fff5f5;
+            color: #dc2626;
+            border: 2px solid #fed7d7;
+        }
+
+        .success-message {
+            background: #f0fff4;
+            color: #059669;
+            border: 2px solid #9ae6b4;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                width: 100%;
+                margin: 10px;
+            }
+            
+            .login-form {
+                padding: 40px 25px;
+            }
+
+            .login-header {
+                padding: 40px 25px;
+            }
+
+            .login-header h1 {
+                font-size: 28px;
+            }
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 鼠标跟随效果 */
+        .cursor-glow {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- 鼠标跟随光效 -->
+    <div class="cursor-glow" id="cursorGlow"></div>
+
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo-icon">
+                <i class="fas fa-city"></i>
+            </div>
+            <h1>游市生活</h1>
+            <p>欢迎回来，请登录您的账户</p>
+        </div>
+
+        <div class="login-form">
+            <div id="error-message" class="message error-message"></div>
+            <div id="success-message" class="message success-message"></div>
+
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="showTab('password')">密码登录</button>
+                <button class="tab-button" onclick="showTab('sms')">验证码登录</button>
+            </div>
+
+            <!-- 密码登录 -->
+            <div id="password-tab" class="tab-content active">
+                <form id="password-form">
+                    <div class="form-group">
+                        <label for="phone">手机号</label>
+                        <input type="tel" id="phone" name="phone" placeholder="请输入11位手机号" required maxlength="11">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">密码</label>
+                        <input type="password" id="password" name="password" placeholder="请输入登录密码" required>
+                    </div>
+                    <button type="submit" class="login-btn">登录</button>
+                </form>
+            </div>
+
+            <!-- 验证码登录 -->
+            <div id="sms-tab" class="tab-content">
+                <form id="sms-form">
+                    <div class="form-group">
+                        <label for="sms-phone">手机号</label>
+                        <input type="tel" id="sms-phone" name="phone" placeholder="请输入11位手机号" required maxlength="11">
+                    </div>
+                    <div class="form-group">
+                        <label for="sms-code">验证码</label>
+                        <div class="sms-group">
+                            <input type="text" id="sms-code" name="smsCode" placeholder="请输入6位验证码" required maxlength="6">
+                            <button type="button" class="send-sms-btn" onclick="sendSmsCode('sms-phone', 'login')">发送验证码</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="login-btn">登录</button>
+                </form>
+            </div>
+
+            <div class="form-links">
+                <a href="/user/register">注册新账户</a>
+                <a href="/">返回首页</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 
+        JavaScript代码块
+        功能概述：实现登录页面的交互功能，包括标签页切换、短信验证码发送、表单提交、消息提示等
+    -->
+    <script>
+        /**
+         * 文件级注释：登录页面JavaScript功能模块
+         * 功能概述：
+         *   1. 鼠标跟随光效动画
+         *   2. 标签页切换功能（密码登录/验证码登录）
+         *   3. 短信验证码发送功能（包含倒计时）
+         *   4. 密码登录表单提交
+         *   5. 验证码登录表单提交
+         *   6. 消息提示功能（错误消息、成功消息）
+         *   7. 表单验证功能
+         */
+        
+        // ==================== 鼠标跟随光效模块 ====================
+        /**
+         * 鼠标跟随光效功能
+         * 功能概述：实现鼠标跟随光效动画，光效元素跟随鼠标移动，带有平滑过渡效果
+         */
+        // 获取鼠标跟随光效元素
+        const cursorGlow = document.getElementById('cursorGlow');
+        // 鼠标当前X坐标，初始值为0
+        let mouseX = 0;
+        // 鼠标当前Y坐标，初始值为0
+        let mouseY = 0;
+        // 光效元素当前X坐标，初始值为0
+        let currentX = 0;
+        // 光效元素当前Y坐标，初始值为0
+        let currentY = 0;
+
+        /**
+         * 监听鼠标移动事件
+         * 功能概述：实时更新鼠标坐标，用于计算光效元素的目标位置
+         */
+        // 监听document的mousemove事件，当鼠标移动时触发
+        document.addEventListener('mousemove', (e) => {
+            // 更新鼠标当前X坐标（相对于浏览器窗口的X坐标）
+            mouseX = e.clientX;
+            // 更新鼠标当前Y坐标（相对于浏览器窗口的Y坐标）
+            mouseY = e.clientY;
+        });
+
+        /**
+         * 更新光效元素位置
+         * 功能概述：使用平滑插值算法更新光效元素位置，实现跟随鼠标的平滑动画效果
+         */
+        function updateCursor() {
+            // 使用线性插值算法，平滑更新光效元素X坐标（每次移动10%的距离，实现平滑跟随效果）
+            currentX += (mouseX - currentX) * 0.1;
+            // 使用线性插值算法，平滑更新光效元素Y坐标（每次移动10%的距离，实现平滑跟随效果）
+            currentY += (mouseY - currentY) * 0.1;
+            
+            // 设置光效元素左偏移量（减去10px是为了让光效元素中心点对齐鼠标位置）
+            cursorGlow.style.left = currentX - 10 + 'px';
+            // 设置光效元素上偏移量（减去10px是为了让光效元素中心点对齐鼠标位置）
+            cursorGlow.style.top = currentY - 10 + 'px';
+            
+            // 使用requestAnimationFrame递归调用updateCursor函数，实现平滑动画循环（60fps）
+            requestAnimationFrame(updateCursor);
+        }
+        // 立即调用updateCursor函数，启动鼠标跟随光效动画
+        updateCursor();
+
+        // ==================== 倒计时变量 ====================
+        /**
+         * 倒计时变量
+         * 功能概述：存储短信验证码发送后的倒计时秒数，用于控制发送按钮的禁用状态
+         */
+        // 倒计时秒数，初始值为0
+        let countdown = 0;
+
+        // ==================== 标签页切换功能模块 ====================
+        /**
+         * 切换标签页
+         * 功能概述：在密码登录和验证码登录两个标签页之间切换，更新按钮状态和内容区域显示
+         * @param {String} tabName - 标签页名称（'password'表示密码登录，'sms'表示验证码登录）
+         */
+        function showTab(tabName) {
+            // 更新按钮状态
+            // 遍历所有标签按钮，移除active类，取消激活状态
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            // 为当前点击的按钮添加active类，激活当前按钮
+            event.target.classList.add('active');
+
+            // 更新内容区域
+            // 遍历所有标签内容区域，移除active类，隐藏所有内容
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            // 为指定标签页的内容区域添加active类，显示对应内容
+            document.getElementById(tabName + '-tab').classList.add('active');
+
+            // 清空消息
+            // 调用hideMessage函数，隐藏所有消息提示
+            hideMessage();
+        }
+
+        // ==================== 短信验证码发送功能模块 ====================
+        /**
+         * 发送短信验证码
+         * 功能概述：验证手机号格式，发送短信验证码请求到后端，成功后启动倒计时功能
+         * @param {String} phoneInputId - 手机号输入框的ID
+         * @param {String} type - 验证码类型（'login'表示登录验证码）
+         */
+        function sendSmsCode(phoneInputId, type) {
+            // 获取手机号输入框元素
+            const phoneInput = document.getElementById(phoneInputId);
+            // 获取手机号输入框的值并去除首尾空格
+            const phone = phoneInput.value.trim();
+            // 获取触发发送的按钮元素（event.target是触发事件的元素）
+            const btn = event.target;
+
+            // 判断手机号是否为空
+            if (!phone) {
+                // 如果手机号为空，显示错误消息
+                showError('请输入手机号');
+                // 聚焦手机号输入框，方便用户输入
+                phoneInput.focus();
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 判断手机号格式是否正确（1开头，第二位为3-9，共11位数字）
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                // 如果手机号格式不正确，显示错误消息
+                showError('请输入正确的手机号格式');
+                // 聚焦手机号输入框，方便用户输入
+                phoneInput.focus();
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 禁用发送按钮，防止重复发送
+            btn.disabled = true;
+            // 更新按钮文本，显示加载动画和"发送中"文字
+            btn.innerHTML = '<span class="loading"></span>发送中';
+
+            // 使用fetch API发送POST请求到后端短信发送接口
+            fetch('/user/sendSms', {
+                method: 'POST',  // 请求方法为POST
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',  // 设置请求头，指定内容类型为表单数据
+                },
+                body: `phone=${encodeURIComponent(phone)}&type=${type}`  // 将手机号和类型编码后作为请求体
+            })
+            .then(response => response.json())  // 将响应转换为JSON对象
+            .then(data => {
+                // 判断后端是否返回成功
+                if (data.success) {
+                    // 如果发送成功，显示成功消息
+                    showSuccess(data.message);
+                    // 启动倒计时功能，禁用发送按钮60秒
+                    startCountdown(btn);
+                } else {
+                    // 如果发送失败，显示错误消息
+                    showError(data.message);
+                    // 重新启用发送按钮
+                    btn.disabled = false;
+                    // 恢复按钮文本为"发送验证码"
+                    btn.textContent = '发送验证码';
+                }
+            })
+            .catch(error => {
+                // 如果发生网络错误或其他异常，打印错误信息到控制台
+                console.error('Error:', error);
+                // 显示网络错误消息
+                showError('网络错误，请重试');
+                // 重新启用发送按钮
+                btn.disabled = false;
+                // 恢复按钮文本为"发送验证码"
+                btn.textContent = '发送验证码';
+            });
+        }
+
+        /**
+         * 启动倒计时
+         * 功能概述：启动60秒倒计时，在倒计时期间禁用发送按钮，倒计时结束后恢复按钮可用状态
+         * @param {HTMLElement} btn - 发送验证码按钮元素
+         */
+        function startCountdown(btn) {
+            // 设置倒计时初始值为60秒
+            countdown = 60;
+            // 使用setInterval创建定时器，每1000毫秒（1秒）执行一次
+            const timer = setInterval(() => {
+                // 倒计时减1
+                countdown--;
+                // 更新按钮文本，显示剩余秒数
+                btn.textContent = `${countdown}s后重发`;
+                
+                // 判断倒计时是否结束
+                if (countdown <= 0) {
+                    // 如果倒计时结束，清除定时器
+                    clearInterval(timer);
+                    // 重新启用发送按钮
+                    btn.disabled = false;
+                    // 恢复按钮文本为"发送验证码"
+                    btn.textContent = '发送验证码';
+                }
+            }, 1000);
+        }
+
+        // ==================== 密码登录表单提交模块 ====================
+        /**
+         * 密码登录表单提交
+         * 功能概述：监听密码登录表单的提交事件，验证表单数据，发送登录请求到后端，处理登录结果
+         */
+        // 监听密码登录表单的submit事件，当表单提交时触发
+        document.getElementById('password-form').addEventListener('submit', function(e) {
+            // 阻止表单的默认提交行为（页面跳转）
+            e.preventDefault();
+            
+            // 创建FormData对象，获取表单数据
+            const formData = new FormData(this);
+            // 从表单数据中获取手机号
+            const phone = formData.get('phone');
+            // 从表单数据中获取密码
+            const password = formData.get('password');
+
+            // 判断手机号和密码是否为空
+            if (!phone || !password) {
+                // 如果手机号或密码为空，显示错误消息
+                showError('请填写完整的登录信息');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 判断手机号格式是否正确（1开头，第二位为3-9，共11位数字）
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                // 如果手机号格式不正确，显示错误消息
+                showError('请输入正确的手机号格式');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 获取提交按钮元素
+            const submitBtn = this.querySelector('.login-btn');
+            // 禁用提交按钮，防止重复提交
+            submitBtn.disabled = true;
+            // 更新按钮文本，显示加载动画和"登录中"文字
+            submitBtn.innerHTML = '<span class="loading"></span>登录中';
+
+            // 使用fetch API发送POST请求到后端登录接口
+            fetch('/user/doLogin', {
+                method: 'POST',  // 请求方法为POST
+                body: new URLSearchParams(formData)  // 将表单数据转换为URL编码格式作为请求体
+            })
+            .then(response => response.json())  // 将响应转换为JSON对象
+            .then(data => {
+                // 判断后端是否返回成功
+                if (data.success) {
+                    // 如果登录成功，显示成功消息
+                    showSuccess(data.message);
+                    
+                    // 登录成功后，将用户信息同步到localStorage以支持预订和订单功能
+                    // 判断后端是否返回用户信息
+                    if (data.user) {
+                        // 将用户ID存储到localStorage中
+                        localStorage.setItem('userId', data.user.id);
+                        // 将用户昵称或用户名存储到localStorage中（优先使用昵称，如果没有则使用用户名）
+                        localStorage.setItem('userName', data.user.nickname || data.user.username);
+                        // 打印用户信息到控制台，用于调试
+                        console.log('用户信息已同步到localStorage:', data.user);
+                    }
+                    
+                    // 延迟1000毫秒后跳转到首页
+                    setTimeout(() => {
+                        // 跳转到首页
+                        window.location.href = '/';
+                    }, 1000);
+                } else {
+                    // 如果登录失败，显示错误消息
+                    showError(data.message);
+                }
+            })
+            .catch(error => {
+                // 如果发生网络错误或其他异常，打印错误信息到控制台
+                console.error('Error:', error);
+                // 显示网络错误消息
+                showError('登录失败，请重试');
+            })
+            .finally(() => {
+                // 无论成功或失败，都执行以下操作
+                // 重新启用提交按钮
+                submitBtn.disabled = false;
+                // 恢复按钮文本为"登录"
+                submitBtn.textContent = '登录';
+            });
+        });
+
+        // ==================== 验证码登录表单提交模块 ====================
+        /**
+         * 验证码登录表单提交
+         * 功能概述：监听验证码登录表单的提交事件，验证表单数据（手机号和验证码），发送登录请求到后端，处理登录结果
+         */
+        // 监听验证码登录表单的submit事件，当表单提交时触发
+        document.getElementById('sms-form').addEventListener('submit', function(e) {
+            // 阻止表单的默认提交行为（页面跳转）
+            e.preventDefault();
+            
+            // 创建FormData对象，获取表单数据
+            const formData = new FormData(this);
+            // 从表单数据中获取手机号
+            const phone = formData.get('phone');
+            // 从表单数据中获取短信验证码
+            const smsCode = formData.get('smsCode');
+
+            // 判断手机号和验证码是否为空
+            if (!phone || !smsCode) {
+                // 如果手机号或验证码为空，显示错误消息
+                showError('请填写完整的登录信息');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 判断手机号格式是否正确（1开头，第二位为3-9，共11位数字）
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                // 如果手机号格式不正确，显示错误消息
+                showError('请输入正确的手机号格式');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 判断验证码格式是否正确（6位数字）
+            if (!/^\d{6}$/.test(smsCode)) {
+                // 如果验证码格式不正确，显示错误消息
+                showError('请输入6位验证码');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 获取提交按钮元素
+            const submitBtn = this.querySelector('.login-btn');
+            // 禁用提交按钮，防止重复提交
+            submitBtn.disabled = true;
+            // 更新按钮文本，显示加载动画和"登录中"文字
+            submitBtn.innerHTML = '<span class="loading"></span>登录中';
+
+            // 使用fetch API发送POST请求到后端验证码登录接口
+            fetch('/user/doSmsLogin', {
+                method: 'POST',  // 请求方法为POST
+                body: new URLSearchParams(formData)  // 将表单数据转换为URL编码格式作为请求体
+            })
+            .then(response => response.json())  // 将响应转换为JSON对象
+            .then(data => {
+                // 判断后端是否返回成功
+                if (data.success) {
+                    // 如果登录成功，显示成功消息
+                    showSuccess(data.message);
+                    
+                    // 登录成功后，将用户信息同步到localStorage以支持预订和订单功能
+                    // 判断后端是否返回用户信息
+                    if (data.user) {
+                        // 将用户ID存储到localStorage中
+                        localStorage.setItem('userId', data.user.id);
+                        // 将用户昵称或用户名存储到localStorage中（优先使用昵称，如果没有则使用用户名）
+                        localStorage.setItem('userName', data.user.nickname || data.user.username);
+                        // 打印用户信息到控制台，用于调试
+                        console.log('用户信息已同步到localStorage:', data.user);
+                    }
+                    
+                    // 延迟1000毫秒后跳转到首页
+                    setTimeout(() => {
+                        // 跳转到首页
+                        window.location.href = '/';
+                    }, 1000);
+                } else {
+                    // 如果登录失败，显示错误消息
+                    showError(data.message);
+                }
+            })
+            .catch(error => {
+                // 如果发生网络错误或其他异常，打印错误信息到控制台
+                console.error('Error:', error);
+                // 显示网络错误消息
+                showError('登录失败，请重试');
+            })
+            .finally(() => {
+                // 无论成功或失败，都执行以下操作
+                // 重新启用提交按钮
+                submitBtn.disabled = false;
+                // 恢复按钮文本为"登录"
+                submitBtn.textContent = '登录';
+            });
+        });
+
+        // ==================== 消息提示功能模块 ====================
+        /**
+         * 显示错误消息
+         * 功能概述：显示错误消息提示，隐藏成功消息，5秒后自动隐藏错误消息
+         * @param {String} message - 错误消息文本
+         */
+        function showError(message) {
+            // 获取错误消息div元素
+            const errorDiv = document.getElementById('error-message');
+            // 获取成功消息div元素
+            const successDiv = document.getElementById('success-message');
+            
+            // 隐藏成功消息
+            successDiv.style.display = 'none';
+            // 设置错误消息文本内容
+            errorDiv.textContent = message;
+            // 显示错误消息
+            errorDiv.style.display = 'block';
+            
+            // 延迟5000毫秒（5秒）后自动隐藏错误消息
+            setTimeout(() => {
+                // 隐藏错误消息
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        /**
+         * 显示成功消息
+         * 功能概述：显示成功消息提示，隐藏错误消息，3秒后自动隐藏成功消息
+         * @param {String} message - 成功消息文本
+         */
+        function showSuccess(message) {
+            // 获取成功消息div元素
+            const successDiv = document.getElementById('success-message');
+            // 获取错误消息div元素
+            const errorDiv = document.getElementById('error-message');
+            
+            // 隐藏错误消息
+            errorDiv.style.display = 'none';
+            // 设置成功消息文本内容
+            successDiv.textContent = message;
+            // 显示成功消息
+            successDiv.style.display = 'block';
+            
+            // 延迟3000毫秒（3秒）后自动隐藏成功消息
+            setTimeout(() => {
+                // 隐藏成功消息
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        /**
+         * 隐藏消息
+         * 功能概述：隐藏所有消息提示（错误消息和成功消息）
+         */
+        function hideMessage() {
+            // 隐藏错误消息
+            document.getElementById('error-message').style.display = 'none';
+            // 隐藏成功消息
+            document.getElementById('success-message').style.display = 'none';
+        }
+    </script>
+</body>
+</html> 

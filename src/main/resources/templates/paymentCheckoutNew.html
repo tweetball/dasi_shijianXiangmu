@@ -1,0 +1,724 @@
+<!--
+    文件名称：paymentCheckoutNew.html
+    文件功能：统一支付页面模板
+    功能概述：
+        1. 显示订单详细信息，包括订单号、订单类型、订单标题、订单状态、创建时间等
+        2. 根据订单类型（购物、美食、酒店）动态显示不同的订单详情（商品列表、菜品列表、预订详情）
+        3. 提供多种支付方式选择（微信支付、支付宝、银行卡）
+        4. 处理支付请求，发送支付请求到后端，处理支付结果并跳转
+        5. 根据来源页面智能跳转（支付成功后返回到来源页面或订单中心）
+        6. 响应式设计，支持PC端和移动端访问
+    技术栈：HTML5 + CSS3 + JavaScript + Thymeleaf模板引擎
+    依赖文件：无外部JavaScript文件依赖
+    作者：游市生活开发团队
+    创建日期：2024年
+    最后更新：2024年
+-->
+<!DOCTYPE html>
+<!-- HTML5文档类型声明，标识这是一个HTML5文档 -->
+<html xmlns:th="http://www.thymeleaf.org">
+<!-- 
+    HTML根元素
+    xmlns:th="http://www.thymeleaf.org"：声明Thymeleaf命名空间，用于模板引擎语法
+-->
+<head>
+    <!-- HTML文档头部，包含元数据和样式表引用 -->
+    <!-- 字符编码声明，指定页面使用UTF-8编码，支持中文等多语言字符 -->
+    <meta charset="UTF-8">
+    <!-- 视口元数据，设置页面在移动设备上的显示方式，width=device-width表示宽度自适应设备宽度，initial-scale=1.0表示初始缩放比例为1.0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题 -->
+    <title>统一支付 - 西湖旅游</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            padding-bottom: 80px; /* 为底部留出空间 */
+        }
+
+        .payment-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .payment-header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .payment-header h1 {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .payment-header p {
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+
+        .payment-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .order-info {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .order-info h2 {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .order-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .order-detail.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .order-detail {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .order-detail label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .order-detail span {
+            font-size: 16px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .order-amount {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .order-amount .label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .order-amount .amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #e74c3c;
+        }
+
+        .payment-methods {
+            padding: 30px;
+        }
+
+        .payment-methods h2 {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .payment-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .payment-option {
+            border: 2px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .payment-option:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+
+        .payment-option.selected {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+
+        .payment-option input[type="radio"] {
+            display: none;
+        }
+
+        .payment-option .icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .payment-option .name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .payment-option .desc {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .payment-actions {
+            padding: 30px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            min-width: 120px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .payment-container {
+                padding: 10px;
+            }
+
+            .order-details {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-options {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 支付页面容器 -->
+    <div class="payment-container">
+        <!-- 支付页面头部 -->
+        <div class="payment-header">
+            <!-- 支付页面标题 -->
+            <h1>统一支付</h1>
+            <!-- 支付页面副标题 -->
+            <p>安全便捷的支付体验</p>
+        </div>
+
+        <!-- 支付内容区域 -->
+        <div class="payment-content">
+            <!-- 订单信息区域 -->
+            <div class="order-info">
+                <!-- 订单信息标题 -->
+                <h2>订单信息</h2>
+                <!-- 订单详情列表 -->
+                <div class="order-details">
+                    <!-- 订单号详情项 -->
+                    <div class="order-detail">
+                        <!-- 订单号标签 -->
+                        <label>订单号</label>
+                        <!-- 订单号值，使用Thymeleaf动态显示订单号 -->
+                        <span th:text="${order.orderNo}">UOFOOD20251024001</span>
+                    </div>
+                    <!-- 订单类型详情项 -->
+                    <div class="order-detail">
+                        <!-- 订单类型标签 -->
+                        <label>订单类型</label>
+                        <!-- 订单类型值，使用Thymeleaf调用getTypeText()方法获取订单类型文本 -->
+                        <span th:text="${order.getTypeText()}">美食外卖</span>
+                    </div>
+                    <!-- 订单标题详情项 -->
+                    <div class="order-detail">
+                        <!-- 订单标题标签 -->
+                        <label>订单标题</label>
+                        <!-- 订单标题值，使用Thymeleaf动态显示订单标题 -->
+                        <span th:text="${order.orderTitle}">西湖楼外卖订单</span>
+                    </div>
+                    <!-- 订单描述详情项（全宽，条件显示） -->
+                    <div class="order-detail full-width" th:if="${order.orderDescription != null and order.orderDescription != ''}">
+                        <!-- 订单描述标签 -->
+                        <label>订单描述</label>
+                        <!-- 订单描述值，使用Thymeleaf动态显示订单描述（如果存在） -->
+                        <span th:text="${order.orderDescription}">订单描述</span>
+                    </div>
+                    <!-- 订单状态详情项 -->
+                    <div class="order-detail">
+                        <!-- 订单状态标签 -->
+                        <label>订单状态</label>
+                        <!-- 订单状态值，使用Thymeleaf调用getStatusText()方法获取订单状态文本 -->
+                        <span th:text="${order.getStatusText()}">待支付</span>
+                    </div>
+                    <!-- 创建时间详情项 -->
+                    <div class="order-detail">
+                        <!-- 创建时间标签 -->
+                        <label>创建时间</label>
+                        <!-- 创建时间值，使用Thymeleaf格式化时间显示（格式：yyyy-MM-dd HH:mm:ss） -->
+                        <span th:text="${#temporals.format(order.createTime, 'yyyy-MM-dd HH:mm:ss')}">2025-01-01 10:00:00</span>
+                    </div>
+                </div>
+                <!-- 订单金额显示区域 -->
+                <div class="order-amount">
+                    <!-- 金额标签 -->
+                    <div class="label">应付金额</div>
+                    <!-- 金额值，使用Thymeleaf格式化金额显示（如果金额不为null则显示格式化后的金额，否则显示¥0.00） -->
+                    <div class="amount" th:text="${order.totalAmount != null ? '¥' + #numbers.formatDecimal(order.totalAmount, 1, 2) : '¥0.00'}">¥89.00</div>
+                </div>
+                
+                <!-- 订单详情列表（购物订单显示商品列表，美食订单显示菜品列表，酒店订单显示预订详情） -->
+                <div th:if="${(detailType == 'SHOPPING' or detailType == 'FOOD' or detailType == 'HOTEL') and orderDetails != null and !orderDetails.isEmpty()}" class="order-items-list" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+                    <h3 style="font-size: 16px; color: #2c3e50; margin-bottom: 15px;" th:text="${detailType == 'SHOPPING' ? '商品清单' : (detailType == 'FOOD' ? '菜品清单' : '预订详情')}">商品清单</h3>
+                    <!-- 购物和美食订单详情表格 -->
+                    <div th:if="${detailType == 'SHOPPING' or detailType == 'FOOD'}" class="items-table" style="background: #f8f9fa; border-radius: 8px; overflow: hidden;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #e9ecef;">
+                                    <th style="padding: 12px; text-align: left; font-size: 14px; color: #495057; font-weight: 600;" th:text="${detailType == 'SHOPPING' ? '商品名称' : '菜品名称'}">商品名称</th>
+                                    <th style="padding: 12px; text-align: center; font-size: 14px; color: #495057; font-weight: 600;">单价</th>
+                                    <th style="padding: 12px; text-align: center; font-size: 14px; color: #495057; font-weight: 600;">数量</th>
+                                    <th style="padding: 12px; text-align: right; font-size: 14px; color: #495057; font-weight: 600;">小计</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 购物订单商品列表 -->
+                                <tr th:if="${detailType == 'SHOPPING'}" th:each="item : ${orderDetails}" style="border-bottom: 1px solid #dee2e6;">
+                                    <td style="padding: 12px; font-size: 14px; color: #2c3e50;" th:text="${item.productName}">商品名称</td>
+                                    <td style="padding: 12px; text-align: center; font-size: 14px; color: #495057;" th:text="'¥' + ${#numbers.formatDecimal(item.productPrice, 1, 2)}">¥0.00</td>
+                                    <td style="padding: 12px; text-align: center; font-size: 14px; color: #495057;" th:text="${item.quantity}">1</td>
+                                    <td style="padding: 12px; text-align: right; font-size: 14px; color: #e74c3c; font-weight: 600;" th:text="'¥' + ${#numbers.formatDecimal(item.subtotal, 1, 2)}">¥0.00</td>
+                                </tr>
+                                <!-- 美食订单菜品列表 -->
+                                <tr th:if="${detailType == 'FOOD'}" th:each="item : ${orderDetails}" style="border-bottom: 1px solid #dee2e6;">
+                                    <td style="padding: 12px; font-size: 14px; color: #2c3e50;" th:text="${item.menuName}">菜品名称</td>
+                                    <td style="padding: 12px; text-align: center; font-size: 14px; color: #495057;" th:text="'¥' + ${#numbers.formatDecimal(item.menuPrice, 1, 2)}">¥0.00</td>
+                                    <td style="padding: 12px; text-align: center; font-size: 14px; color: #495057;" th:text="${item.quantity}">1</td>
+                                    <td style="padding: 12px; text-align: right; font-size: 14px; color: #e74c3c; font-weight: 600;" th:text="'¥' + ${#numbers.formatDecimal(item.subtotal, 1, 2)}">¥0.00</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr style="background: #fff;">
+                                    <td colspan="3" style="padding: 12px; text-align: right; font-size: 16px; font-weight: 600; color: #2c3e50;">合计：</td>
+                                    <td style="padding: 12px; text-align: right; font-size: 18px; font-weight: 700; color: #e74c3c;" th:text="'¥' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}">¥0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <!-- 酒店订单详情卡片 -->
+                    <div th:if="${detailType == 'HOTEL'}" class="hotel-details" style="background: #f8f9fa; border-radius: 8px; padding: 20px;">
+                        <div th:each="item : ${orderDetails}" style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div>
+                                    <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 5px;">酒店名称</label>
+                                    <span style="font-size: 16px; color: #2c3e50; font-weight: 600;" th:text="${item.hotelName}">酒店名称</span>
+                                </div>
+                                <div>
+                                    <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 5px;">房型</label>
+                                    <span style="font-size: 16px; color: #2c3e50; font-weight: 600;" th:text="${item.roomType}">房型</span>
+                                </div>
+                                <div>
+                                    <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 5px;">入住日期</label>
+                                    <span style="font-size: 16px; color: #2c3e50;" th:text="${#temporals.format(item.checkInDate, 'yyyy-MM-dd')}">2025-01-01</span>
+                                </div>
+                                <div>
+                                    <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 5px;">退房日期</label>
+                                    <span style="font-size: 16px; color: #2c3e50;" th:text="${#temporals.format(item.checkOutDate, 'yyyy-MM-dd')}">2025-01-02</span>
+                                </div>
+                                <div>
+                                    <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 5px;">入住天数</label>
+                                    <span style="font-size: 16px; color: #2c3e50;" th:text="${item.nights + '晚'}">1晚</span>
+                                </div>
+                                <div>
+                                    <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 5px;">入住人数</label>
+                                    <span style="font-size: 16px; color: #2c3e50;" th:text="${item.guests + '人'}">2人</span>
+                                </div>
+                                <div>
+                                    <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 5px;">房型单价</label>
+                                    <span style="font-size: 16px; color: #495057;" th:text="'¥' + ${#numbers.formatDecimal(item.roomPrice, 1, 2)} + '/晚'">¥0.00/晚</span>
+                                </div>
+                                <div>
+                                    <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 5px;">小计</label>
+                                    <span style="font-size: 18px; color: #e74c3c; font-weight: 700;" th:text="'¥' + ${#numbers.formatDecimal(item.subtotal, 1, 2)}">¥0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="text-align: right; padding-top: 15px; border-top: 1px solid #dee2e6;">
+                            <span style="font-size: 16px; font-weight: 600; color: #2c3e50; margin-right: 10px;">合计：</span>
+                            <span style="font-size: 20px; font-weight: 700; color: #e74c3c;" th:text="'¥' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}">¥0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 支付方式选择区域 -->
+            <div class="payment-methods">
+                <!-- 支付方式标题 -->
+                <h2>选择支付方式</h2>
+                <!-- 支付方式选项列表 -->
+                <div class="payment-options">
+                    <!-- 微信支付选项 -->
+                    <label class="payment-option" onclick="selectPaymentMethod('wechat')">
+                        <!-- 微信支付单选按钮（视觉上隐藏） -->
+                        <input type="radio" name="paymentMethod" value="wechat">
+                        <!-- 微信支付图标 -->
+                        <div class="icon">💳</div>
+                        <!-- 微信支付名称 -->
+                        <div class="name">微信支付</div>
+                        <!-- 微信支付描述 -->
+                        <div class="desc">安全便捷</div>
+                    </label>
+                    <!-- 支付宝选项 -->
+                    <label class="payment-option" onclick="selectPaymentMethod('alipay')">
+                        <!-- 支付宝单选按钮（视觉上隐藏） -->
+                        <input type="radio" name="paymentMethod" value="alipay">
+                        <!-- 支付宝图标 -->
+                        <div class="icon">💰</div>
+                        <!-- 支付宝名称 -->
+                        <div class="name">支付宝</div>
+                        <!-- 支付宝描述 -->
+                        <div class="desc">快速支付</div>
+                    </label>
+                    <!-- 银行卡选项 -->
+                    <label class="payment-option" onclick="selectPaymentMethod('bank')">
+                        <!-- 银行卡单选按钮（视觉上隐藏） -->
+                        <input type="radio" name="paymentMethod" value="bank">
+                        <!-- 银行卡图标 -->
+                        <div class="icon">🏦</div>
+                        <!-- 银行卡名称 -->
+                        <div class="name">银行卡</div>
+                        <!-- 银行卡描述 -->
+                        <div class="desc">银行直连</div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 支付操作按钮区域 -->
+            <div class="payment-actions">
+                <!-- 返回按钮，点击后返回上一页 -->
+                <button class="btn btn-secondary" onclick="goBack()">返回</button>
+                <!-- 确认支付按钮，初始状态为禁用，选择支付方式后启用 -->
+                <button class="btn btn-primary" id="payButton" onclick="processPayment()" disabled>
+                    确认支付
+                </button>
+            </div>
+
+            <!-- 加载提示区域 -->
+            <div class="loading" id="loading">
+                <!-- 加载提示文本 -->
+                <div>处理中，请稍候...</div>
+            </div>
+
+            <!-- 错误消息区域 -->
+            <div class="error" id="error"></div>
+            <!-- 成功消息区域 -->
+            <div class="success" id="success"></div>
+        </div>
+    </div>
+
+    <!-- 
+        JavaScript代码块
+        功能概述：实现支付页面的交互功能，包括支付方式选择、支付处理、消息提示、页面跳转等
+    -->
+    <script>
+        /**
+         * 文件级注释：统一支付页面JavaScript功能模块
+         * 功能概述：
+         *   1. 支付方式选择功能（微信支付、支付宝、银行卡）
+         *   2. 支付处理功能（发送支付请求到后端，处理支付结果）
+         *   3. 智能页面跳转功能（根据来源页面决定跳转位置）
+         *   4. 消息提示功能（加载状态、错误消息、成功消息）
+         *   5. 订单号验证功能（页面加载时检查订单号是否存在）
+         */
+        
+        // ==================== 全局变量 ====================
+        /**
+         * 选中的支付方式
+         * 功能概述：存储用户选择的支付方式（'wechat'、'alipay'、'bank'）
+         */
+        // 选中的支付方式，初始值为null
+        let selectedPaymentMethod = null;
+        /**
+         * 订单号
+         * 功能概述：从URL查询参数中获取订单号，用于支付请求
+         */
+        // 从URL查询参数中获取订单号
+        const orderNo = new URLSearchParams(window.location.search).get('orderNo');
+
+        // ==================== 支付方式选择功能模块 ====================
+        /**
+         * 选择支付方式
+         * 功能概述：当用户点击支付方式选项时，更新选中的支付方式，更新UI状态，启用支付按钮
+         * @param {String} method - 支付方式（'wechat'、'alipay'、'bank'）
+         */
+        function selectPaymentMethod(method) {
+            // 更新选中的支付方式
+            selectedPaymentMethod = method;
+            
+            // 更新UI
+            // 遍历所有支付方式选项，移除selected类，取消选中状态
+            document.querySelectorAll('.payment-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            // 为当前点击的支付方式选项添加selected类，激活选中状态
+            event.currentTarget.classList.add('selected');
+            
+            // 启用支付按钮
+            // 移除支付按钮的disabled属性，允许用户点击支付
+            document.getElementById('payButton').disabled = false;
+        }
+
+        // ==================== 支付处理功能模块 ====================
+        /**
+         * 处理支付
+         * 功能概述：验证支付方式，发送支付请求到后端，处理支付结果，根据来源页面智能跳转
+         */
+        function processPayment() {
+            // 判断是否选择了支付方式
+            if (!selectedPaymentMethod) {
+                // 如果未选择支付方式，显示错误消息
+                showError('请选择支付方式');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 显示加载状态
+            // 显示加载提示，禁用支付按钮
+            showLoading(true);
+            // 隐藏错误消息
+            hideError();
+            // 隐藏成功消息
+            hideSuccess();
+
+            // 发送支付请求
+            // 使用fetch API发送POST请求到后端支付处理接口
+            fetch('/unified-new/payment/process', {
+                method: 'POST',  // 请求方法为POST
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'  // 设置请求头，指定内容类型为表单数据
+                },
+                body: `orderNo=${orderNo}&paymentMethod=${selectedPaymentMethod}`,  // 将订单号和支付方式编码后作为请求体
+                credentials: 'include'  // 包含Cookie，用于身份验证
+            })
+            .then(response => response.json())  // 将响应转换为JSON对象
+            .then(data => {
+                // 隐藏加载状态
+                showLoading(false);
+                // 判断后端是否返回成功
+                if (data.success) {
+                    // 如果支付成功，显示成功消息
+                    showSuccess('支付成功！正在跳转...');
+                    // 延迟2000毫秒后跳转页面
+                    setTimeout(() => {
+                        // 检查来源页面，根据来源页面决定跳转位置
+                        // 获取来源页面URL
+                        const referrer = document.referrer;
+                        // 判断来源页面是否包含'/payment'
+                        if (referrer && referrer.includes('/payment')) {
+                            // 如果是从生活缴费页面跳转的，返回到生活缴费页面并刷新
+                            window.location.href = '/payment?refresh=true';
+                        // 判断来源页面是否包含'/food'
+                        } else if (referrer && referrer.includes('/food')) {
+                            // 如果是从美食页面跳转的，返回到美食页面
+                            window.location.href = '/food';
+                        // 判断来源页面是否包含'/hc'
+                        } else if (referrer && referrer.includes('/hc')) {
+                            // 如果是从酒店页面跳转的，返回到酒店页面
+                            window.location.href = '/hc/f2';
+                        // 判断来源页面是否包含'/travel'
+                        } else if (referrer && referrer.includes('/travel')) {
+                            // 如果是从旅游页面跳转的，返回到旅游页面
+                            window.location.href = '/travel';
+                        // 判断来源页面是否包含'/shopping'
+                        } else if (referrer && referrer.includes('/shopping')) {
+                            // 如果是从购物页面跳转的，返回到购物页面
+                            window.location.href = '/shopping';
+                        // 其他情况
+                        } else {
+                            // 其他情况跳转到订单中心
+                            window.location.href = '/unified-new/orders';
+                        }
+                    }, 2000);
+                // 如果后端返回失败
+                } else {
+                    // 显示支付失败消息
+                    showError('支付失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                // 如果发生网络错误或其他异常，隐藏加载状态
+                showLoading(false);
+                // 显示支付失败消息
+                showError('支付失败: ' + error.message);
+            });
+        }
+
+        // ==================== 页面导航功能模块 ====================
+        /**
+         * 返回上一页
+         * 功能概述：返回浏览器历史记录中的上一页
+         */
+        function goBack() {
+            // 返回浏览器历史记录中的上一页
+            window.history.back();
+        }
+
+        // ==================== 消息提示功能模块 ====================
+        /**
+         * 显示/隐藏加载状态
+         * 功能概述：显示或隐藏加载提示，并控制支付按钮的禁用状态
+         * @param {Boolean} show - 是否显示加载状态（true表示显示，false表示隐藏）
+         */
+        function showLoading(show) {
+            // 设置加载提示div的显示状态（show为true时显示，false时隐藏）
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            // 设置支付按钮的禁用状态（show为true时禁用，false时启用）
+            document.getElementById('payButton').disabled = show;
+        }
+
+        /**
+         * 显示错误消息
+         * 功能概述：显示错误消息提示
+         * @param {String} message - 错误消息文本
+         */
+        function showError(message) {
+            // 获取错误消息div元素
+            const errorDiv = document.getElementById('error');
+            // 设置错误消息文本内容
+            errorDiv.textContent = message;
+            // 显示错误消息
+            errorDiv.style.display = 'block';
+        }
+
+        /**
+         * 隐藏错误消息
+         * 功能概述：隐藏错误消息提示
+         */
+        function hideError() {
+            // 隐藏错误消息div元素
+            document.getElementById('error').style.display = 'none';
+        }
+
+        /**
+         * 显示成功消息
+         * 功能概述：显示成功消息提示
+         * @param {String} message - 成功消息文本
+         */
+        function showSuccess(message) {
+            // 获取成功消息div元素
+            const successDiv = document.getElementById('success');
+            // 设置成功消息文本内容
+            successDiv.textContent = message;
+            // 显示成功消息
+            successDiv.style.display = 'block';
+        }
+
+        /**
+         * 隐藏成功消息
+         * 功能概述：隐藏成功消息提示
+         */
+        function hideSuccess() {
+            // 隐藏成功消息div元素
+            document.getElementById('success').style.display = 'none';
+        }
+
+        // ==================== 页面初始化功能模块 ====================
+        /**
+         * 页面加载时检查订单状态
+         * 功能概述：监听DOMContentLoaded事件，当DOM加载完成后检查订单号是否存在
+         */
+        // 监听DOMContentLoaded事件，当DOM加载完成后触发
+        document.addEventListener('DOMContentLoaded', () => {
+            // 判断订单号是否存在
+            if (!orderNo) {
+                // 如果订单号不存在，显示错误消息
+                showError('订单号不能为空');
+                // 直接返回，不执行后续操作
+                return;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,481 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #c9f4fc;
+  min-height: 100vh;
+}
+/* 重置所有a标签的默认样式 */
+a {
+  text-decoration: none; /* 去除下划线 */
+  color: inherit; /* 继承父元素颜色 */
+  outline: none; /* 去除聚焦时的边框 */
+  transition: all 0.3s ease; /* 添加过渡效果 */
+}
+
+/* 鼠标悬停时的样式 */
+a:hover {
+  color: #40c9ff; /* 悬停时颜色 */
+  text-decoration: none; /* 悬停时仍不下划线 */
+}
+
+/* 鼠标点击时的样式 */
+a:active {
+  color: #2aafdd; /* 点击时颜色 */
+}
+.allBox {
+  overflow: hidden;
+  background-color: #c9f4fc;
+  min-height: 100vh;
+}
+.titleBox{
+  width: 100%;
+  height: 50px;
+  display: flex;
+  position: relative;
+  top: 20px;
+  justify-content: center;
+  align-items: center;
+  font-size: 2.5em;
+  font-weight: 900;
+  color: rgb(254, 181, 46);
+}
+/* 轮播图容器 */
+.carouselContainer {
+  width: 1200px;
+  height: 600px;
+  margin: 30px auto 40px;
+  background-color: #f5f5f5;
+  padding: 50px;
+  box-shadow: 0 30px 30px #dbdbdb;
+  position: relative;
+  z-index: 1;
+}
+
+#slide {
+  width: max-content;
+  margin-top: 50px;
+}
+
+.item {
+  width: 200px;
+  height: 300px;
+  background-position: 50% 50%;
+  display: inline-block;
+  background-size: cover;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 2px black solid;
+  border-radius: 20px;
+  box-shadow: 0 30px 50px #505050;
+  transition: 0.9s;
+}
+
+.item:nth-child(1),
+.item:nth-child(2) {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: translateY(0);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.item:nth-child(3) {
+  left: calc(50% + 90px);
+}
+
+.item:nth-child(4) {
+  left: calc(50% + 310px);
+}
+
+.item:nth-child(5) {
+  left: calc(50% + 530px);
+}
+
+.item:nth-child(n+6) {
+  left: calc(50% + 750px);
+  opacity: 0;
+}
+
+.item .content {
+  width: 300px;
+  position: absolute;
+  padding: 10px;
+  left: 100px;
+  top: 40%;
+  transform: translateY(-50%);
+  font-family: system-ui;
+  color: #eee;
+  display: none;
+  background: rgba(2,37,107, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.item:nth-child(2) .content {
+  display: block;
+  opacity: 0;
+  animation: showContent 1s ease-in-out 1 forwards;
+}
+
+.item .name {
+  font-size: 40px;
+  font-weight: bold;
+  opacity: 0;
+  animation: showContent 1s ease-in-out 1 forwards;
+}
+
+.item .des {
+  margin: 20px 0;
+  opacity: 0;
+  animation: showContent 0.9s 0.3s ease-in-out 1 forwards;
+}
+
+.item button {
+  padding: 10px 20px;
+  border: none;
+  opacity: 0;
+  animation: showContent 0.6s 0.8s ease-in-out 1 forwards;
+}
+
+@keyframes showContent {
+  from {
+    opacity: 0;
+    transform: translateY(100px);
+    filter: blur(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.buttons {
+  width: 100%;
+  position: absolute;
+  bottom: 50px;
+  margin-left: -50px;
+  text-align: center;
+}
+
+.s_button {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  line-height: 50px;
+  text-align: center;
+  color: gray;
+  border-color: #fff;
+  border-radius: 50%;
+  font-weight: bold;
+  border: 1px solid #555;
+  margin: 0 25px;
+  transition: .5s;
+}
+
+.s_button:hover {
+  cursor: pointer;
+  background-color: #ccc;
+}
+
+/* 搜索栏容器 */
+.tarbarContener {
+  width: 90%;
+  max-width: 1200px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 10;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
+  border-radius: 30px;
+  padding: 12px 16px;
+  height: auto;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+  margin: 40px auto;
+  position: relative;
+}
+
+/* 搜索框样式 */
+.selectBox {
+  flex: 0 0 70%;
+  max-width: 700px;
+  display: flex;
+  align-items: center;
+  background: #000;
+  border-radius: 24px;
+  overflow: visible; /* 允许下拉框溢出 */
+  height: 48px;
+  position: relative;
+}
+
+.selectBox input {
+  flex: 1;
+  height: 100%;
+  border: none;
+  padding: 0 16px 0 48px;
+  font-size: 16px;
+  outline: none;
+  background: transparent;
+  color: #fff;
+}
+
+.selectBox input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.selectBtn {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #89f5ff;
+}
+
+/* 辅助搜索下拉框样式 */
+.autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 24px 24px; /* 与搜索框圆角一致 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: none;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.autocomplete-dropdown li {
+  padding: 10px 14px;
+  color: #333;
+  cursor: pointer;
+  list-style: none;
+}
+
+.autocomplete-dropdown li:hover {
+  background-color: #f5f5f5;
+}
+
+/* 按钮区域样式 */
+.tarbarBtnBox {
+  display: flex;
+  gap: 30px;
+  margin-left: 100px;
+  justify-content: flex-end;
+}
+
+.tarItem {
+  padding: 8px 14px;
+  font-size: 1.2em;
+  margin-left: 50px;
+  cursor: pointer;
+  border-radius: 24px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+}
+
+.tarItem:hover {
+  background: linear-gradient(135deg, #89f5ff, #40c9ff);
+  color: #ffffff;
+  padding: 10px 20px;
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+  .selectBox {
+    flex: 0 0 60%;
+    max-width: 240px;
+  }
+
+  .tarbarBtnBox {
+    gap: 8px;
+    margin-left: 8px;
+  }
+
+  .tarItem {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
+
+/* 酒店列表容器 */
+.hotelListBox {
+  width: 1200px;
+  margin: 40px auto;
+  padding: 40px 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+}
+
+/* 酒店列表项基础样式 */
+.hotelItem {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s ease;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 鼠标悬停效果 */
+.hotelItem:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+}
+
+/* 酒店图片容器 */
+.imgBox {
+  height: 200px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 酒店图片样式 */
+.imgBox img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+/* 鼠标悬停时图片缩放效果 */
+.hotelItem:hover .imgBox img {
+  transform: scale(1.1);
+}
+
+/* 标签角标样式 */
+.hotelItem::before {
+  content: attr(data-tag);
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: linear-gradient(45deg, #40c9ff, #89f5ff);
+  color: white;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 2px 10px rgba(64, 201, 255, 0.3);
+}
+
+/* 酒店描述容器 */
+.describeBox {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* 酒店名称样式 */
+.hName {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 10px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 酒店类型样式 */
+.htype {
+  display: inline-block;
+  background: rgba(137, 245, 255, 0.2);
+  color: #0077cc;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+/* 酒店地址样式 */
+.adress {
+  color: #666;
+  font-size: 0.95rem;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.adreess i {
+  color: #40c9ff;
+}
+
+/* 酒店描述文本样式 */
+.describe {
+  color: #777;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 价格与按钮区域样式 */
+.priceAndBtn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 价格样式 */
+.price {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #ff6b35;
+}
+
+/* 查看详情按钮样式 */
+.detailsBtn {
+  background: linear-gradient(135deg, #40c9ff, #89f5ff);
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 24px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.detailsBtn:hover {
+  background: linear-gradient(135deg, #2aafdd, #6ce1ff);
+  transform: translateX(5px);
+}
+
+/* 响应式设计 - 中等屏幕 */
+@media (max-width: 1024px) {
+  .hotelListBox {
+    width: 90%;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

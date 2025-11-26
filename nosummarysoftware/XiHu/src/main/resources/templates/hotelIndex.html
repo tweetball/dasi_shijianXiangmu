@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" xmlns:th="http://www.thymeleaf.org">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>hotelIndex</title>
+
+  <link rel="stylesheet" href="/css/hotelIndex.css">
+  <link rel="stylesheet" href="/css/iconfont.css">
+  <script src="/js/jquery-1.8.3.js"></script>
+</head>
+
+<body>
+<div class="allBox">
+  <div class="titleBox">
+    游市生活-住宿服务
+  </div>
+  <div class="carouselContainer">
+    <div class="slide" id="slide">
+      <div class="item" style="background-image: url(/img/bl1.jpg);">
+        <div class="content">
+          <div class="name">
+            大连渔悦小筑
+          </div>
+          <div class="des">
+            近海民宿，提供渔家风味餐食，房间简约温馨，步行 3 分钟可达沙滩。
+          </div>
+          <button><a href="/hc/findByMany?id=1">查看更多</a></button>
+        </div>
+      </div>
+      <div class="item" style="background-image: url(/img/bl2.jpg);">
+        <div class="content">
+          <div class="name">
+            大连城际快捷酒店
+          </div>
+          <div class="des">
+            交通便利，临近地铁站，房间配备基础办公设施，适合商务及休闲旅客。
+          </div>
+          <button><a href="/hc/findByMany?id=2">查看更多</a></button>
+        </div>
+      </div>
+      <div class="item" style="background-image: url(/img/bl3.jpg);">
+        <div class="content">
+          <div class="name">
+            大连滨海度假酒店
+          </div>
+          <div class="des">
+            拥有海景与园景房型，内设健身房、泳池，提供亲子活动设施。
+          </div>
+          <button><a href="/hc/findByMany?id=3">查看更多</a></button>
+        </div>
+      </div>
+      <div class="item" style="background-image: url(/img/bl4.jpg);">
+        <div class="content">
+          <div class="name">
+            大连星港国际酒店
+          </div>
+          <div class="des">
+            豪华商务度假综合体，配备米其林餐厅、空中花园及 24 小时管家服务。
+          </div>
+          <button><a href="/hc/findByMany?id=4">查看更多</a></button>
+        </div>
+      </div>
+      <div class="item" style="background-image: url(/img/bl5.jpg);">
+        <div class="content">
+          <div class="name">
+            大连云端海景酒店
+          </div>
+          <div class="des">
+            主打全海景房，设有私人海滩、水疗中心，提供高端定制化服务。
+          </div>
+          <button><a href="/hc/findByMany?id=5">查看更多</a></button>
+        </div>
+      </div>
+      <div class="item" style="background-image: url(/img/bl6.jpg);">
+        <div class="content">
+          <div class="name">
+            大连静巷别院
+          </div>
+          <div class="des">
+            隐匿于百年街巷中的庭院式民宿，保留传统建筑风格，院内花木繁茂，提供茶歇与手作体验。
+          </div>
+          <button><a href="/hc/findByMany?id=6">查看更多</a></button>
+        </div>
+      </div>
+    </div>
+    <div class="buttons">
+      <div class="s_button">&lt;</div>
+      <div class="s_button">&gt;</div>
+    </div>
+  </div>
+  <div class="tarbarContener">
+    <div class="selectBox" style="position: relative;"> <!-- 添加相对定位 -->
+      <input type="text" placeholder="搜索酒店、景点" id="searchInput">
+      <div class="selectBtn">
+        <i class="iconfont icon-search"></i>
+      </div>
+      <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+    </div>
+    <div class="tarbarBtnBox">
+      <div class="tarItem">热门酒店</div>
+      <div class="tarItem"><a href="/hc/fAll">全部酒店</a></div>
+    </div>
+  </div>
+  <div class="hotelListBox">
+    <!-- 酒店列表项 1 -->
+    <div class="hotelItem" th:each="hh:${hotelList}">
+      <div class="imgBox">
+        <img th:src="${hh.img}" alt="">
+      </div>
+      <div class="describeBox">
+        <div class="hName" th:text="${hh.name}"></div>
+        <div class="htype" th:text="${hh.level}"></div>
+        <div class="adress">
+          <i class="iconfont icon-location"></i>
+          <span th:text="${hh.address}"></span>
+        </div>
+        <div class="describe" th:text="${hh.content}">
+        </div>
+        <button class="detailsBtn">
+          <i class="iconfont icon-seeMore"></i>
+          <a th:href="@{/hc/findByMany(id=${hh.id})}">查看详情</a>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+
+</div>
+<script>
+  $(document).ready(function() {
+    // 获取DOM元素
+    const $searchInput = $('#searchInput');
+    const $autocompleteDropdown = $('#autocompleteDropdown');
+    const $hotelListBox = $('.hotelListBox');
+    const $hotHotelBtn = $('.tarItem:eq(0)'); // 热门酒店按钮
+    const $allHotelBtn = $('.tarItem:eq(1)'); // 全部酒店按钮
+
+    // 轮播图逻辑（保持不变）
+    let _direction = true;
+    let _move = () => {
+      let lists = document.querySelectorAll('.item');
+      if (_direction) {
+        document.querySelector('#slide').appendChild(lists[0]);
+      } else {
+        document.querySelector('#slide').prepend(lists[(lists.length) - 1]);
+      }
+    }
+    let timer = setInterval(_move, 2500);
+    document.querySelector('.carouselContainer').addEventListener('mouseover', () => {
+      clearInterval(timer);
+    })
+    document.querySelector('.carouselContainer').addEventListener('mouseout', () => {
+      _direction = true;
+      timer = setInterval(_move, 2500);
+    })
+    document.querySelectorAll('.s_button')[1].onclick = () => {
+      _direction = true
+      _move();
+    }
+    document.querySelectorAll('.s_button')[0].onclick = () => {
+      _direction = false
+      _move();
+    }
+
+    // 防抖计时器
+    let searchTimer = null;
+
+    // 监听输入事件
+    $searchInput.on('input', function() {
+      const inputValue = $(this).val().trim();
+
+      if (inputValue === '') {
+        $autocompleteDropdown.hide();
+        return;
+      }
+
+      // 防抖处理
+      if (searchTimer) {
+        clearTimeout(searchTimer);
+      }
+
+      searchTimer = setTimeout(() => {
+        fetchSearchResult(inputValue);
+      }, 300);
+    });
+
+    // 监听聚焦事件
+    $searchInput.on('focus', function() {
+      const inputValue = $(this).val().trim();
+      if (inputValue !== '') {
+        fetchSearchResult(inputValue);
+      }
+    });
+
+    // 监听失焦事件
+    $searchInput.on('blur', function() {
+      setTimeout(() => {
+        $autocompleteDropdown.hide();
+      }, 200);
+    });
+
+    // 点击页面其他区域隐藏下拉框
+    $(document).click(function(event) {
+      if (!$(event.target).closest('.selectBox').length) {
+        $autocompleteDropdown.hide();
+      }
+    });
+
+    // 下拉项点击事件
+    $autocompleteDropdown.on('click', 'li', function() {
+      const selectedText = $(this).text();
+      $searchInput.val(selectedText);
+      $autocompleteDropdown.hide();
+      searchNow(selectedText); // 选中下拉项后直接搜索
+    });
+
+    // 点击搜索按钮事件
+    $('.selectBtn').on('click', function() {
+      const keyword = $searchInput.val().trim();
+      if (keyword) {
+        searchNow(keyword);
+      }
+    });
+
+    // 按下回车键搜索
+    $searchInput.keypress(function(e) {
+      if (e.which === 13) { // 13是回车键的键码
+        const keyword = $(this).val().trim();
+        if (keyword) {
+          searchNow(keyword);
+        }
+      }
+    });
+
+    // 热门酒店按钮点击事件
+    $hotHotelBtn.on('click', function() {
+      $.ajax({
+        url: "/hc/hotHotels",
+        type: "GET",
+        dataType: "json",
+        success: function(data) {
+          renderHotelList(data);
+          $(this).addClass('active');
+          $allHotelBtn.removeClass('active');
+        },
+        error: function() {
+          $hotelListBox.html('<div class="error">获取热门酒店失败</div>');
+        }
+      });
+    });
+
+    // 全部酒店按钮点击事件
+    $allHotelBtn.on('click', function() {
+      window.location.href = "/hc/fAll";
+      $(this).addClass('active');
+      $hotHotelBtn.removeClass('active');
+    });
+
+    // 发起搜索请求
+    function fetchSearchResult(keyword) {
+      console.log("请求搜索建议，关键词：", keyword);
+      $.ajax({
+        url: "/hc/search",
+        type: "GET",
+        data: { keyword: keyword },
+        dataType: "json",
+        success: function(data) {
+          console.log("搜索建议返回数据：", data);
+          renderDropdown(data);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.error("搜索建议获取失败: ", textStatus, errorThrown);
+          $autocompleteDropdown.html('<li>获取搜索建议失败</li>').show();
+        }
+      });
+    }
+
+    // 渲染下拉框内容
+    function renderDropdown(data) {
+      let html = '';
+
+      if (data && data.length > 0) {
+        data.forEach(item => {
+          html += `<li>${item.name}</li>`;
+        });
+      } else {
+        html = '<li>暂无匹配结果</li>';
+      }
+
+      $autocompleteDropdown.html(html).show();
+      console.log("下拉框内容已渲染：", html);
+    }
+
+    // 立即执行搜索
+    function searchNow(keyword) {
+      $.ajax({
+        url: "/hc/search",
+        type: "GET",
+        data: { keyword: "%" + keyword + "%" },
+        dataType: "json",
+        beforeSend: function() {
+          $hotelListBox.html('<div class="loading">加载中...</div>');
+        },
+        success: function(data) {
+          renderHotelList(data);
+        },
+        error: function() {
+          $hotelListBox.html('<div class="error">搜索失败，请重试</div>');
+        }
+      });
+    }
+
+    // 渲染酒店列表
+    function renderHotelList(hotels) {
+      if (hotels.length === 0) {
+        $hotelListBox.html('<div class="no-result">未找到相关酒店</div>');
+        return;
+      }
+
+      let html = '';
+      hotels.forEach(hotel => {
+        html += `
+                <div class="hotelItem" data-tag="${hotel.level}">
+                    <div class="imgBox">
+                        <img src="${hotel.img}" alt="${hotel.name}">
+                    </div>
+                    <div class="describeBox">
+                        <div class="hName">${hotel.name}</div>
+                        <div class="htype">${hotel.level}</div>
+                        <div class="adress">
+                            <i class="iconfont icon-location"></i>
+                            ${hotel.address}
+                        </div>
+                        <div class="describe">${hotel.content}</div>
+                        <button class="detailsBtn">
+                            <i class="iconfont icon-seeMore"></i>
+                            <a href="/hc/findByMany?id=${hotel.id}">查看详情</a>
+                        </button>
+                    </div>
+                </div>
+            `;
+      });
+
+      $hotelListBox.html(html);
+    }
+  });
+</script>
+</body>
+</html>

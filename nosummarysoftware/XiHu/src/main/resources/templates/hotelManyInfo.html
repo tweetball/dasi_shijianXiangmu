@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${m.name}">酒店详情</title>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/hotelManyInfo.css">
+</head>
+<body>
+<!-- 导航栏 -->
+<header class="header">
+    <div class="container header-content">
+        <a href="#" class="logo">
+            <i class="fa fa-building-o"></i>
+            <span class="font-weight-bold">游市生活酒店预订平台</span>
+        </a>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="/hc/f2">首页</a></li>
+                <li><a href="/hc/fAll">酒店列表</a></li>
+                <li><a href="/hc/myHotelOrder">我的预订</a></li>
+            </ul>
+        </nav>
+        <button class="login-btn">
+            <i class="fa fa-user mr-1"></i> 登录
+        </button>
+    </div>
+</header>
+
+<main class="container py-4">
+    <!-- 返回按钮 -->
+    <div class="mb-4">
+        <a href="javascript:history.back()" class="text-primary">
+            <i class="fa fa-arrow-left mr-1"></i> 返回酒店列表
+        </a>
+    </div>
+
+    <!-- 酒店基本信息 -->
+    <section class="hotel-card">
+        <div class="hotel-header">
+            <div class="hotel-image">
+                <img th:src="${m.img}" alt="酒店外观" class="fixed-size-image" />
+            </div>
+            <div class="hotel-info">
+                <h1 class="hotel-name" th:text="${m.name}">酒店名称</h1>
+                <!-- 优化数据绑定方式，确保评分数据正确输出 -->
+                <div class="hotel-rating" id="hotelRating" th:text="${m.score != null ? m.score : '暂无评分'}"></div>
+                <div class="hotel-address">
+                    <i class="fa fa-map-marker mr-1"></i>
+                    <span th:text="${m.address}">辽宁省大连市中山区</span>
+                </div>
+                <div class="hotel-tags">
+                    <span class="hotel-tag" th:text="'服务电话:'+ ${m.tel}"></span>
+                </div>
+                <div class="hotel-description" th:text="${m.content}">
+                    豪华商务度假综合体，配备米其林餐厅、空中花园及24小时管家服务。
+                </div>
+                <div class="hotel-price">
+                    价格：¥<span id="minPrice">788</span>/晚起
+                </div>
+                <button id="bookNowBtn" class="book-btn">
+                    <i class="fa fa-calendar-check-o mr-1"></i> 立即预订
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 酒店设施 -->
+    <section class="facilities">
+        <h2><i class="fa fa-cog text-primary mr-1"></i> 酒店设施</h2>
+        <div class="facility-list">
+            <div class="facility-item"><i class="fa fa-wifi"></i> 免费WiFi</div>
+            <div class="facility-item"><i class="fa fa-cutlery"></i> 餐厅</div>
+            <div class="facility-item"><i class="fa fa-deaf"></i> 超强隔音</div>
+            <div class="facility-item"><i class="fa fa-car"></i> 停车场</div>
+            <div class="facility-item"><i class="fa fa-heartbeat"></i> 健身房</div>
+            <div class="facility-item"><i class="fa fa-bath"></i> 独立卫浴</div>
+            <div class="facility-item"><i class="fa fa-television"></i> 电视</div>
+            <div class="facility-item"><i class="fa fa-thermometer-half"></i> 空调</div>
+        </div>
+    </section>
+
+    <!-- 房型选择 -->
+    <section class="room-types">
+        <h2><i class="fa fa-bed text-primary mr-1"></i> 选择房型</h2>
+        <div id="roomTypes" class="room-list">
+            <!-- 房型将通过Thymeleaf和JS动态生成 -->
+            <div th:each="ml:${m.rList}" class="room-item" data-id="${ml.id}">
+                <div class="room-image">
+                    <img th:src="${ml.img}" alt="房型图片" class="fixed-size-image" />
+                </div>
+                <div class="room-info">
+                    <h3 class="room-name" th:text="${ml.name}">豪华海景双床房</h3>
+                    <div class="room-price">¥<span th:text="${ml.price}">788</span>/晚</div>
+                    <div class="room-facilities">
+                        <span class="room-facility">海景</span>
+                        <span class="room-facility">大床</span>
+                        <span class="room-facility">42寸电视</span>
+                        <span class="room-facility">免费WiFi</span>
+                        <span class="room-facility">独立卫浴</span>
+                    </div>
+                    <p class="room-description" th:text="${ml.content}">35平方米，海景，大床，免费WiFi，独立卫浴</p>
+                </div>
+                <div class="room-select">
+                    <input type="radio" name="roomType" id="room_${ml.id}" th:value="${ml.id}" class="room-radio visually-hidden" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 客户评价 -->
+    <section class="reviews">
+        <h2><i class="fa fa-comment text-primary mr-1"></i> 客户评价</h2>
+        <div id="reviews" class="review-list">
+            <div class="review-item">
+                <div class="review-header">
+                    <img src="https://picsum.photos/seed/user1/40/40" alt="用户头像" class="review-avatar" />
+                    <span class="review-name">张先生</span>
+                    <div class="review-rating" data-rating="5"></div>
+                    <span class="review-date">2025-06-15</span>
+                </div>
+                <p class="review-content">酒店位置很好，服务态度非常好，房间干净整洁，设施齐全，性价比很高，下次还会选择这里。</p>
+            </div>
+            <div class="review-item">
+                <div class="review-header">
+                    <img src="https://picsum.photos/seed/user2/40/40" alt="用户头像" class="review-avatar" />
+                    <span class="review-name">李女士</span>
+                    <div class="review-rating" data-rating="4"></div>
+                    <span class="review-date">2025-06-10</span>
+                </div>
+                <p class="review-content">酒店的海景房视野非常好，早餐种类丰富，就是停车场有点小，不过整体还是很满意的。</p>
+            </div>
+            <button id="loadMoreReviews" class="btn btn-link text-primary">
+                查看更多评价 <i class="fa fa-angle-down ml-1"></i>
+            </button>
+        </div>
+    </section>
+</main>
+
+<!-- 预订弹窗 -->
+<div id="bookingModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">填写预订信息</h3>
+            <span id="closeModal" class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="bookingForm">
+                <input type="hidden" id="bookHotelId" value="" />
+                <input type="hidden" id="bookRoomId" value="" />
+                <input type="hidden" id="bookRoomName" value="" />
+                <input type="hidden" id="bookRoomPrice" value="" />
+                <input type="hidden" id="bookTotalPrice" value="0" />
+
+                <!-- 入住日期 -->
+                <div class="form-group">
+                    <label for="checkInDate">入住日期</label>
+                    <input type="date" id="checkInDate" required />
+                </div>
+
+                <!-- 离店日期 -->
+                <div class="form-group">
+                    <label for="checkOutDate">离店日期</label>
+                    <input type="date" id="checkOutDate" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="guests">入住人数</label>
+                    <select id="guests" required>
+                        <option value="1">1人</option>
+                        <option value="2" selected>2人</option>
+                        <option value="3">3人</option>
+                        <option value="4">4人</option>
+                        <option value="5+">5人及以上</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="contactName">联系人姓名</label>
+                    <input type="text" id="contactName" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="contactPhone">联系电话</label>
+                    <input type="tel" id="contactPhone" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">特殊要求 (选填)</label>
+                    <textarea id="notes" rows="3"></textarea>
+                </div>
+
+                <div class="summary">
+                    <h4>订单摘要</h4>
+                    <div class="summary-item">
+                        <span>酒店名称</span>
+                        <span id="summaryHotelName" th:text="${m.name}">酒店名称</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>房型</span>
+                        <span id="summaryRoomName">标准间</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>单价</span>
+                        <span id="summaryPrice">¥788/晚</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>入住天数</span>
+                        <span id="summaryDays">0晚</span>
+                    </div>
+                    <div class="summary-item summary-total">
+                        <span>总计</span>
+                        <span id="summaryTotal">¥0</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fa fa-check mr-1"></i> 确认预订
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="/js/hotelManyInfo.js"></script>
+</body>
+</html>

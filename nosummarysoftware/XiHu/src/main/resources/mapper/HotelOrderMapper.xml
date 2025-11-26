@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icss.xihu.mapper.HotelOrderMapper">
+    <!-- 插入订单数据 -->
+    <insert id="insert" parameterType="com.icss.xihu.model.HotelOrder" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO hotel_order
+        (hid, rid, uid, rname, indate, outdate, guests, `name`, tel, notes, status, create_time, price)
+        VALUES
+        (#{hid}, #{rid}, #{uid}, #{rname}, #{indate}, #{outdate}, #{guests}, #{name}, #{tel}, #{notes}, #{status}, #{creatTime}, #{price})
+    </insert>
+    <!-- 根据用户ID查询订单列表 -->
+    <select id="selectByUserId" resultType="com.icss.xihu.model.HotelOrder">
+        SELECT
+        ho.*,
+        h.name AS hotelName,
+        h.img AS hotelImg
+        FROM
+        hotel_order ho
+        LEFT JOIN
+        hotel h ON ho.hid = h.id    -- 关联酒店表
+        WHERE
+        ho.uid = #{userId}
+        ORDER BY
+        ho.create_time DESC
+    </select>
+    <!-- 更新订单状态 -->
+    <update id="updateStatus">
+        UPDATE hotel_order
+        SET status = #{status}
+        WHERE id = #{orderId}
+    </update>
+</mapper>

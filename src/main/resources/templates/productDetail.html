@@ -1,0 +1,503 @@
+<!--
+    文件名称：productDetail.html
+    文件功能：商品详情页面模板
+    功能概述：
+        1. 显示商品的详细信息，包括商品名称、价格、描述、图片等
+        2. 支持商品图片轮播展示
+        3. 提供数量选择功能（增加/减少商品数量）
+        4. 提供加入购物车功能
+        5. 提供立即购买功能
+        6. 显示商品的详细信息（品牌、详细描述、规格参数、产品特色、使用指南、服务保障等）
+        7. 响应式设计，支持PC端和移动端访问
+    技术栈：HTML5 + CSS3 + JavaScript + Thymeleaf模板引擎
+    依赖文件：
+        - Font Awesome图标库（CDN）
+        - /css/navbar.css（导航栏样式）
+        - /css/shopping-pinduoduo.css（购物页面样式）
+        - /js/shop.js（购物车相关功能）
+    作者：游市生活开发团队
+    创建日期：2024年
+    最后更新：2024年
+-->
+<!DOCTYPE html>
+<!-- HTML5文档类型声明，标识这是一个HTML5文档 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<!-- 
+    HTML根元素
+    lang="zh-CN"：设置页面语言为简体中文
+    xmlns:th="http://www.thymeleaf.org"：声明Thymeleaf命名空间，用于模板引擎语法
+-->
+<head>
+    <!-- HTML文档头部，包含元数据和样式表引用 -->
+    <!-- 字符编码声明，指定页面使用UTF-8编码，支持中文等多语言字符 -->
+    <meta charset="UTF-8">
+    <!-- 视口元数据，设置页面在移动设备上的显示方式，width=device-width表示宽度自适应设备宽度，initial-scale=1.0表示初始缩放比例为1.0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题 -->
+    <title>商品详情 - 游市生活</title>
+    <!-- Font Awesome图标库（CDN） -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 导航栏样式表 -->
+    <link rel="stylesheet" href="/css/navbar.css">
+    <!-- 购物页面样式表 -->
+    <link rel="stylesheet" href="/css/shopping-pinduoduo.css">
+    <!-- 购物车相关功能JavaScript文件 -->
+    <script src="/js/shop.js"></script>
+    <!-- 
+        JavaScript代码块
+        功能概述：实现商品详情页面的交互功能，包括商品信息加载、图片轮播、数量选择、加入购物车、立即购买等
+    -->
+    <script>
+        /**
+         * 文件级注释：商品详情页面JavaScript功能模块
+         * 功能概述：
+         *   1. 商品信息加载功能（从后端API获取商品数据并渲染）
+         *   2. 商品图片轮播功能（切换商品图片）
+         *   3. 数量选择功能（增加/减少商品数量）
+         *   4. 加入购物车功能（将商品添加到购物车）
+         *   5. 立即购买功能（将商品添加到购物车并跳转到结算页面）
+         *   6. 提示消息功能（显示操作成功或失败的提示）
+         */
+        
+        // ==================== 全局变量 ====================
+        /**
+         * 当前商品信息
+         * 功能概述：保存当前页面的商品信息对象，供加入购物车和立即购买功能使用
+         */
+        // 保存当前商品信息，初始值为null
+        let currentProduct = null;
+        
+        // ==================== 商品信息加载功能模块 ====================
+        /**
+         * 加载商品信息
+         * 功能概述：从URL路径中获取商品ID，从后端API获取商品数据，并渲染到页面上
+         */
+        function loadProduct() {
+            // 从URL路径中获取商品ID（路径的最后一部分）
+            const id = location.pathname.split('/').pop();
+            // 使用fetch API发送GET请求到后端商品详情接口
+            fetch('/shop/product/' + id)
+            .then(r => {
+                // 判断响应是否成功
+                if (!r.ok) {
+                    // 如果响应不成功，抛出错误
+                    throw new Error('获取商品信息失败');
+                }
+                // 将响应转换为JSON对象
+                return r.json();
+            })
+            .then(p => {
+                // 判断商品信息是否完整
+                if (!p || !p.id) { 
+                    // 如果商品信息不完整，打印错误信息到控制台
+                    console.error('商品信息不完整:', p);
+                    // 显示错误提示
+                    alert('商品不存在或信息不完整');
+                    // 直接返回，不执行后续操作
+                    return; 
+                }
+                
+                // 保存商品信息供按钮使用
+                // 将商品信息保存到全局变量currentProduct中，供加入购物车和立即购买功能使用
+                currentProduct = p;
+                
+                // 更新商品信息
+                // 更新商品名称
+                document.getElementById('productName').textContent = p.name || '';
+                // 更新当前价格（显示格式：¥价格）
+                document.getElementById('currentPrice').textContent = '¥' + (p.price||0);
+                // 更新原价（显示格式：¥原价，原价为当前价格的1.5倍，四舍五入）
+                document.getElementById('originalPrice').textContent = '¥' + (Math.round((p.price||0) * 1.5));
+                // 更新销售信息（显示格式：已售X件，如果没有销售数量则随机生成）
+                document.getElementById('salesInfo').textContent = '已售' + (p.soldCount || Math.floor(Math.random() * 5000) + 100) + '件';
+                // 更新商品描述（如果没有描述则使用默认描述）
+                document.getElementById('productDesc').textContent = p.description || '关于"' + (p.name||'商品') + '"的详细介绍';
+                
+                // 更新详细信息
+                // 更新品牌信息（显示格式：品牌：品牌名称，如果没有则显示"暂无"）
+                document.getElementById('brandInfo').textContent = '品牌：' + (p.brand || '暂无');
+                // 更新详细描述（如果没有则显示"暂无详细描述"）
+                document.getElementById('detailedDescription').textContent = p.detailedDescription || '暂无详细描述';
+                // 更新规格参数（如果没有则显示"暂无规格参数"）
+                document.getElementById('specifications').textContent = p.specifications || '暂无规格参数';
+                // 更新产品特色（如果没有则显示"暂无产品特色"）
+                document.getElementById('features').textContent = p.features || '暂无产品特色';
+                // 更新使用指南（如果没有则显示"暂无使用指南"）
+                document.getElementById('usageGuide').textContent = p.usageGuide || '暂无使用指南';
+                // 更新保修信息（显示格式：保修信息：保修内容，如果没有则显示"暂无"）
+                document.getElementById('warrantyInfo').textContent = '保修信息：' + (p.warrantyInfo || '暂无');
+                // 更新配送信息（显示格式：配送信息：配送内容，如果没有则显示"暂无"）
+                document.getElementById('shippingInfo').textContent = '配送信息：' + (p.shippingInfo || '暂无');
+                
+                // 更新图片轮播
+                // 初始化图片数组
+                let imgs = [];
+                // 判断商品是否有图片（images字段不为空且去除空格后不为空）
+                if (p.images && p.images.trim()) {
+                    // 如果有图片，将图片字符串按逗号分割成数组，并过滤掉空值
+                    imgs = p.images.split(',').filter(Boolean);
+                }
+                // 如果没有images，使用cover作为默认图片
+                // 判断图片数组是否为空且商品有封面图片
+                if (imgs.length === 0 && p.cover) {
+                    // 如果图片数组为空但有封面图片，将封面图片添加到图片数组中
+                    imgs = [p.cover];
+                }
+                
+                // 判断图片数组是否不为空
+                if (imgs.length > 0) {
+                    // 获取图片轮播元素
+                    const galleryImage = document.getElementById('galleryImage');
+                    // 判断图片轮播元素是否存在
+                    if (galleryImage) {
+                        // 设置图片源为第一张图片
+                        galleryImage.src = imgs[0];
+                        // 显示图片元素
+                        galleryImage.style.display = 'block';
+                        // 设置图片的alt属性（用于无障碍访问）
+                        galleryImage.alt = p.name || '商品图片';
+                    }
+                }
+                
+                // 更新轮播指示器
+                // 获取轮播指示器容器元素
+                const indicators = document.getElementById('galleryIndicators');
+                // 判断轮播指示器容器元素是否存在
+                if (indicators) {
+                    // 生成轮播指示器HTML（每个图片对应一个指示器，第一个指示器默认激活）
+                    indicators.innerHTML = imgs.map((_, i) => 
+                        `<div class="indicator ${i === 0 ? 'active' : ''}" onclick="switchImage(${i})"></div>`
+                    ).join('');
+                }
+                
+                // 绑定加购按钮
+                // 获取加入购物车按钮元素
+                const addCartBtn = document.getElementById('addCartBtn');
+                // 判断加入购物车按钮元素是否存在
+                if (addCartBtn) {
+                    // 为加入购物车按钮绑定点击事件
+                    addCartBtn.onclick = function(){ 
+                        // 判断商品信息是否已加载完成
+                        if (!currentProduct || !currentProduct.id) {
+                            // 如果商品信息未加载完成，显示错误提示
+                            alert('商品信息未加载完成，请稍后再试');
+                            // 直接返回，不执行后续操作
+                            return;
+                        }
+                        // 获取当前选择的数量（从数量显示元素中获取，如果没有则默认为1）
+                        const quantity = parseInt(document.getElementById('quantity').textContent) || 1;
+                        // 确保传入数字ID
+                        // 判断商品ID是否为数字类型，如果不是则转换为整数
+                        const productId = typeof currentProduct.id === 'number' ? currentProduct.id : parseInt(currentProduct.id);
+                        // 打印调试信息到控制台
+                        console.log('加入购物车 - 商品ID:', productId, '数量:', quantity);
+                        
+                        // 修复内容（2024）：改为增量模式，支持多次点击叠加
+                        // 之前使用目标数量模式（quantity + 1000），导致多次点击无法叠加
+                        // 现在使用增量模式，每次点击都会在现有数量基础上增加选择的数量
+                        // 例如：购物车中已有2个，选择数量为1，点击后变成3个；再次点击变成4个
+                        // 调用shop.js中的updateQtyForProduct函数，将商品添加到购物车（quantity作为增量）
+                        updateQtyForProduct(productId, quantity); 
+                        // 显示成功提示消息
+                        showToast('已加入购物车');
+                    };
+                }
+                
+                // 绑定立即购买按钮
+                // 获取立即购买按钮元素
+                const buyNowBtn = document.getElementById('buyNowBtn');
+                // 判断立即购买按钮元素是否存在
+                if (buyNowBtn) {
+                    // 为立即购买按钮绑定点击事件
+                    buyNowBtn.onclick = function(){ 
+                        // 判断商品信息是否已加载完成
+                        if (!currentProduct || !currentProduct.id) {
+                            // 如果商品信息未加载完成，显示错误提示
+                            alert('商品信息未加载完成，请稍后再试');
+                            // 直接返回，不执行后续操作
+                            return;
+                        }
+                        // 获取当前选择的数量（从数量显示元素中获取，如果没有则默认为1）
+                        const quantity = parseInt(document.getElementById('quantity').textContent) || 1;
+                        // 确保传入数字ID
+                        // 判断商品ID是否为数字类型，如果不是则转换为整数
+                        const productId = typeof currentProduct.id === 'number' ? currentProduct.id : parseInt(currentProduct.id);
+                        // 打印调试信息到控制台
+                        console.log('立即购买 - 商品ID:', productId, '数量:', quantity);
+                        // 获取商品信息
+                        const productName = currentProduct.name || '未知商品';
+                        const productPrice = currentProduct.price || 0;
+                        const productCover = currentProduct.cover || '/img/default-product.jpg';
+                        // 调用shop.js中的buyNowDirect函数，直接结算而不加入购物车
+                        buyNowDirect(productId, quantity, productName, productPrice, productCover);
+                    };
+                }
+            })
+            .catch(err => {
+                // 如果发生网络错误或其他异常，打印错误信息到控制台
+                console.error('加载商品失败:', err);
+                // 显示错误提示
+                alert('加载商品信息失败，请稍后重试');
+            });
+        }
+        
+        // ==================== 图片轮播功能模块 ====================
+        /**
+         * 切换图片
+         * 功能概述：切换到指定索引的商品图片，并更新轮播指示器状态
+         * @param {Number} index - 图片索引（从0开始）
+         */
+        function switchImage(index) {
+            // 从URL路径中获取商品ID（路径的最后一部分）
+            const id = location.pathname.split('/').pop();
+            // 使用fetch API发送GET请求到后端商品详情接口
+            fetch('/shop/product/' + id)
+            .then(r=>r.json())  // 将响应转换为JSON对象
+            .then(p=>{
+                // 初始化图片数组
+                let imgs = [];
+                // 判断商品是否有图片（images字段不为空且去除空格后不为空）
+                if (p.images && p.images.trim()) {
+                    // 如果有图片，将图片字符串按逗号分割成数组，并过滤掉空值
+                    imgs = p.images.split(',').filter(Boolean);
+                }
+                // 如果没有images，使用cover作为默认图片
+                // 判断图片数组是否为空且商品有封面图片
+                if (imgs.length === 0 && p.cover) {
+                    // 如果图片数组为空但有封面图片，将封面图片添加到图片数组中
+                    imgs = [p.cover];
+                }
+                
+                // 判断指定索引的图片是否存在
+                if (imgs[index]) {
+                    // 如果图片存在，更新图片轮播元素的源为指定索引的图片
+                    document.getElementById('galleryImage').src = imgs[index];
+                    // 更新指示器状态
+                    // 遍历所有轮播指示器，更新激活状态（当前索引的指示器激活，其他取消激活）
+                    document.querySelectorAll('.indicator').forEach((ind, i) => {
+                        // 使用toggle方法切换active类（如果i === index则添加active类，否则移除）
+                        ind.classList.toggle('active', i === index);
+                    });
+                }
+            });
+        }
+        
+        // ==================== 提示消息功能模块 ====================
+        /**
+         * 显示提示消息
+         * 功能概述：在页面中央显示一个提示消息，2秒后自动消失
+         * @param {String} message - 提示消息文本
+         */
+        function showToast(message) {
+            // 创建一个div元素作为提示消息容器
+            const toast = document.createElement('div');
+            // 设置提示消息容器的样式（固定在页面中央，黑色半透明背景，白色文字，圆角边框）
+            toast.style.cssText = `
+                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                background: rgba(0,0,0,0.8); color: white; padding: 12px 24px;
+                border-radius: 20px; z-index: 9999; font-size: 14px;
+            `;
+            // 设置提示消息文本内容
+            toast.textContent = message;
+            // 将提示消息容器添加到页面body中
+            document.body.appendChild(toast);
+            // 延迟2000毫秒（2秒）后自动移除提示消息容器
+            setTimeout(() => document.body.removeChild(toast), 2000);
+        }
+        
+        // ==================== 数量选择功能模块 ====================
+        /**
+         * 改变数量
+         * 功能概述：增加或减少商品数量，并更新数量显示和减号按钮的禁用状态
+         * @param {Number} delta - 数量变化量（正数表示增加，负数表示减少）
+         */
+        function changeQuantity(delta) {
+            // 获取数量显示元素
+            const quantityEl = document.getElementById('quantity');
+            // 获取减号按钮元素
+            const minusBtn = document.getElementById('minusBtn');
+            // 获取当前数量（从数量显示元素中获取，转换为整数）
+            const current = parseInt(quantityEl.textContent);
+            // 计算新数量（当前数量加上变化量，最小值为1）
+            const newQuantity = Math.max(1, current + delta);
+            
+            // 更新数量显示元素的文本内容为新数量
+            quantityEl.textContent = newQuantity;
+            // 更新减号按钮的禁用状态（如果新数量小于等于1则禁用，否则启用）
+            minusBtn.disabled = newQuantity <= 1;
+        }
+        
+        // ==================== 页面初始化功能模块 ====================
+        /**
+         * 页面加载时加载商品信息
+         * 功能概述：监听DOMContentLoaded事件，当DOM加载完成后自动加载商品信息
+         */
+        // 监听DOMContentLoaded事件，当DOM加载完成后触发
+        document.addEventListener('DOMContentLoaded', loadProduct);
+    </script>
+</head>
+<body>
+    <!-- 页面主体 -->
+    <!-- 页面头部导航栏 -->
+    <header class="header">
+        <!-- 导航栏容器 -->
+        <nav class="nav">
+            <!-- 网站Logo链接 -->
+            <a href="/" class="logo">
+                <!-- 城市图标 -->
+                <i class="fas fa-city"></i> 
+                <!-- 网站名称 -->
+                游市生活
+            </a>
+            <!-- 导航链接列表 -->
+            <ul class="nav-links">
+                <!-- 首页导航链接 -->
+                <li><a href="/">首页</a></li>
+                <!-- 购物服务导航链接（当前激活状态） -->
+                <li><a href="/shopping" class="active">购物服务</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <!-- 主要内容区域 -->
+    <main class="product-detail">
+        <!-- 详情容器 -->
+        <div class="detail-container">
+            <!-- 详情主要内容区域 -->
+            <div class="detail-main">
+                <!-- 左侧：商品图片 -->
+                <!-- 商品图片轮播区域 -->
+                <div class="image-gallery">
+                    <!-- 商品主图片（通过JavaScript动态设置src） -->
+                    <img id="galleryImage" class="gallery-image" src="" alt="商品图片" style="display: none;">
+                    <!-- 轮播指示器容器（指示器将通过JavaScript动态生成） -->
+                    <div id="galleryIndicators" class="gallery-indicators">
+                        <!-- 指示器将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 右侧：商品信息 -->
+                <!-- 商品信息区域 -->
+                <div class="product-info-section">
+                    <!-- 价格区域 -->
+                    <!-- 商品价格显示区域 -->
+                    <div class="price-section">
+                        <!-- 当前价格（通过JavaScript动态更新） -->
+                        <div class="current-price" id="currentPrice">¥0</div>
+                        <!-- 原价（通过JavaScript动态更新） -->
+                        <div class="original-price" id="originalPrice">¥0</div>
+                        <!-- 销售信息（通过JavaScript动态更新） -->
+                        <div class="sales-info" id="salesInfo">已售0件</div>
+                    </div>
+
+                    <!-- 商品信息 -->
+                    <!-- 商品基本信息区域 -->
+                    <div class="product-detail-info">
+                        <!-- 商品名称（通过JavaScript动态更新） -->
+                        <div class="product-detail-name" id="productName">商品名称</div>
+                        <!-- 商品描述（通过JavaScript动态更新） -->
+                        <div class="product-detail-desc" id="productDesc">商品描述</div>
+                        
+                        <!-- 数量选择器 -->
+                        <!-- 商品数量选择区域 -->
+                        <div class="quantity-selector">
+                            <!-- 数量选择标签 -->
+                            <label>选择数量：</label>
+                            <!-- 数量控制按钮组 -->
+                            <div class="quantity-controls">
+                                <!-- 减少数量按钮（点击后调用changeQuantity(-1)函数） -->
+                                <button class="qty-btn" id="minusBtn" onclick="changeQuantity(-1)">-</button>
+                                <!-- 数量显示（通过JavaScript动态更新） -->
+                                <span class="qty" id="quantity">1</span>
+                                <!-- 增加数量按钮（点击后调用changeQuantity(1)函数） -->
+                                <button class="qty-btn" id="plusBtn" onclick="changeQuantity(1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 详细商品信息 -->
+            <!-- 商品详细信息区域 -->
+            <div class="product-details-section">
+                <!-- 品牌信息 -->
+                <!-- 品牌信息详情区域 -->
+                <div class="detail-section">
+                    <!-- 区域标题 -->
+                    <h3 class="section-title">品牌信息</h3>
+                    <!-- 品牌信息内容（通过JavaScript动态更新） -->
+                    <div class="brand-info" id="brandInfo">品牌：</div>
+                </div>
+                
+                <!-- 详细描述 -->
+                <!-- 商品详情区域 -->
+                <div class="detail-section">
+                    <!-- 区域标题 -->
+                    <h3 class="section-title">商品详情</h3>
+                    <!-- 详细描述内容（通过JavaScript动态更新） -->
+                    <div class="detailed-description" id="detailedDescription">详细描述：</div>
+                </div>
+                
+                <!-- 规格参数 -->
+                <!-- 规格参数区域 -->
+                <div class="detail-section">
+                    <!-- 区域标题 -->
+                    <h3 class="section-title">规格参数</h3>
+                    <!-- 规格参数内容（通过JavaScript动态更新） -->
+                    <div class="specifications" id="specifications">规格参数：</div>
+                </div>
+                
+                <!-- 产品特色 -->
+                <!-- 产品特色区域 -->
+                <div class="detail-section">
+                    <!-- 区域标题 -->
+                    <h3 class="section-title">产品特色</h3>
+                    <!-- 产品特色内容（通过JavaScript动态更新） -->
+                    <div class="features" id="features">产品特色：</div>
+                </div>
+                
+                <!-- 使用指南 -->
+                <!-- 使用指南区域 -->
+                <div class="detail-section">
+                    <!-- 区域标题 -->
+                    <h3 class="section-title">使用指南</h3>
+                    <!-- 使用指南内容（通过JavaScript动态更新） -->
+                    <div class="usage-guide" id="usageGuide">使用指南：</div>
+                </div>
+                
+                <!-- 服务保障 -->
+                <!-- 服务保障区域 -->
+                <div class="detail-section">
+                    <!-- 区域标题 -->
+                    <h3 class="section-title">服务保障</h3>
+                    <!-- 服务信息容器 -->
+                    <div class="service-info">
+                        <!-- 保修信息内容（通过JavaScript动态更新） -->
+                        <div class="warranty-info" id="warrantyInfo">保修信息：</div>
+                        <!-- 配送信息内容（通过JavaScript动态更新） -->
+                        <div class="shipping-info" id="shippingInfo">配送信息：</div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 底部操作栏 -->
+    <!-- 商品详情页面底部固定操作栏 -->
+    <div class="detail-bottom-bar">
+        <!-- 左侧操作按钮区域 -->
+        <div class="bottom-bar-left">
+            <!-- 加入购物车按钮（通过JavaScript绑定点击事件） -->
+            <button class="add-cart-btn" id="addCartBtn">加入购物车</button>
+        </div>
+        <!-- 右侧操作按钮区域 -->
+        <div class="bottom-bar-right">
+            <!-- 立即购买按钮（通过JavaScript绑定点击事件） -->
+            <button class="buy-now-btn" id="buyNowBtn">立即购买</button>
+        </div>
+    </div>
+</body>
+</html>
+
+

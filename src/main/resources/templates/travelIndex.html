@@ -1,0 +1,521 @@
+<!--
+    文件名称：travelIndex.html
+    文件功能：出行服务首页模板
+    功能概述：
+        1. 显示出行服务首页，包括轮播图区域（hero section）
+        2. 提供景点搜索功能（搜索景点名称、地址等）
+        3. 显示景点列表（景点卡片，包含图片、名称、位置、等级、开放时间、描述、价格等）
+        4. 提供分页功能（分页导航）
+        5. 响应式设计，支持PC端和移动端访问
+    技术栈：HTML5 + CSS3 + JavaScript + Thymeleaf模板引擎
+    依赖文件：
+        - Font Awesome图标库（CDN）
+        - /css/navbar.css（导航栏样式）
+    作者：游市生活开发团队
+    创建日期：2024年
+    最后更新：2024年
+-->
+<!DOCTYPE html>
+<!-- HTML5文档类型声明，标识这是一个HTML5文档 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<!-- 
+    HTML根元素
+    lang="zh-CN"：设置页面语言为简体中文
+    xmlns:th="http://www.thymeleaf.org"：声明Thymeleaf命名空间，用于模板引擎语法
+-->
+<head>
+    <!-- HTML文档头部，包含元数据和样式表引用 -->
+    <!-- 字符编码声明，指定页面使用UTF-8编码，支持中文等多语言字符 -->
+    <meta charset="UTF-8">
+    <!-- 视口元数据，设置页面在移动设备上的显示方式，width=device-width表示宽度自适应设备宽度，initial-scale=1.0表示初始缩放比例为1.0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题 -->
+    <title>游市生活 - 出行服务</title>
+    <!-- Font Awesome图标库（CDN） -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 导航栏样式表 -->
+    <link rel="stylesheet" href="/css/navbar.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 20px 30px 20px;
+        }
+
+        /* 轮播图区域 */
+        .hero-section {
+            background: linear-gradient(135deg, #FF6600, #FF8533);
+            color: white;
+            padding: 60px 0;
+            margin-bottom: 40px;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .hero-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.3;
+            z-index: 1;
+        }
+
+        /* 搜索区域 */
+        .search-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #FF6600;
+        }
+
+        .search-btn {
+            padding: 12px 30px;
+            background: #FF6600;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-btn:hover {
+            background: #e55a00;
+        }
+
+        /* 景点列表 */
+        .attraction-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .attraction-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .attraction-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        .attraction-image {
+            width: 100%;
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .attraction-content {
+            padding: 20px;
+        }
+
+        .attraction-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .attraction-info {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .attraction-info span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .attraction-description {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .attraction-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .attraction-price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FF6600;
+        }
+
+        .view-details-btn {
+            padding: 8px 20px;
+            background: #FF6600;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .view-details-btn:hover {
+            background: #e55a00;
+            color: white;
+        }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 40px;
+        }
+
+        .pagination a {
+            padding: 10px 15px;
+            background: white;
+            color: #333;
+            text-decoration: none;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s;
+        }
+
+        .pagination a:hover,
+        .pagination a.active {
+            background: #FF6600;
+            color: white;
+            border-color: #FF6600;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .search-form {
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-width: 100%;
+            }
+
+            .attraction-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 页面主体 -->
+    <!-- 统一导航栏 -->
+    <!-- 页面头部导航栏 -->
+    <header class="header">
+        <!-- 导航栏容器 -->
+        <nav class="nav">
+            <!-- 网站Logo链接 -->
+            <a href="/" class="logo">
+                <!-- 城市图标 -->
+                <i class="fas fa-city"></i>
+                <!-- 网站名称 -->
+                游市生活
+            </a>
+            <!-- 导航链接列表 -->
+            <ul class="nav-links">
+                <!-- 首页导航链接 -->
+                <li><a href="/">首页</a></li>
+                <!-- 住宿服务导航链接 -->
+                <li><a href="/hc/f2">住宿服务</a></li>
+                <!-- 出行服务导航链接 -->
+                <li><a href="/travel">出行服务</a></li>
+                <!-- 美食服务导航链接 -->
+                <li><a href="/food">美食服务</a></li>
+                <!-- 购物服务导航链接 -->
+                <li><a href="/shopping">购物服务</a></li>
+                <!-- 生活缴费导航链接 -->
+                <li><a href="/payment">生活缴费</a></li>
+            </ul>
+            <!-- 用户操作区域 -->
+            <div class="user-actions">
+                <!-- 未登录状态显示 -->
+                <!-- 使用Thymeleaf判断用户是否未登录 -->
+                <div th:if="${session.user == null}">
+                    <!-- 登录按钮链接 -->
+                    <a href="/user/login" class="login-btn">登录</a>
+                    <!-- 注册按钮链接 -->
+                    <a href="/user/register" class="register-btn">注册</a>
+                </div>
+                <!-- 已登录状态显示 -->
+                <!-- 使用Thymeleaf判断用户是否已登录 -->
+                <div th:if="${session.user != null}">
+                    <!-- 我的订单链接（统一订单中心） -->
+                    <a href="/unified-new/orders" style="color: #FF6600; text-decoration: none; font-weight: 500; margin-right: 15px;">
+                        <!-- 订单列表图标 -->
+                        <i class="fas fa-list-alt"></i>
+                        <!-- 我的订单文本 -->
+                        我的订单
+                    </a>
+                    <!-- 个人中心链接 -->
+                    <a href="/user/profile" style="color: #00CED1; text-decoration: none; font-weight: 500;">
+                        <!-- 用户图标 -->
+                        <i class="fas fa-user-circle"></i>
+                        <!-- 用户昵称或用户名（使用Thymeleaf动态显示，优先显示昵称，如果没有则显示用户名） -->
+                        <span th:text="${session.user.nickname ?: session.user.username}">用户</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 主要内容 -->
+    <!-- 出行服务页面主要内容区域 -->
+    <main class="main-content">
+        <!-- 轮播图区域 -->
+        <!-- 页面头部轮播图区域（hero section） -->
+        <div class="hero-section">
+            <!-- 背景图片（使用内联样式设置背景图片） -->
+            <div class="hero-image" style="background-image: url('/img/1.jpg')"></div>
+            <!-- 轮播图内容区域 -->
+            <div class="hero-content">
+                <!-- 页面主标题 -->
+                <h1 class="hero-title">出行服务</h1>
+                <!-- 页面副标题 -->
+                <p class="hero-subtitle">智能出行规划，便捷交通服务，让您的每一次出行都精彩纷呈</p>
+            </div>
+        </div>
+
+        <!-- 搜索区域 -->
+        <!-- 景点搜索区域 -->
+        <div class="search-section">
+            <!-- 搜索表单（提交时调用searchAttractions函数，阻止默认提交行为） -->
+            <form class="search-form" onsubmit="searchAttractions(event)">
+                <!-- 搜索输入框（文本类型，占位符提示用户输入搜索关键词） -->
+                <input type="text" class="search-input" placeholder="搜索景点名称、地址..." id="searchKeyword">
+                <!-- 搜索按钮（提交类型，包含搜索图标和文本） -->
+                <button type="submit" class="search-btn">
+                    <!-- 搜索图标 -->
+                    <i class="fas fa-search"></i> 
+                    <!-- 搜索文本 -->
+                    搜索
+                </button>
+            </form>
+        </div>
+
+        <!-- 景点列表 -->
+        <!-- 景点列表容器（通过JavaScript动态加载景点） -->
+        <div class="attraction-list" id="attractionList">
+            <!-- 景点卡片1：西湖风景名胜区 -->
+            <div class="attraction-card">
+                <!-- 景点图片（使用内联样式设置背景图片） -->
+                <div class="attraction-image" style="background-image: url('/img/1.jpg')"></div>
+                <!-- 景点内容区域 -->
+                <div class="attraction-content">
+                    <!-- 景点名称 -->
+                    <h3 class="attraction-name">西湖风景名胜区</h3>
+                    <!-- 景点信息区域 -->
+                    <div class="attraction-info">
+                        <!-- 景点位置信息（带位置图标） -->
+                        <span><i class="fas fa-map-marker-alt"></i> 杭州市西湖区</span>
+                        <!-- 景点等级信息（带星级图标） -->
+                        <span><i class="fas fa-star"></i> 5A级景区</span>
+                        <!-- 开放时间信息（带时钟图标） -->
+                        <span><i class="fas fa-clock"></i> 全天开放</span>
+                    </div>
+                    <!-- 景点描述 -->
+                    <p class="attraction-description">世界文化遗产，以秀丽的湖光山色和众多的名胜古迹闻名中外，是中国著名的旅游胜地。</p>
+                    <!-- 景点操作区域 -->
+                    <div class="attraction-actions">
+                        <!-- 景点价格 -->
+                        <div class="attraction-price">免费</div>
+                        <!-- 查看详情按钮链接 -->
+                        <a href="#" class="view-details-btn">查看详情</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 景点卡片2：雷峰塔 -->
+            <div class="attraction-card">
+                <!-- 景点图片（使用内联样式设置背景图片） -->
+                <div class="attraction-image" style="background-image: url('/img/2.jpg')"></div>
+                <!-- 景点内容区域 -->
+                <div class="attraction-content">
+                    <!-- 景点名称 -->
+                    <h3 class="attraction-name">雷峰塔</h3>
+                    <!-- 景点信息区域 -->
+                    <div class="attraction-info">
+                        <!-- 景点位置信息（带位置图标） -->
+                        <span><i class="fas fa-map-marker-alt"></i> 杭州市西湖区</span>
+                        <!-- 景点等级信息（带星级图标） -->
+                        <span><i class="fas fa-star"></i> 4A级景区</span>
+                        <!-- 开放时间信息（带时钟图标） -->
+                        <span><i class="fas fa-clock"></i> 8:00-17:30</span>
+                    </div>
+                    <!-- 景点描述 -->
+                    <p class="attraction-description">西湖十景之一，因白娘子传说而闻名，是杭州的标志性建筑之一。</p>
+                    <!-- 景点操作区域 -->
+                    <div class="attraction-actions">
+                        <!-- 景点价格 -->
+                        <div class="attraction-price">¥40起</div>
+                        <!-- 查看详情按钮链接 -->
+                        <a href="#" class="view-details-btn">查看详情</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 景点卡片3：断桥残雪 -->
+            <div class="attraction-card">
+                <!-- 景点图片（使用内联样式设置背景图片） -->
+                <div class="attraction-image" style="background-image: url('/img/3.jpg')"></div>
+                <!-- 景点内容区域 -->
+                <div class="attraction-content">
+                    <!-- 景点名称 -->
+                    <h3 class="attraction-name">断桥残雪</h3>
+                    <!-- 景点信息区域 -->
+                    <div class="attraction-info">
+                        <!-- 景点位置信息（带位置图标） -->
+                        <span><i class="fas fa-map-marker-alt"></i> 杭州市西湖区</span>
+                        <!-- 景点等级信息（带星级图标） -->
+                        <span><i class="fas fa-star"></i> 免费景点</span>
+                        <!-- 开放时间信息（带时钟图标） -->
+                        <span><i class="fas fa-clock"></i> 全天开放</span>
+                    </div>
+                    <!-- 景点描述 -->
+                    <p class="attraction-description">西湖十景之一，冬季雪后景色尤为美丽，是观赏西湖雪景的最佳地点。</p>
+                    <!-- 景点操作区域 -->
+                    <div class="attraction-actions">
+                        <!-- 景点价格 -->
+                        <div class="attraction-price">免费</div>
+                        <!-- 查看详情按钮链接 -->
+                        <a href="#" class="view-details-btn">查看详情</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分页 -->
+        <!-- 分页导航区域 -->
+        <div class="pagination">
+            <!-- 第1页链接（默认激活） -->
+            <a href="#" class="active">1</a>
+            <!-- 第2页链接 -->
+            <a href="#">2</a>
+            <!-- 第3页链接 -->
+            <a href="#">3</a>
+            <!-- 下一页链接 -->
+            <a href="#">下一页</a>
+        </div>
+    </main>
+
+    <!-- 
+        JavaScript代码块
+        功能概述：实现出行服务首页的交互功能，包括景点搜索、页面初始化等
+    -->
+    <script>
+        /**
+         * 文件级注释：出行服务首页JavaScript功能模块
+         * 功能概述：
+         *   1. 景点搜索功能（搜索景点名称、地址等）
+         *   2. 页面初始化功能（页面加载完成后的初始化操作）
+         */
+        
+        // ==================== 景点搜索功能模块 ====================
+        /**
+         * 搜索景点
+         * 功能概述：处理搜索表单提交，搜索景点名称、地址等
+         * @param {Event} event - 表单提交事件对象
+         */
+        function searchAttractions(event) {
+            // 阻止表单的默认提交行为（页面跳转）
+            event.preventDefault();
+            // 获取搜索关键词输入框的值
+            const keyword = document.getElementById('searchKeyword').value;
+            // 判断搜索关键词是否不为空（去除首尾空格后）
+            if (keyword.trim()) {
+                // 如果搜索关键词不为空，打印调试信息到控制台
+                console.log('搜索关键词:', keyword);
+                // 显示提示信息（搜索功能开发中）
+                alert('搜索功能开发中...');
+            }
+        }
+
+        // ==================== 页面初始化功能模块 ====================
+        /**
+         * 页面加载完成后的初始化
+         * 功能概述：监听DOMContentLoaded事件，当DOM加载完成后执行初始化操作
+         */
+        // 监听DOMContentLoaded事件，当DOM加载完成后触发
+        document.addEventListener('DOMContentLoaded', function() {
+            // 打印调试信息到控制台
+            console.log('出行服务页面加载完成');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,2261 @@
+<!--
+    文件名称：index.html
+    文件功能：游市生活平台首页模板
+    功能概述：
+        1. 显示平台首页，包括轮播图Banner、快速功能区、推荐酒店、特色服务等
+        2. 集成AI聊天小窗功能，提供智能客服服务
+        3. 实现轮播图自动播放、鼠标跟随光效、滚动动画等交互效果
+        4. 响应式设计，支持PC端和移动端访问
+    技术栈：HTML5 + CSS3 + JavaScript + Thymeleaf模板引擎
+    依赖文件：
+        - /css/navbar.css（导航栏样式）
+        - Font Awesome图标库（CDN）
+    作者：游市生活开发团队
+    创建日期：2024年
+    最后更新：2024年
+-->
+<!DOCTYPE html>
+<!-- HTML5文档类型声明，标识这是一个HTML5文档 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<!-- 
+    HTML根元素
+    lang="zh-CN"：设置页面语言为简体中文
+    xmlns:th="http://www.thymeleaf.org"：声明Thymeleaf命名空间，用于模板引擎语法
+-->
+<head>
+    <!-- HTML文档头部，包含元数据和样式表引用 -->
+    <!-- 字符编码声明，指定页面使用UTF-8编码，支持中文等多语言字符 -->
+    <meta charset="UTF-8">
+    <!-- 视口元数据，设置页面在移动设备上的显示方式，width=device-width表示宽度自适应设备宽度，initial-scale=1.0表示初始缩放比例为1.0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题，显示在浏览器标签页上 -->
+    <title>游市生活 - 您的本地生活专家</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            overflow-x: hidden;
+        }
+
+        /* 导航栏样式已移至外部CSS文件 /css/navbar.css */
+
+        /* 按钮样式已移至外部CSS文件 /css/navbar.css */
+
+        /* 主要内容区域 */
+        .main-content {
+            margin-top: 70px;
+        }
+
+        /* Banner区域 - 轮播图 */
+        .banner {
+            position: relative;
+            height: 500px;
+            overflow: hidden;
+            color: white;
+        }
+
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .carousel-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .carousel-slide.active {
+            opacity: 1;
+        }
+
+        .carousel-slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 206, 209, 0.3));
+            z-index: 1;
+        }
+
+        .carousel-indicators {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 3;
+        }
+
+        .carousel-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .carousel-indicator.active {
+            background: #00CED1;
+            transform: scale(1.2);
+        }
+
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 3;
+            backdrop-filter: blur(10px);
+        }
+
+        .carousel-nav:hover {
+            background: rgba(0, 206, 209, 0.8);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-nav.prev {
+            left: 30px;
+        }
+
+        .carousel-nav.next {
+            right: 30px;
+        }
+
+        .banner-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            z-index: 2;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .banner-text h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            line-height: 1.2;
+            animation: slideInLeft 1s ease-out;
+        }
+
+        .banner-text p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            opacity: 0.95;
+            line-height: 1.6;
+            animation: slideInLeft 1s ease-out 0.3s both;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+            color: #00CED1;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 18px;
+            transition: all 0.4s ease;
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+            animation: slideInLeft 1s ease-out 0.6s both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        .cta-button:hover {
+            background: white;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.4);
+        }
+
+        .cta-button i {
+            margin-left: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .cta-button:hover i {
+            transform: translateX(5px);
+        }
+
+        .banner-image {
+            text-align: center;
+            font-size: 200px;
+            color: rgba(255, 255, 255, 0.15);
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        /* 快速功能区 - 一行5个 */
+        .quick-services {
+            background: white;
+            margin: -40px 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        .quick-services::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 206, 209, 0.05), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: -100%; }
+        }
+
+        .quick-services-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 50px 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .quick-services h2 {
+            text-align: center;
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 50px;
+            font-weight: 600;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+        }
+
+        .service-card {
+            background: white;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .service-card:nth-child(1) { animation-delay: 0.1s; animation-fill-mode: both; }
+        .service-card:nth-child(2) { animation-delay: 0.2s; animation-fill-mode: both; }
+        .service-card:nth-child(3) { animation-delay: 0.3s; animation-fill-mode: both; }
+        .service-card:nth-child(4) { animation-delay: 0.4s; animation-fill-mode: both; }
+        .service-card:nth-child(5) { animation-delay: 0.5s; animation-fill-mode: both; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 206, 209, 0.05), rgba(72, 209, 204, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .service-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #00CED1, #48D1CC);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .service-card:hover::before {
+            opacity: 1;
+        }
+
+        .service-card:hover::after {
+            transform: scaleX(1);
+        }
+
+        .service-card:hover {
+            border-color: #00CED1;
+            transform: translateY(-10px) rotateX(5deg);
+            box-shadow: 0 20px 40px rgba(0, 206, 209, 0.2);
+        }
+
+        .service-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 28px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-icon::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transition: all 0.4s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .service-card:hover .service-icon {
+            transform: scale(1.15) rotate(10deg);
+            box-shadow: 0 10px 25px rgba(0, 206, 209, 0.4);
+        }
+
+        .service-card:hover .service-icon::before {
+            width: 100%;
+            height: 100%;
+        }
+
+        .service-card h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 12px;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .service-card:hover h3 {
+            color: #00CED1;
+        }
+
+        .service-card p {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .service-badge {
+            background: linear-gradient(45deg, #00CED1, #48D1CC);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+            box-shadow: 0 2px 8px rgba(0, 206, 209, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .service-badge.coming-soon {
+            background: linear-gradient(45deg, #666, #888);
+            animation: none;
+        }
+
+        /* 推荐酒店区域样式 */
+        .recommended-hotels {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+
+        .hotels-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .hotels-content h2 {
+            font-size: 2.5rem;
+            color: #333;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .hotels-subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .hotels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .hotel-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .hotel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .hotel-image {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .hotel-content {
+            padding: 25px;
+        }
+
+        .hotel-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .hotel-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .hotel-location,
+        .hotel-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .hotel-rating {
+            color: #FF6600;
+        }
+
+        .hotel-description {
+            color: #777;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .hotel-price {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #FF6600;
+        }
+
+        .hotels-action {
+            text-align: center;
+        }
+
+        .view-all-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #FF6600;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .view-all-btn:hover {
+            background: #e55a00;
+            color: white;
+        }
+
+        /* 特色服务区域 */
+        .features {
+            padding: 80px 0;
+            background: #fafafa;
+            position: relative;
+        }
+
+        .features-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .features-subtitle {
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 60px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+        }
+
+        .feature-item.animate {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0, 206, 209, 0.3);
+        }
+
+        .feature-content h3 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .feature-content p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* 页脚 - 顺丰风格 */
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 60px 0 20px;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-section h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #00CED1;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-section ul li a {
+            color: #bbb;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer-section ul li a:hover {
+            color: #00CED1;
+            transform: translateX(5px);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #444;
+            padding-top: 20px;
+            text-align: center;
+            color: #bbb;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .services-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .banner {
+                height: 400px;
+            }
+
+            .banner-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+                padding: 0 10px;
+            }
+
+            .banner-text h1 {
+                font-size: 36px;
+            }
+
+            .carousel-nav {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+
+            .carousel-nav.prev {
+                left: 15px;
+            }
+
+            .carousel-nav.next {
+                right: 15px;
+            }
+
+            .carousel-indicators {
+                bottom: 20px;
+            }
+
+            .quick-services {
+                margin: -20px 10px 0;
+            }
+
+            .services-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .banner {
+                height: 350px;
+            }
+
+            .banner-text h1 {
+                font-size: 28px;
+            }
+
+            .banner-text p {
+                font-size: 16px;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .carousel-nav {
+                display: none; /* 移动端隐藏导航按钮，只保留指示器和触摸滑动 */
+            }
+        }
+
+        /* 加载动画 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 1;
+            visibility: visible;
+            transition: all 0.8s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 鼠标跟随效果 */
+        .cursor-glow {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, rgba(0, 206, 209, 0.3), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+        }
+
+        /* AI聊天小窗样式 */
+        .ai-chat-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10000;
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .ai-chat-button {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 206, 209, 0.4);
+            transition: all 0.3s ease;
+            border: none;
+            position: relative;
+        }
+
+        .ai-chat-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(0, 206, 209, 0.6);
+        }
+
+        .ai-chat-button::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .ai-chat-window {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 380px;
+            height: 500px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+        }
+
+        .ai-chat-window.active {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-chat-header {
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .ai-chat-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-chat-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            transition: transform 0.2s ease;
+        }
+
+        .ai-chat-close:hover {
+            transform: rotate(90deg);
+        }
+
+        .ai-chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .ai-chat-message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-chat-message.user {
+            flex-direction: row-reverse;
+        }
+
+        .ai-chat-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        .ai-chat-message.ai .ai-chat-avatar {
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+        }
+
+        .ai-chat-message.user .ai-chat-avatar {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .ai-chat-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .ai-chat-message.ai .ai-chat-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .ai-chat-message.user .ai-chat-content {
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .ai-chat-input-area {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .ai-chat-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .ai-chat-input:focus {
+            border-color: #00CED1;
+        }
+
+        .ai-chat-send {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .ai-chat-send:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(0, 206, 209, 0.4);
+        }
+
+        .ai-chat-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .ai-chat-typing {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 12px;
+            border-bottom-left-radius: 4px;
+        }
+
+        .ai-chat-typing span {
+            width: 8px;
+            height: 8px;
+            background: #00CED1;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .ai-chat-typing span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .ai-chat-typing span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            .ai-chat-window {
+                width: calc(100vw - 40px);
+                height: calc(100vh - 120px);
+                bottom: 80px;
+                right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载动画 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- 鼠标跟随光效 -->
+    <div class="cursor-glow" id="cursorGlow"></div>
+
+    <!-- 顶部导航 -->
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo">
+                <i class="fas fa-city"></i>
+                游市生活
+            </a>
+            <ul class="nav-links">
+                <li><a href="/">首页</a></li>
+                <li><a href="/hc/f2">住宿服务</a></li>
+                <li><a href="/travel">出行服务</a></li>
+                <li><a href="/food">美食服务</a></li>
+                <li><a href="/shopping">购物服务</a></li>
+                <li><a href="/payment">生活缴费</a></li>
+            </ul>
+            <div class="user-actions">
+                <div th:if="${session.user == null}">
+                    <a href="/user/login" class="login-btn">登录</a>
+                    <a href="/user/register" class="register-btn">注册</a>
+                </div>
+                <div th:if="${session.user != null}">
+                    <a href="/unified-new/orders" style="color: #FF6600; text-decoration: none; font-weight: 500; margin-right: 15px;">
+                        <i class="fas fa-list-alt"></i>
+                        我的订单
+                    </a>
+                    <a href="/user/profile" style="color: #00CED1; text-decoration: none; font-weight: 500;">
+                        <i class="fas fa-user-circle"></i>
+                        <span th:text="${session.user.nickname ?: session.user.username}">用户</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 主要内容 -->
+    <main class="main-content">
+        <!-- Banner区域 - 轮播图 -->
+        <section class="banner">
+            <div class="carousel-container">
+                <div class="carousel-slide active" style="background-image: url('/img/1.jpg')"></div>
+                <div class="carousel-slide" style="background-image: url('/img/2.jpg')"></div>
+                <div class="carousel-slide" style="background-image: url('/img/3.jpg')"></div>
+                <div class="carousel-slide" style="background-image: url('/img/4.jpg')"></div>
+                <div class="carousel-slide" style="background-image: url('/img/5.jpg')"></div>
+                
+                <button class="carousel-nav prev" onclick="changeSlide(-1)">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="carousel-nav next" onclick="changeSlide(1)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                
+                <div class="carousel-indicators">
+                    <div class="carousel-indicator active" onclick="currentSlide(1)"></div>
+                    <div class="carousel-indicator" onclick="currentSlide(2)"></div>
+                    <div class="carousel-indicator" onclick="currentSlide(3)"></div>
+                    <div class="carousel-indicator" onclick="currentSlide(4)"></div>
+                    <div class="carousel-indicator" onclick="currentSlide(5)"></div>
+                </div>
+                </div>
+
+            <div class="banner-content">
+                <div class="banner-text">
+                    <h1>游市生活</h1>
+                    <p>专业可靠的本地生活服务平台<br>让您的每一次出行都精彩纷呈</p>
+                    <a href="#services" class="cta-button">
+                        立即体验
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="banner-image">
+                    <i class="fas fa-city"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- 快速功能区 -->
+        <section class="quick-services" id="services">
+            <div class="quick-services-content">
+                <h2>核心服务</h2>
+                <div class="services-grid">
+                    <div class="service-card" onclick="location.href='/hc/f2'">
+                        <div class="service-icon">
+                            <i class="fas fa-bed"></i>
+                        </div>
+                        <h3>住宿服务</h3>
+                        <p>精选优质酒店民宿，提供舒适住宿体验</p>
+                        <span class="service-badge">热门推荐</span>
+                    </div>
+
+                    <div class="service-card" onclick="location.href='/food'">
+                        <div class="service-icon">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <h3>美食服务</h3>
+                        <p>发现当地特色美食，享受味蕾盛宴</p>
+                        <span class="service-badge">立即体验</span>
+                    </div>
+
+                    <div class="service-card" onclick="location.href='/travel'">
+                        <div class="service-icon">
+                            <i class="fas fa-car"></i>
+                        </div>
+                        <h3>出行服务</h3>
+                        <p>智能出行规划，便捷交通服务</p>
+                        <span class="service-badge">立即体验</span>
+                    </div>
+
+                    <div class="service-card" onclick="location.href='/shopping'">
+                        <div class="service-icon">
+                            <i class="fas fa-shopping-bag"></i>
+                        </div>
+                        <h3>购物服务</h3>
+                        <p>汇聚本地商户，优质购物体验</p>
+                        <span class="service-badge">立即体验</span>
+                    </div>
+
+                    <div class="service-card" onclick="location.href='/payment'">
+                        <div class="service-icon">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <h3>生活缴费</h3>
+                        <p>便民缴费服务，生活更加便捷</p>
+                        <span class="service-badge">立即体验</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 推荐酒店 -->
+        <section class="recommended-hotels" th:if="${recommendedHotels != null and !recommendedHotels.empty}">
+            <div class="hotels-content">
+                <h2>精选推荐</h2>
+                <p class="hotels-subtitle">为您精选优质酒店，享受舒适住宿体验</p>
+                <div class="hotels-grid">
+                    <div th:each="hotel : ${recommendedHotels}" class="hotel-card" th:onclick="'location.href=\'/hc/findById?id=' + ${hotel.id} + '\''">
+                        <div class="hotel-image" th:style="'background-image: url(' + ${hotel.img} + ')'"></div>
+                        <div class="hotel-content">
+                            <h3 class="hotel-name" th:text="${hotel.name}">酒店名称</h3>
+                            <div class="hotel-info">
+                                <span class="hotel-location">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span th:text="${hotel.address}">地址</span>
+                                </span>
+                                <span class="hotel-rating">
+                                    <i class="fas fa-star"></i>
+                                    <span th:text="${hotel.score}">4.5</span>
+                                </span>
+                            </div>
+                            <p class="hotel-description" th:text="${hotel.content}">酒店描述</p>
+                            <div class="hotel-price">¥299起</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hotels-action">
+                    <a href="/hc/f2" class="view-all-btn">
+                        <i class="fas fa-arrow-right"></i>
+                        查看更多酒店
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 特色服务 -->
+        <section class="features">
+            <div class="features-content">
+                <h2>为什么选择游市生活</h2>
+                <p class="features-subtitle">专业、可靠、便捷的一站式生活服务平台</p>
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>安全保障</h3>
+                            <p>严格的商户审核机制，完善的用户保障体系，让您安心享受每一项服务</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>7×24小时服务</h3>
+                            <p>全天候客服支持，随时为您解决问题，提供贴心周到的服务体验</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>智能便捷</h3>
+                            <p>智能推荐算法，个性化服务定制，让每一次使用都更加便捷高效</p>
+                        </div>
+                </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>贴心服务</h3>
+                            <p>专业的服务团队，细致入微的服务标准，为您提供超预期的服务体验</p>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </section>
+    </main>
+
+    <!-- AI聊天小窗 -->
+    <div class="ai-chat-widget">
+        <button class="ai-chat-button" id="aiChatButton" onclick="toggleChatWindow()">
+            <i class="fas fa-robot"></i>
+        </button>
+        <div class="ai-chat-window" id="aiChatWindow">
+            <div class="ai-chat-header">
+                <h3>
+                    <i class="fas fa-robot"></i>
+                    AI智能助手
+                </h3>
+                <button class="ai-chat-close" onclick="toggleChatWindow()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="ai-chat-messages" id="aiChatMessages">
+                <div class="ai-chat-message ai">
+                    <div class="ai-chat-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="ai-chat-content">
+                        您好！我是游市生活的AI助手，很高兴为您服务。我可以帮您解答关于住宿、美食、出行、购物等方面的问题。有什么可以帮您的吗？
+                    </div>
+                </div>
+            </div>
+            <div class="ai-chat-input-area">
+                <input type="text" class="ai-chat-input" id="aiChatInput" placeholder="输入您的问题..." onkeypress="handleChatKeyPress(event)">
+                <button class="ai-chat-send" id="aiChatSend" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h3>核心服务</h3>
+                    <ul>
+                        <li><a href="/hc/f2">住宿服务</a></li>
+                        <li><a href="/food">美食服务</a></li>
+                        <li><a href="/travel">出行服务</a></li>
+                        <li><a href="/shopping">购物服务</a></li>
+                        <li><a href="/payment">生活缴费</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>用户服务</h3>
+                    <ul>
+                        <li><a href="/user/register">注册账号</a></li>
+                        <li><a href="/user/login">用户登录</a></li>
+                        <li><a href="#">帮助中心</a></li>
+                        <li><a href="#">意见反馈</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>关于我们</h3>
+                    <ul>
+                        <li><a href="#">公司介绍</a></li>
+                        <li><a href="#">加入我们</a></li>
+                        <li><a href="#">联系我们</a></li>
+                        <li><a href="#">合作伙伴</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>联系方式</h3>
+                    <ul>
+                        <li>客服热线: 400-888-8888</li>
+                        <li>邮箱: service@youshishenghua.com</li>
+                        <li>地址: 北京市朝阳区xxx街道</li>
+                        <li>工作时间: 7×24小时</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 游市生活. 版权所有 | 专业可靠的本地生活服务平台</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 
+        JavaScript代码块
+        th:inline="none"：禁用Thymeleaf对JavaScript代码的内联处理，避免Thymeleaf解析JavaScript中的正则表达式等特殊字符
+    -->
+    <script th:inline="none">
+        /**
+         * 文件级注释：首页JavaScript功能模块
+         * 功能概述：
+         *   1. 轮播图自动播放和手动控制（支持键盘、鼠标、触摸操作）
+         *   2. 鼠标跟随光效动画
+         *   3. 页面滚动动画效果（导航栏动态效果、特色服务区域滚动动画）
+         *   4. AI聊天小窗功能（发送消息、接收回复、Markdown格式清理）
+         *   5. 模态框提示功能（即将上线提示）
+         *   6. 平滑滚动功能
+         *   7. 服务卡片悬浮效果
+         *   8. 页面加载动画
+         */
+        
+        // ==================== 轮播图功能模块 ====================
+        /**
+         * 轮播图相关变量
+         * 功能概述：定义轮播图控制所需的全局变量
+         */
+        // 当前幻灯片索引，初始值为0（第一张）
+        let currentSlideIndex = 0;
+        // 获取所有轮播图幻灯片元素，返回NodeList对象
+        const slides = document.querySelectorAll('.carousel-slide');
+        // 获取所有轮播图指示器元素，返回NodeList对象
+        const indicators = document.querySelectorAll('.carousel-indicator');
+        // 轮播图幻灯片总数，用于循环播放
+        const totalSlides = slides.length;
+
+        // ==================== 页面加载初始化模块 ====================
+        /**
+         * 页面加载完成后隐藏加载动画
+         * 功能概述：监听页面加载完成事件，延迟隐藏加载动画，并初始化页面动画效果和轮播图自动播放
+         */
+        // 监听window的load事件，当页面所有资源（包括图片、样式表等）加载完成后触发
+        window.addEventListener('load', function() {
+            // 延迟1200毫秒后执行，确保加载动画有足够时间显示
+            setTimeout(() => {
+                // 获取加载动画遮罩层元素
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                // 为加载动画遮罩层添加hidden类，隐藏加载动画
+                loadingOverlay.classList.add('hidden');
+                
+                // 启动所有动画效果
+                // 调用initAnimations函数，初始化页面所有动画效果（滚动动画、服务卡片悬浮效果、导航栏图标动画等）
+                initAnimations();
+                
+                // 启动轮播图自动播放
+                // 调用startCarousel函数，启动轮播图自动播放功能
+                startCarousel();
+            }, 1200);
+        });
+
+        // ==================== 鼠标跟随光效模块 ====================
+        /**
+         * 鼠标跟随光效功能
+         * 功能概述：实现鼠标跟随光效动画，光效元素跟随鼠标移动，带有平滑过渡效果
+         */
+        // 获取鼠标跟随光效元素
+        const cursorGlow = document.getElementById('cursorGlow');
+        // 鼠标当前X坐标，初始值为0
+        let mouseX = 0;
+        // 鼠标当前Y坐标，初始值为0
+        let mouseY = 0;
+        // 光效元素当前X坐标，初始值为0
+        let currentX = 0;
+        // 光效元素当前Y坐标，初始值为0
+        let currentY = 0;
+
+        /**
+         * 监听鼠标移动事件
+         * 功能概述：实时更新鼠标坐标，用于计算光效元素的目标位置
+         */
+        // 监听document的mousemove事件，当鼠标移动时触发
+        document.addEventListener('mousemove', (e) => {
+            // 更新鼠标当前X坐标（相对于浏览器窗口的X坐标）
+            mouseX = e.clientX;
+            // 更新鼠标当前Y坐标（相对于浏览器窗口的Y坐标）
+            mouseY = e.clientY;
+        });
+
+        /**
+         * 更新光效元素位置
+         * 功能概述：使用平滑插值算法更新光效元素位置，实现跟随鼠标的平滑动画效果
+         */
+        function updateCursor() {
+            // 使用线性插值算法，平滑更新光效元素X坐标（每次移动10%的距离，实现平滑跟随效果）
+            currentX += (mouseX - currentX) * 0.1;
+            // 使用线性插值算法，平滑更新光效元素Y坐标（每次移动10%的距离，实现平滑跟随效果）
+            currentY += (mouseY - currentY) * 0.1;
+            
+            // 设置光效元素左偏移量（减去10px是为了让光效元素中心点对齐鼠标位置）
+            cursorGlow.style.left = currentX - 10 + 'px';
+            // 设置光效元素上偏移量（减去10px是为了让光效元素中心点对齐鼠标位置）
+            cursorGlow.style.top = currentY - 10 + 'px';
+            
+            // 使用requestAnimationFrame递归调用updateCursor函数，实现平滑动画循环（60fps）
+            requestAnimationFrame(updateCursor);
+        }
+        // 立即调用updateCursor函数，启动鼠标跟随光效动画
+        updateCursor();
+
+        // ==================== 动画效果初始化模块 ====================
+        /**
+         * 初始化动画效果
+         * 功能概述：初始化页面所有动画效果，包括滚动动画、服务卡片悬浮效果、导航栏图标动画等
+         */
+        function initAnimations() {
+            // 视差滚动效果
+            // 监听window的scroll事件，当页面滚动时触发handleScrollAnimations函数
+            window.addEventListener('scroll', handleScrollAnimations);
+            
+            // 服务卡片悬浮效果增强
+            // 获取所有服务卡片元素，遍历每个卡片并添加鼠标事件监听器
+            document.querySelectorAll('.service-card').forEach((card, index) => {
+                /**
+                 * 鼠标进入事件处理
+                 * 功能概述：当鼠标进入服务卡片时，应用3D变换效果和阴影效果，增强视觉反馈
+                 */
+                // 监听卡片的mouseenter事件，当鼠标进入卡片时触发
+                card.addEventListener('mouseenter', () => {
+                    // 应用3D变换效果：向上移动15px，绕X轴旋转8度，绕Y轴旋转5度
+                    card.style.transform = 'translateY(-15px) rotateX(8deg) rotateY(5deg)';
+                    // 应用阴影效果，增强立体感
+                    card.style.boxShadow = '0 25px 50px rgba(0, 206, 209, 0.3)';
+                });
+                
+                /**
+                 * 鼠标离开事件处理
+                 * 功能概述：当鼠标离开服务卡片时，恢复原始状态
+                 */
+                // 监听卡片的mouseleave事件，当鼠标离开卡片时触发
+                card.addEventListener('mouseleave', () => {
+                    // 恢复原始变换状态（无变换）
+                    card.style.transform = 'translateY(0) rotateX(0) rotateY(0)';
+                    // 恢复原始阴影效果
+                    card.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.1)';
+                });
+                
+                // 添加随机浮动动画
+                // 延迟2000毫秒后为每个卡片添加浮动动画，每个卡片的动画延迟时间不同（index * 0.5秒），实现错落有致的动画效果
+                setTimeout(() => {
+                    // 为卡片添加浮动动画，动画持续4秒，无限循环，缓入缓出效果，延迟时间根据索引计算
+                    card.style.animation = `cardFloat 4s ease-in-out infinite ${index * 0.5}s`;
+                }, 2000);
+            });
+            
+            // 导航栏图标动画
+            // 获取导航栏logo图标元素
+            const logoIcon = document.querySelector('.logo i');
+            // 每3000毫秒执行一次图标动画
+            setInterval(() => {
+                // 应用图标放大和旋转效果（放大1.2倍，旋转10度）
+                logoIcon.style.transform = 'scale(1.2) rotate(10deg)';
+                // 200毫秒后恢复原始状态
+                setTimeout(() => {
+                    // 恢复原始大小和角度
+                    logoIcon.style.transform = 'scale(1) rotate(0deg)';
+                }, 200);
+            }, 3000);
+        }
+
+        // ==================== 滚动动画处理模块 ====================
+        /**
+         * 滚动动画处理函数
+         * 功能概述：处理页面滚动时的动画效果，包括导航栏动态效果和特色服务区域滚动动画
+         */
+        function handleScrollAnimations() {
+            // 获取导航栏header元素
+            const header = document.querySelector('.header');
+            // 获取当前页面垂直滚动距离（像素）
+            const scrollY = window.scrollY;
+            
+            // 导航栏动态效果
+            // 判断页面滚动距离是否大于100像素
+            if (scrollY > 100) {
+                // 如果滚动距离大于100像素，应用导航栏滚动后的样式（更不透明的背景和更明显的阴影）
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+                header.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+            } else {
+                // 如果滚动距离小于等于100像素，应用导航栏原始样式（半透明背景和轻微阴影）
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+                header.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+            }
+            
+            // 特色服务区域滚动动画
+            // 获取所有特色服务项元素
+            const featureItems = document.querySelectorAll('.feature-item');
+            // 遍历每个特色服务项，检查是否进入视口并触发动画
+            featureItems.forEach((item, index) => {
+                // 获取元素相对于视口的位置信息
+                const rect = item.getBoundingClientRect();
+                // 判断元素顶部是否进入视口的80%位置（即元素顶部距离视口顶部小于视口高度的80%）
+                if (rect.top < window.innerHeight * 0.8) {
+                    // 如果元素进入视口，延迟添加animate类（每个元素的延迟时间不同，实现错落有致的动画效果）
+                    setTimeout(() => {
+                        // 为元素添加animate类，触发CSS动画
+                        item.classList.add('animate');
+                    }, index * 200);
+                }
+            });
+        }
+
+        // ==================== 动态样式添加模块 ====================
+        /**
+         * 添加卡片浮动动画样式
+         * 功能概述：动态创建CSS样式元素，定义卡片浮动动画关键帧
+         */
+        // 创建style元素，用于动态添加CSS样式
+        const style = document.createElement('style');
+        // 设置style元素的内容，定义cardFloat动画关键帧（0%和100%时元素在原始位置，50%时向上移动5px）
+        style.textContent = `
+            @keyframes cardFloat {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(-5px); }
+            }
+        `;
+        // 将style元素添加到document的head中，使动画样式生效
+        document.head.appendChild(style);
+
+        // ==================== 平滑滚动功能模块 ====================
+        /**
+         * 平滑滚动功能
+         * 功能概述：为所有锚点链接（href以#开头的链接）添加平滑滚动效果
+         */
+        // 获取所有href以#开头的锚点链接元素，遍历每个链接并添加点击事件监听器
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            /**
+             * 锚点链接点击事件处理
+             * 功能概述：阻止默认跳转行为，使用平滑滚动方式滚动到目标元素
+             */
+            // 监听链接的click事件，当点击链接时触发
+            anchor.addEventListener('click', function (e) {
+                // 阻止默认的锚点跳转行为
+                e.preventDefault();
+                // 获取链接href属性值（锚点ID），并查找对应的目标元素
+                const target = document.querySelector(this.getAttribute('href'));
+                // 如果目标元素存在，执行平滑滚动
+                if (target) {
+                    // 使用scrollIntoView方法，平滑滚动到目标元素位置
+                    target.scrollIntoView({
+                        behavior: 'smooth',  // 平滑滚动效果
+                        block: 'start'      // 目标元素对齐到视口顶部
+                    });
+                }
+            });
+        });
+
+        // ==================== 模态框提示功能模块 ====================
+        /**
+         * 显示即将上线提示模态框（增强版）
+         * 功能概述：创建并显示一个模态框，提示用户该功能正在开发中，包含淡入动画、缩放动画和图标弹跳动画
+         * @param {String} serviceName - 服务名称，用于在模态框中显示
+         */
+        function showComingSoon(serviceName) {
+            // 创建模态框容器div元素
+            const modal = document.createElement('div');
+            // 设置模态框容器的CSS样式（固定定位、全屏遮罩、居中显示、淡入动画）
+            modal.style.cssText = `
+                position: fixed;        /* 固定定位，相对于浏览器窗口 */
+                top: 0;                /* 距离顶部0像素 */
+                left: 0;               /* 距离左侧0像素 */
+                width: 100%;           /* 宽度100%，覆盖整个屏幕 */
+                height: 100%;          /* 高度100%，覆盖整个屏幕 */
+                background: rgba(0, 0, 0, 0.6);  /* 半透明黑色背景，实现遮罩效果 */
+                display: flex;         /* 使用flex布局 */
+                justify-content: center;  /* 水平居中 */
+                align-items: center;   /* 垂直居中 */
+                z-index: 10000;        /* 设置层级，确保在最上层 */
+                opacity: 0;            /* 初始透明度为0，用于淡入动画 */
+                animation: modalFadeIn 0.3s ease forwards;  /* 淡入动画，持续0.3秒 */
+            `;
+            
+            // 设置模态框容器的HTML内容（包含图标、标题、描述和关闭按钮）
+            modal.innerHTML = `
+                <div style="
+                    background: white;           /* 白色背景 */
+                    padding: 50px;              /* 内边距50像素 */
+                    border-radius: 12px;       /* 圆角12像素 */
+                    text-align: center;         /* 文本居中 */
+                    max-width: 450px;          /* 最大宽度450像素 */
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);  /* 阴影效果 */
+                    transform: scale(0.8);     /* 初始缩放0.8倍，用于缩放动画 */
+                    animation: modalScaleIn 0.3s ease 0.1s forwards;  /* 缩放动画，延迟0.1秒执行 */
+                ">
+                    <div style="
+                        color: #FF6600;         /* 图标颜色为橙色 */
+                        font-size: 60px;        /* 图标大小60像素 */
+                        margin-bottom: 25px;    /* 底部外边距25像素 */
+                        animation: iconBounce 0.6s ease 0.3s;  /* 图标弹跳动画，延迟0.3秒执行 */
+                    ">
+                        <i class="fas fa-tools"></i>  <!-- 工具图标 -->
+                    </div>
+                    <h3 style="color: #333; margin-bottom: 20px; font-size: 28px; font-weight: 600;">${serviceName}</h3>  <!-- 服务名称标题 -->
+                    <p style="color: #666; margin-bottom: 35px; line-height: 1.8; font-size: 16px;">
+                        该功能正在紧张开发中，敬请期待！<br>  <!-- 提示文本第一行 -->
+                        我们将为您提供更优质的服务体验。  <!-- 提示文本第二行 -->
+                    </p>
+                    <button onclick="closeModal(this)" style="
+                        background: linear-gradient(45deg, #FF6600, #ff8533);  /* 橙色渐变背景 */
+                        color: white;          /* 白色文字 */
+                        border: none;         /* 无边框 */
+                        padding: 15px 40px;   /* 内边距 */
+                        border-radius: 8px;   /* 圆角8像素 */
+                        font-size: 18px;      /* 字体大小18像素 */
+                        font-weight: 600;     /* 字体粗细600 */
+                        cursor: pointer;      /* 鼠标指针样式为手型 */
+                        transition: all 0.3s ease;  /* 过渡动画，持续0.3秒 */
+                        box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);  /* 阴影效果 */
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(255, 102, 0, 0.4)'" 
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255, 102, 0, 0.3)'">
+                        知道了  <!-- 按钮文本 -->
+                    </button>
+                </div>
+            `;
+            
+            // 将模态框容器添加到document的body中，显示模态框
+            document.body.appendChild(modal);
+        }
+
+        /**
+         * 关闭模态框
+         * 功能概述：关闭并移除模态框，包含淡出动画效果
+         * @param {HTMLElement} button - 触发关闭的按钮元素
+         */
+        function closeModal(button) {
+            // 通过按钮元素向上查找，获取模态框容器元素（button -> div -> modal）
+            const modal = button.closest('div').parentElement;
+            // 为模态框容器添加淡出动画样式
+            modal.style.animation = 'modalFadeOut 0.3s ease forwards';
+            // 延迟300毫秒后移除模态框元素（等待淡出动画完成）
+            setTimeout(() => {
+                // 从DOM中移除模态框元素
+                modal.remove();
+            }, 300);
+        }
+
+        /**
+         * 添加模态框动画样式
+         * 功能概述：动态创建CSS样式元素，定义模态框相关的动画关键帧（淡入、淡出、缩放、图标弹跳）
+         */
+        // 创建style元素，用于动态添加CSS样式
+        const modalStyle = document.createElement('style');
+        // 设置style元素的内容，定义模态框相关的动画关键帧
+        modalStyle.textContent = `
+            /* 模态框淡入动画：从透明度0到透明度1 */
+            @keyframes modalFadeIn {
+                to { opacity: 1; }
+            }
+            /* 模态框淡出动画：从透明度1到透明度0 */
+            @keyframes modalFadeOut {
+                to { opacity: 0; }
+            }
+            /* 模态框缩放动画：从缩放0.8倍到缩放1倍 */
+            @keyframes modalScaleIn {
+                to { transform: scale(1); }
+            }
+            /* 图标弹跳动画：实现上下弹跳效果 */
+            @keyframes iconBounce {
+                0%, 20%, 50%, 80%, 100% { transform: translateY(0); }  /* 在0%、20%、50%、80%、100%时，元素在原始位置 */
+                40% { transform: translateY(-10px); }  /* 在40%时，元素向上移动10像素 */
+                60% { transform: translateY(-5px); }  /* 在60%时，元素向上移动5像素 */
+            }
+        `;
+        // 将style元素添加到document的head中，使动画样式生效
+        document.head.appendChild(modalStyle);
+
+        // ==================== 键盘快捷键功能模块 ====================
+        /**
+         * 键盘快捷键功能
+         * 功能概述：监听键盘按键事件，实现ESC键关闭模态框、左右方向键控制轮播图等功能
+         */
+        // 监听document的keydown事件，当按下键盘按键时触发
+        document.addEventListener('keydown', function(e) {
+            // 判断是否按下ESC键
+            if (e.key === 'Escape') {
+                // 如果按下ESC键，查找并关闭模态框（通过查找包含特定样式的元素）
+                const modal = document.querySelector('[style*="position: fixed"][style*="z-index: 10000"]');
+                // 如果找到模态框元素，移除它
+                if (modal) {
+                    modal.remove();
+                }
+            }
+            // 轮播图键盘控制
+            // 判断是否按下左方向键
+            if (e.key === 'ArrowLeft') {
+                // 如果按下左方向键，切换到上一张幻灯片（direction为-1）
+                changeSlide(-1);
+            // 判断是否按下右方向键
+            } else if (e.key === 'ArrowRight') {
+                // 如果按下右方向键，切换到下一张幻灯片（direction为1）
+                changeSlide(1);
+            }
+        });
+
+        // ==================== 轮播图控制函数模块 ====================
+        /**
+         * 显示指定索引的幻灯片
+         * 功能概述：隐藏所有幻灯片和指示器，然后显示指定索引的幻灯片和对应的指示器
+         * @param {Number} index - 幻灯片索引（从0开始）
+         */
+        function showSlide(index) {
+            // 隐藏所有幻灯片
+            // 遍历所有幻灯片元素，移除active类，隐藏幻灯片
+            slides.forEach(slide => slide.classList.remove('active'));
+            // 遍历所有指示器元素，移除active类，取消指示器的激活状态
+            indicators.forEach(indicator => indicator.classList.remove('active'));
+            
+            // 显示当前幻灯片
+            // 判断指定索引的幻灯片是否存在
+            if (slides[index]) {
+                // 如果幻灯片存在，为指定索引的幻灯片添加active类，显示幻灯片
+                slides[index].classList.add('active');
+                // 为指定索引的指示器添加active类，激活指示器
+                indicators[index].classList.add('active');
+            }
+        }
+
+        /**
+         * 切换幻灯片（按方向）
+         * 功能概述：根据方向参数（1或-1）切换到下一张或上一张幻灯片，支持循环播放
+         * @param {Number} direction - 切换方向（1表示下一张，-1表示上一张）
+         */
+        function changeSlide(direction) {
+            // 更新当前幻灯片索引（加上方向值）
+            currentSlideIndex += direction;
+            
+            // 判断当前幻灯片索引是否超出范围，实现循环播放
+            // 如果当前索引大于等于幻灯片总数，重置为0（循环到第一张）
+            if (currentSlideIndex >= totalSlides) {
+                currentSlideIndex = 0;
+            // 如果当前索引小于0，设置为最后一张的索引（循环到最后一张）
+            } else if (currentSlideIndex < 0) {
+                currentSlideIndex = totalSlides - 1;
+            }
+            
+            // 显示更新后的当前幻灯片
+            showSlide(currentSlideIndex);
+        }
+
+        /**
+         * 跳转到指定幻灯片（通过指示器点击）
+         * 功能概述：根据指示器索引（从1开始）跳转到对应的幻灯片
+         * @param {Number} index - 指示器索引（从1开始，需要转换为从0开始的幻灯片索引）
+         */
+        function currentSlide(index) {
+            // 将指示器索引（从1开始）转换为幻灯片索引（从0开始）
+            currentSlideIndex = index - 1;
+            // 显示转换后的幻灯片
+            showSlide(currentSlideIndex);
+        }
+
+        /**
+         * 轮播图自动播放定时器变量
+         * 功能概述：存储轮播图自动播放的定时器ID，用于清除定时器
+         */
+        let carouselInterval;
+        /**
+         * 启动轮播图自动播放
+         * 功能概述：启动轮播图自动播放功能，每5秒自动切换到下一张幻灯片
+         */
+        function startCarousel() {
+            // 使用setInterval创建定时器，每5000毫秒（5秒）执行一次切换操作
+            carouselInterval = setInterval(() => {
+                // 切换到下一张幻灯片（direction为1）
+                changeSlide(1);
+            }, 5000); // 每5秒自动切换
+        }
+
+        // ==================== 轮播图交互控制模块 ====================
+        /**
+         * 鼠标悬停控制自动播放
+         * 功能概述：当鼠标进入轮播图区域时暂停自动播放，离开时恢复自动播放
+         */
+        // 监听轮播图区域的mouseenter事件，当鼠标进入轮播图区域时触发
+        document.querySelector('.banner').addEventListener('mouseenter', function() {
+            // 清除轮播图自动播放定时器，暂停自动播放
+            clearInterval(carouselInterval);
+        });
+
+        // 监听轮播图区域的mouseleave事件，当鼠标离开轮播图区域时触发
+        document.querySelector('.banner').addEventListener('mouseleave', function() {
+            // 重新启动轮播图自动播放
+            startCarousel();
+        });
+
+        // ==================== 触摸滑动支持模块（移动端） ====================
+        /**
+         * 触摸滑动支持（移动端）
+         * 功能概述：支持移动端触摸滑动操作，实现左右滑动切换幻灯片功能
+         */
+        // 触摸开始时的X坐标，初始值为0
+        let touchStartX = 0;
+        // 触摸结束时的X坐标，初始值为0
+        let touchEndX = 0;
+
+        /**
+         * 触摸开始事件处理
+         * 功能概述：记录触摸开始时的X坐标，并暂停轮播图自动播放
+         */
+        // 监听轮播图区域的touchstart事件，当手指触摸屏幕时触发
+        document.querySelector('.banner').addEventListener('touchstart', function(e) {
+            // 记录触摸开始时的X坐标（相对于屏幕的X坐标）
+            touchStartX = e.changedTouches[0].screenX;
+            // 清除轮播图自动播放定时器，暂停自动播放
+            clearInterval(carouselInterval);
+        });
+
+        /**
+         * 触摸结束事件处理
+         * 功能概述：记录触摸结束时的X坐标，处理滑动操作，并在1秒后恢复自动播放
+         */
+        // 监听轮播图区域的touchend事件，当手指离开屏幕时触发
+        document.querySelector('.banner').addEventListener('touchend', function(e) {
+            // 记录触摸结束时的X坐标（相对于屏幕的X坐标）
+            touchEndX = e.changedTouches[0].screenX;
+            // 处理滑动操作，判断滑动方向并切换幻灯片
+            handleSwipe();
+            // 延迟1000毫秒后恢复自动播放
+            setTimeout(() => {
+                // 重新启动轮播图自动播放
+                startCarousel();
+            }, 1000);
+        });
+
+        /**
+         * 处理滑动操作
+         * 功能概述：根据滑动距离和方向，判断是否切换幻灯片（向左滑动切换到下一张，向右滑动切换到上一张）
+         */
+        function handleSwipe() {
+            // 最小滑动距离阈值（像素），只有滑动距离超过此值才触发切换
+            const swipeThreshold = 50;
+            // 计算滑动距离（开始X坐标减去结束X坐标，正数表示向左滑动，负数表示向右滑动）
+            const diff = touchStartX - touchEndX;
+            
+            // 判断滑动距离的绝对值是否大于阈值
+            if (Math.abs(diff) > swipeThreshold) {
+                // 如果滑动距离大于阈值，判断滑动方向
+                if (diff > 0) {
+                    // 向左滑动 - 切换到下一张幻灯片（direction为1）
+                    changeSlide(1);
+                } else {
+                    // 向右滑动 - 切换到上一张幻灯片（direction为-1）
+                    changeSlide(-1);
+                }
+            }
+        }
+
+        // ==================== AI聊天小窗功能模块 ====================
+        /**
+         * 切换聊天窗口显示/隐藏状态
+         * 功能概述：切换AI聊天窗口的显示和隐藏状态，如果显示则自动聚焦输入框
+         */
+        function toggleChatWindow() {
+            // 获取AI聊天窗口元素
+            const chatWindow = document.getElementById('aiChatWindow');
+            // 切换聊天窗口的active类（如果存在则移除，如果不存在则添加）
+            chatWindow.classList.toggle('active');
+            
+            // 判断聊天窗口是否处于显示状态（包含active类）
+            if (chatWindow.classList.contains('active')) {
+                // 如果聊天窗口显示，自动聚焦输入框，方便用户输入
+                document.getElementById('aiChatInput').focus();
+            }
+        }
+
+        /**
+         * 处理聊天输入框键盘按键事件
+         * 功能概述：监听输入框的按键事件，当按下Enter键时发送消息
+         * @param {KeyboardEvent} event - 键盘事件对象
+         */
+        function handleChatKeyPress(event) {
+            // 判断是否按下Enter键
+            if (event.key === 'Enter') {
+                // 如果按下Enter键，调用sendMessage函数发送消息
+                sendMessage();
+            }
+        }
+
+        /**
+         * 发送消息到AI服务
+         * 功能概述：获取用户输入的消息，发送到后端AI接口，接收AI回复并显示在聊天窗口中
+         */
+        async function sendMessage() {
+            // 获取聊天输入框元素
+            const input = document.getElementById('aiChatInput');
+            // 获取发送按钮元素
+            const sendButton = document.getElementById('aiChatSend');
+            // 获取消息容器元素
+            const messagesContainer = document.getElementById('aiChatMessages');
+            // 获取输入框的值并去除首尾空格
+            const message = input.value.trim();
+
+            // 判断消息是否为空
+            if (!message) {
+                // 如果消息为空，直接返回，不执行后续操作
+                return;
+            }
+
+            // 添加用户消息
+            // 调用addMessage函数，将用户消息添加到消息容器中，消息类型为'user'
+            addMessage(message, 'user');
+            // 清空输入框内容
+            input.value = '';
+            // 禁用发送按钮，防止重复发送
+            sendButton.disabled = true;
+
+            // 显示正在输入提示
+            // 调用showTypingIndicator函数，创建正在输入提示元素
+            const typingIndicator = showTypingIndicator();
+            // 将正在输入提示元素添加到消息容器中
+            messagesContainer.appendChild(typingIndicator);
+            // 滚动消息容器到底部，确保正在输入提示可见
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // 使用try-catch捕获异常
+            try {
+                // 调用后端AI接口
+                // 使用fetch API发送POST请求到后端AI接口
+                const response = await fetch('/ai/chat', {
+                    method: 'POST',  // 请求方法为POST
+                    headers: {
+                        'Content-Type': 'application/json',  // 设置请求头，指定内容类型为JSON
+                    },
+                    body: JSON.stringify({ message: message })  // 将消息对象转换为JSON字符串，作为请求体
+                });
+
+                // 将响应转换为JSON对象
+                const data = await response.json();
+                
+                // 移除正在输入提示
+                // 从消息容器中移除正在输入提示元素
+                typingIndicator.remove();
+
+                // 判断AI服务是否返回成功
+                if (data.success) {
+                    // 如果AI服务返回成功，添加AI回复消息到消息容器中，消息类型为'ai'
+                    addMessage(data.message, 'ai');
+                } else {
+                    // 如果AI服务返回失败，显示错误消息
+                    addMessage('抱歉，AI服务暂时不可用，请稍后再试。', 'ai');
+                }
+            } catch (error) {
+                // 如果发生网络错误或其他异常，打印错误信息到控制台
+                console.error('AI聊天错误:', error);
+                // 移除正在输入提示元素
+                typingIndicator.remove();
+                // 显示网络错误消息
+                addMessage('网络错误，请检查您的网络连接。', 'ai');
+            } finally {
+                // 无论成功或失败，都执行以下操作
+                // 重新启用发送按钮，允许用户再次发送消息
+                sendButton.disabled = false;
+                // 重新聚焦输入框，方便用户继续输入
+                input.focus();
+            }
+        }
+
+        /**
+         * 添加消息到聊天窗口
+         * 功能概述：创建消息元素（包含头像和内容），处理Markdown格式和HTML转义，添加到消息容器并滚动到底部
+         * @param {String} text - 消息文本内容
+         * @param {String} type - 消息类型（'ai'表示AI消息，'user'表示用户消息）
+         */
+        function addMessage(text, type) {
+            // 获取消息容器元素
+            const messagesContainer = document.getElementById('aiChatMessages');
+            // 创建消息div元素
+            const messageDiv = document.createElement('div');
+            // 设置消息div的类名（根据消息类型设置不同的类名）
+            messageDiv.className = `ai-chat-message ${type}`;
+
+            // 创建头像div元素
+            const avatar = document.createElement('div');
+            // 设置头像div的类名
+            avatar.className = 'ai-chat-avatar';
+            // 根据消息类型设置不同的头像图标
+            if (type === 'ai') {
+                // 如果消息类型为AI，显示机器人图标
+                avatar.innerHTML = '<i class="fas fa-robot"></i>';
+            } else {
+                // 如果消息类型为用户，显示用户图标
+                avatar.innerHTML = '<i class="fas fa-user"></i>';
+            }
+
+            // 创建消息内容div元素
+            const content = document.createElement('div');
+            // 设置消息内容div的类名
+            content.className = 'ai-chat-content';
+            
+            // 清理Markdown格式并转换为HTML（安全处理）
+            // 调用cleanMarkdown函数，移除消息文本中的Markdown格式标记
+            const cleanedText = cleanMarkdown(text);
+            // 将换行符转换为<br>标签，并转义HTML特殊字符（防止XSS攻击）
+            const htmlText = escapeHtml(cleanedText).replace(/\n/g, '<br>');
+            // 设置消息内容div的HTML内容
+            content.innerHTML = htmlText;
+
+            // 将头像元素添加到消息div中
+            messageDiv.appendChild(avatar);
+            // 将消息内容元素添加到消息div中
+            messageDiv.appendChild(content);
+            // 将消息div添加到消息容器中
+            messagesContainer.appendChild(messageDiv);
+
+            // 滚动到底部
+            // 将消息容器的滚动位置设置为底部，确保最新消息可见
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // ==================== Markdown格式清理模块 ====================
+        /**
+         * 清理Markdown格式
+         * 功能概述：移除文本中的Markdown格式标记，转换为纯文本格式，包括粗体、斜体、代码块、标题、列表、链接等
+         * @param {String} text - 包含Markdown格式的文本
+         * @return {String} 清理后的纯文本
+         */
+        function cleanMarkdown(text) {
+            // 判断文本是否为空
+            if (!text) return '';
+            
+            // 移除Markdown格式标记
+            // 创建清理后的文本变量，初始值为原始文本
+            let cleaned = text;
+            
+            // 移除粗体 **text** 或 __text__
+            // 使用正则表达式匹配并替换粗体标记，保留文本内容
+            cleaned = cleaned.replace(/\*\*(.*?)\*\*/g, '$1');
+            // 使用正则表达式匹配并替换粗体标记（下划线格式），保留文本内容
+            cleaned = cleaned.replace(/__(.*?)__/g, '$1');
+            
+            // 移除斜体 *text* 或 _text_（但要小心，避免误删）
+            // 使用正则表达式匹配并替换斜体标记（星号格式），使用负向前瞻和负向后顾避免误删
+            cleaned = cleaned.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, '$1');
+            // 使用正则表达式匹配并替换斜体标记（下划线格式），使用负向前瞻和负向后顾避免误删
+            cleaned = cleaned.replace(/(?<!_)_([^_]+?)_(?!_)/g, '$1');
+            
+            // 移除代码块 ```code```
+            // 使用正则表达式匹配并替换代码块标记（三个反引号），移除整个代码块
+            cleaned = cleaned.replace(/```[\s\S]*?```/g, '');
+            
+            // 移除行内代码 `code`
+            // 使用正则表达式匹配并替换行内代码标记（单个反引号），保留代码内容
+            cleaned = cleaned.replace(/`([^`]+)`/g, '$1');
+            
+            // 移除标题标记 # ## ###
+            // 使用正则表达式匹配并替换标题标记（1-6个#号），保留标题文本
+            cleaned = cleaned.replace(/^#{1,6}\s+(.*)$/gm, '$1');
+            
+            // 移除列表标记 - * +
+            // 使用正则表达式匹配并替换无序列表标记（-、*、+），移除标记符号
+            cleaned = cleaned.replace(/^[-*+]\s+/gm, '');
+            // 使用正则表达式匹配并替换有序列表标记（数字.），移除标记符号
+            cleaned = cleaned.replace(/^\d+\.\s+/gm, '');
+            
+            // 移除链接 [text](url)
+            // 使用正则表达式匹配并替换链接标记，保留链接文本
+            cleaned = cleaned.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
+            
+            // 移除图片 ![alt](url)
+            // 使用正则表达式匹配并替换图片标记，移除整个图片标记
+            cleaned = cleaned.replace(/!\[([^\]]*)\]\([^\)]+\)/g, '');
+            
+            // 移除引用 > text
+            // 使用正则表达式匹配并替换引用标记（>），移除标记符号
+            cleaned = cleaned.replace(/^>\s+/gm, '');
+            
+            // 移除水平线 --- 或 ***
+            // 使用正则表达式匹配并替换水平线标记（3个或更多-或*），移除水平线
+            cleaned = cleaned.replace(/^[-*]{3,}$/gm, '');
+            
+            // 清理多余的空行（保留单个换行）
+            // 使用正则表达式将3个或更多连续换行符替换为2个换行符
+            cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+            
+            // 返回清理后的文本，去除首尾空格
+            return cleaned.trim();
+        }
+
+        // ==================== HTML转义模块 ====================
+        /**
+         * 转义HTML特殊字符（防止XSS攻击）
+         * 功能概述：将HTML特殊字符（<、>、&、'、"）转换为对应的HTML实体，防止XSS攻击
+         * @param {String} text - 需要转义的文本
+         * @return {String} 转义后的HTML安全文本
+         */
+        function escapeHtml(text) {
+            // 创建一个临时的div元素
+            const div = document.createElement('div');
+            // 将文本内容设置为div的文本内容（浏览器会自动转义HTML特殊字符）
+            div.textContent = text;
+            // 返回div的innerHTML（已转义的HTML文本）
+            return div.innerHTML;
+        }
+
+        // ==================== 正在输入提示模块 ====================
+        /**
+         * 显示正在输入提示
+         * 功能概述：创建并返回正在输入提示元素（包含头像和三个跳动的圆点动画）
+         * @return {HTMLElement} 正在输入提示div元素
+         */
+        function showTypingIndicator() {
+            // 创建正在输入提示div元素
+            const typingDiv = document.createElement('div');
+            // 设置正在输入提示div的类名（ai-chat-message ai表示AI消息样式）
+            typingDiv.className = 'ai-chat-message ai';
+            
+            // 创建头像div元素
+            const avatar = document.createElement('div');
+            // 设置头像div的类名
+            avatar.className = 'ai-chat-avatar';
+            // 设置头像内容为机器人图标
+            avatar.innerHTML = '<i class="fas fa-robot"></i>';
+
+            // 创建正在输入内容div元素
+            const typingContent = document.createElement('div');
+            // 设置正在输入内容div的类名
+            typingContent.className = 'ai-chat-typing';
+            // 设置正在输入内容为三个跳动的圆点（通过CSS动画实现跳动效果）
+            typingContent.innerHTML = '<span></span><span></span><span></span>';
+
+            // 将头像元素添加到正在输入提示div中
+            typingDiv.appendChild(avatar);
+            // 将正在输入内容元素添加到正在输入提示div中
+            typingDiv.appendChild(typingContent);
+
+            // 返回正在输入提示div元素
+            return typingDiv;
+        }
+
+        // ==================== 聊天窗口外部点击关闭模块 ====================
+        /**
+         * 点击外部关闭聊天窗口
+         * 功能概述：监听document的点击事件，当点击聊天窗口外部区域时，自动关闭聊天窗口
+         */
+        // 监听document的click事件，当点击页面任意位置时触发
+        document.addEventListener('click', function(event) {
+            // 获取聊天小窗容器元素
+            const chatWidget = document.querySelector('.ai-chat-widget');
+            // 获取聊天窗口元素
+            const chatWindow = document.getElementById('aiChatWindow');
+            // 获取聊天按钮元素
+            const chatButton = document.getElementById('aiChatButton');
+
+            // 判断聊天窗口是否处于显示状态，且点击位置不在聊天小窗容器内
+            if (chatWindow.classList.contains('active') && 
+                !chatWidget.contains(event.target)) {
+                // 如果聊天窗口显示且点击位置在外部，移除active类，关闭聊天窗口
+                chatWindow.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html> 

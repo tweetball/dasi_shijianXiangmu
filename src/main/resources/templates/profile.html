@@ -1,0 +1,1835 @@
+<!--
+    文件名称：profile.html
+    文件功能：个人中心页面模板
+    功能概述：
+        1. 显示用户基本信息，包括头像、昵称、手机号、注册时间等
+        2. 显示用户统计数据（我的收藏、浏览记录、我的订单、我的评价）
+        3. 提供个人信息编辑功能（修改昵称、邮箱等）
+        4. 提供密码修改功能
+        5. 显示用户活动数据（收藏、浏览历史、搜索记录）
+        6. 集成localStorage数据管理功能（浏览历史、收藏、搜索记录等）
+        7. 集成鼠标跟随光效动画
+        8. 集成数字动画效果
+        9. 响应式设计，支持PC端和移动端访问
+    技术栈：HTML5 + CSS3 + JavaScript + Thymeleaf模板引擎
+    依赖文件：
+        - Font Awesome图标库（CDN）
+    作者：游市生活开发团队
+    创建日期：2024年
+    最后更新：2024年
+-->
+<!DOCTYPE html>
+<!-- HTML5文档类型声明，标识这是一个HTML5文档 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<!-- 
+    HTML根元素
+    lang="zh-CN"：设置页面语言为简体中文
+    xmlns:th="http://www.thymeleaf.org"：声明Thymeleaf命名空间，用于模板引擎语法
+-->
+<head>
+    <!-- HTML文档头部，包含元数据和样式表引用 -->
+    <!-- 字符编码声明，指定页面使用UTF-8编码，支持中文等多语言字符 -->
+    <meta charset="UTF-8">
+    <!-- 视口元数据，设置页面在移动设备上的显示方式，width=device-width表示宽度自适应设备宽度，initial-scale=1.0表示初始缩放比例为1.0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题 -->
+    <title>个人中心 - 游市生活</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #00CED1 0%, #48D1CC 25%, #AFEEEE 50%, #48D1CC 75%, #00CED1 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 动态粒子背景 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="1" fill="rgba(255,255,255,0.2)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.15)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.2)"/><circle cx="90" cy="90" r="1" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            animation: floatParticles 20s linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes floatParticles {
+            0% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-20px) translateX(10px); }
+            100% { transform: translateY(0) translateX(0); }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+            animation: slideInUp 0.8s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            box-shadow: 0 8px 25px rgba(0, 206, 209, 0.3);
+            animation: avatarFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes avatarFloat {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-5px) scale(1.05); }
+        }
+
+        .user-details h2 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .user-details p {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 206, 209, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .nav-btn:hover::before {
+            left: 100%;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #20B2AA, #00CED1);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 206, 209, 0.4);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; animation-fill-mode: both; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; animation-fill-mode: both; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; animation-fill-mode: both; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; animation-fill-mode: both; }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0, 206, 209, 0.2);
+            border-color: #00CED1;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #00CED1;
+            margin-bottom: 10px;
+            animation: numberPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes numberPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.5s; animation-fill-mode: both; }
+        .card:nth-child(2) { animation-delay: 0.6s; animation-fill-mode: both; }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 100px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h3 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h3 i {
+            color: #00CED1;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00CED1;
+            box-shadow: 0 0 0 4px rgba(0, 206, 209, 0.1);
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        .form-group input:disabled {
+            background: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #00CED1, #48D1CC);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 6px 20px rgba(0, 206, 209, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #20B2AA, #00CED1);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 206, 209, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .error-message,
+        .success-message {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 15px;
+            font-weight: 500;
+            display: none;
+            animation: slideInDown 0.3s ease-out;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message {
+            background: #fff5f5;
+            color: #dc2626;
+            border: 2px solid #fed7d7;
+        }
+
+        .success-message {
+            background: #f0fff4;
+            color: #059669;
+            border: 2px solid #9ae6b4;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .user-info {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .avatar {
+                width: 70px;
+                height: 70px;
+                font-size: 28px;
+            }
+
+            .card {
+                padding: 30px 20px;
+            }
+        }
+
+        /* 鼠标跟随效果 */
+        .cursor-glow {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 活动展示区域样式 */
+        .activity-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .activity-tabs {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .activity-tab {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .activity-tab.active {
+            color: #00CED1;
+        }
+
+        .activity-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #00CED1;
+        }
+
+        .activity-content {
+            min-height: 300px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .activity-item:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .activity-meta {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        .activity-desc {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .activity-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(0, 206, 209, 0.1);
+            color: #00CED1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 206, 209, 0.2);
+            transform: scale(1.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state p {
+            margin-bottom: 10px;
+        }
+
+        .show-more {
+            text-align: center;
+            padding: 15px;
+            color: #666;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .activity-tabs {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .activity-tab {
+                font-size: 14px;
+                padding: 10px 15px;
+            }
+
+            .activity-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .activity-actions {
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 鼠标跟随光效 -->
+    <!-- 鼠标跟随光效元素，用于实现鼠标跟随动画效果 -->
+    <div class="cursor-glow" id="cursorGlow"></div>
+
+    <!-- 页面容器 -->
+    <div class="container">
+        <!-- 头部信息 -->
+        <!-- 用户头部信息区域，包含用户头像、昵称、手机号、注册时间等 -->
+        <div class="header">
+            <!-- 头部内容容器 -->
+            <div class="header-content">
+                <!-- 用户信息容器 -->
+                <div class="user-info">
+                    <!-- 用户头像，使用Thymeleaf动态显示用户昵称或用户名的首字符 -->
+                    <div class="avatar" th:text="${user.nickname?.substring(0,1) ?: user.username.substring(0,1)}">用</div>
+                    <!-- 用户详细信息容器 -->
+                    <div class="user-details">
+                        <!-- 用户昵称或用户名标题，使用Thymeleaf动态显示（优先显示昵称，如果没有则显示用户名） -->
+                        <h2 th:text="${user.nickname ?: user.username}">用户昵称</h2>
+                        <!-- 手机号信息，使用Thymeleaf动态显示用户手机号 -->
+                        <p><i class="fas fa-phone"></i> 手机号：<span th:text="${user.phone}">138****8888</span></p>
+                        <!-- 注册时间信息，使用Thymeleaf格式化时间显示（格式：yyyy-MM-dd） -->
+                        <p><i class="fas fa-calendar"></i> 注册时间：<span th:text="${#temporals.format(user.createTime, 'yyyy-MM-dd')}">2024-01-01</span></p>
+                    </div>
+                </div>
+                <!-- 导航按钮容器 -->
+                <div class="nav-buttons">
+                    <!-- 返回首页按钮链接 -->
+                    <a href="/" class="nav-btn">
+                        <!-- 首页图标 -->
+                        <i class="fas fa-home"></i> 
+                        <!-- 返回首页文本 -->
+                        返回首页
+                    </a>
+                    <!-- 退出登录按钮链接，点击后调用clearUserLocalStorage函数清除localStorage中的用户信息 -->
+                    <a href="/user/logout" class="nav-btn" onclick="clearUserLocalStorage()">
+                        <!-- 退出登录图标 -->
+                        <i class="fas fa-sign-out-alt"></i> 
+                        <!-- 退出登录文本 -->
+                        退出登录
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计信息 -->
+        <!-- 用户统计数据网格，包含我的收藏、浏览记录、我的订单、我的评价等统计卡片 -->
+        <div class="stats-grid">
+            <!-- 我的收藏统计卡片 -->
+            <div class="stat-card">
+                <!-- 收藏数量（通过JavaScript动态更新） -->
+                <div class="stat-number">0</div>
+                <!-- 收藏标签 -->
+                <div class="stat-label">我的收藏</div>
+            </div>
+            <!-- 浏览记录统计卡片 -->
+            <div class="stat-card">
+                <!-- 浏览记录数量（通过JavaScript动态更新） -->
+                <div class="stat-number">0</div>
+                <!-- 浏览记录标签 -->
+                <div class="stat-label">浏览记录</div>
+            </div>
+            <!-- 我的订单统计卡片 -->
+            <div class="stat-card">
+                <!-- 订单数量（暂时保持原样，未来可通过API获取） -->
+                <div class="stat-number">0</div>
+                <!-- 订单标签 -->
+                <div class="stat-label">我的订单</div>
+            </div>
+            <!-- 我的评价统计卡片 -->
+            <div class="stat-card">
+                <!-- 评价数量（暂时保持原样，未来可通过API获取） -->
+                <div class="stat-number">0</div>
+                <!-- 评价标签 -->
+                <div class="stat-label">我的评价</div>
+            </div>
+        </div>
+
+        <!-- 主要内容 -->
+        <!-- 主要内容区域，包含个人信息编辑和密码修改等功能 -->
+        <div class="main-content">
+            <!-- 个人信息编辑 -->
+            <!-- 个人信息编辑卡片，用于编辑用户昵称和邮箱等信息 -->
+            <div class="card">
+                <!-- 卡片标题 -->
+                <h3>
+                    <!-- 用户编辑图标 -->
+                    <i class="fas fa-user-edit"></i>
+                    <!-- 卡片标题文本 -->
+                    个人信息
+                </h3>
+                <!-- 错误消息显示区域 -->
+                <div id="profile-message-1" class="error-message"></div>
+                <!-- 成功消息显示区域 -->
+                <div id="profile-success-1" class="success-message"></div>
+                
+                <!-- 个人信息编辑表单 -->
+                <form id="profile-form">
+                    <!-- 用户名输入组（禁用，不可编辑） -->
+                    <div class="form-group">
+                        <!-- 用户名标签 -->
+                        <label for="username">用户名</label>
+                        <!-- 用户名输入框，使用Thymeleaf动态显示用户名，禁用状态 -->
+                        <input type="text" id="username" th:value="${user.username}" disabled>
+                    </div>
+                    <!-- 手机号输入组（禁用，不可编辑） -->
+                    <div class="form-group">
+                        <!-- 手机号标签 -->
+                        <label for="phone">手机号</label>
+                        <!-- 手机号输入框，使用Thymeleaf动态显示手机号，禁用状态 -->
+                        <input type="tel" id="phone" th:value="${user.phone}" disabled>
+                    </div>
+                    <!-- 昵称输入组（可编辑） -->
+                    <div class="form-group">
+                        <!-- 昵称标签 -->
+                        <label for="nickname">昵称</label>
+                        <!-- 昵称输入框，使用Thymeleaf动态显示昵称或用户名（优先显示昵称，如果没有则显示用户名），可编辑 -->
+                        <input type="text" id="nickname" name="nickname" th:value="${user.nickname ?: user.username}" placeholder="请输入昵称">
+                    </div>
+                    <!-- 邮箱输入组（可编辑） -->
+                    <div class="form-group">
+                        <!-- 邮箱标签 -->
+                        <label for="email">邮箱</label>
+                        <!-- 邮箱输入框，使用Thymeleaf动态显示邮箱，可编辑 -->
+                        <input type="email" id="email" name="email" th:value="${user.email}" placeholder="请输入邮箱">
+                    </div>
+                    <!-- 更新信息提交按钮 -->
+                    <button type="submit" class="btn">更新信息</button>
+                </form>
+            </div>
+
+            <!-- 密码修改 -->
+            <!-- 密码修改卡片，用于修改用户登录密码 -->
+            <div class="card">
+                <!-- 卡片标题 -->
+                <h3>
+                    <!-- 锁图标 -->
+                    <i class="fas fa-lock"></i>
+                    <!-- 卡片标题文本 -->
+                    修改密码
+                </h3>
+                <!-- 错误消息显示区域 -->
+                <div id="password-message" class="error-message"></div>
+                <!-- 成功消息显示区域 -->
+                <div id="password-success" class="success-message"></div>
+                
+                <!-- 密码修改表单 -->
+                <form id="password-form">
+                    <!-- 当前密码输入组 -->
+                    <div class="form-group">
+                        <!-- 当前密码标签 -->
+                        <label for="old-password">当前密码</label>
+                        <!-- 当前密码输入框（密码类型），必填字段 -->
+                        <input type="password" id="old-password" name="oldPassword" placeholder="请输入当前密码" required>
+                    </div>
+                    <!-- 新密码输入组 -->
+                    <div class="form-group">
+                        <!-- 新密码标签 -->
+                        <label for="new-password">新密码</label>
+                        <!-- 新密码输入框（密码类型），必填字段，至少6位 -->
+                        <input type="password" id="new-password" name="newPassword" placeholder="请输入新密码（至少6位）" required>
+                    </div>
+                    <!-- 确认新密码输入组 -->
+                    <div class="form-group">
+                        <!-- 确认新密码标签 -->
+                        <label for="confirm-new-password">确认新密码</label>
+                        <!-- 确认新密码输入框（密码类型），必填字段 -->
+                        <input type="password" id="confirm-new-password" placeholder="请再次输入新密码" required>
+                    </div>
+                    <!-- 修改密码提交按钮 -->
+                    <button type="submit" class="btn">修改密码</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 
+        JavaScript代码块
+        功能概述：实现个人中心页面的交互功能，包括鼠标跟随光效、localStorage数据管理、统计数据更新、活动数据展示、表单提交处理等
+    -->
+    <script>
+        /**
+         * 文件级注释：个人中心页面JavaScript功能模块
+         * 功能概述：
+         *   1. 鼠标跟随光效动画
+         *   2. localStorage数据管理系统（UserDataManager类）
+         *   3. 用户统计数据更新功能（收藏数、浏览记录数等）
+         *   4. 用户活动数据展示功能（收藏、浏览历史、搜索记录）
+         *   5. 个人信息更新功能（修改昵称、邮箱等）
+         *   6. 密码修改功能
+         *   7. 数字动画效果
+         *   8. 活动标签切换功能
+         *   9. 收藏和历史记录删除功能
+         */
+        
+        // ==================== 默认图片资源模块 ====================
+        /**
+         * 43张美丽景点图片URL数组
+         * 功能概述：存储43张景点图片的URL，用于景点详情页面的默认图片显示
+         */
+        // ===== 43张美丽景点图片URL数组 =====
+        const defaultAttractionImages = [
+            // 自然风光类
+            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 山峰
+            'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 森林
+            'https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 湖泊
+            'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 海岸
+            'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 瀑布
+            'https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 雪山
+            'https://images.unsplash.com/photo-1501436513145-30f24e19fcc4?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 沙漠
+            'https://images.unsplash.com/photo-1464822759844-d150f84ad8de?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 峡谷
+            'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 海滩
+            'https://images.unsplash.com/photo-1439066615861-d1af74d74000?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 日出
+            
+            // 古建筑文化类
+            'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古寺庙
+            'https://images.unsplash.com/photo-1471919743851-c4df8b6ee133?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古城墙
+            'https://images.unsplash.com/photo-1545558014-8692077e9b5c?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 宫殿
+            'https://images.unsplash.com/photo-1513415825881-57c6b43bf862?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古塔
+            'https://images.unsplash.com/photo-1559717201-fbb671ff56b7?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 传统建筑
+            'https://images.unsplash.com/photo-1518709268805-4e9042af2ac0?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古桥
+            'https://images.unsplash.com/photo-1574608851747-15d28b7e3d69?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 园林
+            'https://images.unsplash.com/photo-1565967511849-76a60a516170?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 亭台楼阁
+            'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古村落
+            'https://images.unsplash.com/photo-1609948668013-b5e7f3088607?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 故宫
+            
+            // 现代景观类
+            'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 现代建筑
+            'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1f?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 摩天大楼
+            'https://images.unsplash.com/photo-1514924013411-cbf25faa35bb?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 城市夜景
+            'https://images.unsplash.com/photo-1549924231-f129b911e442?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 公园
+            'https://images.unsplash.com/photo-1533587851505-d119e13fa0d7?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 广场
+            'https://images.unsplash.com/photo-1529655683826-3c6b7ded86b6?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 博物馆
+            'https://images.unsplash.com/photo-1429734956993-8a9b0555e122?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 艺术馆
+            'https://images.unsplash.com/photo-1494949649109-ecfc3b8c35df?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 科技馆
+            'https://images.unsplash.com/photo-1518135714426-c18f5ffb6f4d?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 观景台
+            'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 主题公园
+            
+            // 特色景点类
+            'https://images.unsplash.com/photo-1464278533981-50106e6176b1?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 竹林
+            'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 茶园
+            'https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 花田
+            'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 田园风光
+            'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古镇
+            'https://images.unsplash.com/photo-1586511925558-a4c6376fe65f?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 江南水乡
+            'https://images.unsplash.com/photo-1571804499305-1dfe4c7e5d63?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 民俗村
+            'https://images.unsplash.com/photo-1555400113-8a2d1c19f1e1?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 温泉
+            'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 海岛
+            'https://images.unsplash.com/photo-1537225228614-56cc3556d7ed?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 溶洞
+            
+            // 季节特色类
+            'https://images.unsplash.com/photo-1509773896068-7fd415d91e2e?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 春花
+            'https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 夏日海滨
+            'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 秋叶
+            'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?ixlib=rb-4.0.3&w=800&h=600&fit=crop'  // 冬雪
+        ];
+
+        /**
+         * 获取随机默认图片
+         * 功能概述：从defaultAttractionImages数组中随机选择一张图片URL
+         * @return {String} 随机选择的图片URL
+         */
+        function getRandomDefaultImage() {
+            // 生成随机索引（0到数组长度-1之间的整数）
+            const randomIndex = Math.floor(Math.random() * defaultAttractionImages.length);
+            // 返回随机索引对应的图片URL
+            return defaultAttractionImages[randomIndex];
+        }
+
+        // ==================== localStorage数据管理系统模块 ====================
+        /**
+         * UserDataManager类
+         * 功能概述：管理localStorage中的用户数据，包括浏览历史、搜索历史、收藏列表、用户偏好等
+         */
+        class UserDataManager {
+            /**
+             * 构造函数
+             * 功能概述：初始化localStorage存储键名配置
+             */
+            constructor() {
+                // 定义localStorage存储键名对象
+                this.storageKeys = {
+                    userPreferences: 'xihu_user_preferences',  // 用户偏好设置存储键名
+                    browsingHistory: 'xihu_browsing_history',  // 浏览历史存储键名
+                    searchHistory: 'xihu_search_history',  // 搜索历史存储键名
+                    provincesCache: 'xihu_provinces_cache',  // 省份缓存存储键名
+                    citiesCache: 'xihu_cities_cache',  // 城市缓存存储键名
+                    attractionsCache: 'xihu_attractions_cache',  // 景点缓存存储键名
+                    userProfile: 'xihu_user_profile',  // 用户个人信息缓存存储键名
+                    favoriteAttractions: 'xihu_favorite_attractions'  // 收藏景点存储键名
+                };
+            }
+
+            /**
+             * 获取浏览历史
+             * 功能概述：从localStorage中获取用户的浏览历史记录
+             * @return {Array} 浏览历史记录数组，如果获取失败则返回空数组
+             */
+            getBrowsingHistory() {
+                try {
+                    // 从localStorage中获取浏览历史数据
+                    const data = localStorage.getItem(this.storageKeys.browsingHistory);
+                    // 判断数据是否存在，如果存在则解析为JSON对象，否则返回空数组
+                    return data ? JSON.parse(data) : [];
+                } catch (error) {
+                    // 如果发生错误，打印错误信息到控制台
+                    console.error('❌ 获取浏览历史失败:', error);
+                    // 返回空数组
+                    return [];
+                }
+            }
+
+            /**
+             * 获取搜索历史
+             * 功能概述：从localStorage中获取用户的搜索历史记录
+             * @return {Array} 搜索历史记录数组，如果获取失败则返回空数组
+             */
+            getSearchHistory() {
+                try {
+                    // 从localStorage中获取搜索历史数据
+                    const data = localStorage.getItem(this.storageKeys.searchHistory);
+                    // 判断数据是否存在，如果存在则解析为JSON对象，否则返回空数组
+                    return data ? JSON.parse(data) : [];
+                } catch (error) {
+                    // 如果发生错误，打印错误信息到控制台
+                    console.error('❌ 获取搜索历史失败:', error);
+                    // 返回空数组
+                    return [];
+                }
+            }
+
+            /**
+             * 获取收藏列表
+             * 功能概述：从localStorage中获取用户的收藏景点列表
+             * @return {Array} 收藏景点数组，如果获取失败则返回空数组
+             */
+            getFavorites() {
+                try {
+                    // 从localStorage中获取收藏景点数据
+                    const data = localStorage.getItem(this.storageKeys.favoriteAttractions);
+                    // 判断数据是否存在，如果存在则解析为JSON对象，否则返回空数组
+                    return data ? JSON.parse(data) : [];
+                } catch (error) {
+                    // 如果发生错误，打印错误信息到控制台
+                    console.error('❌ 获取收藏列表失败:', error);
+                    // 返回空数组
+                    return [];
+                }
+            }
+
+            /**
+             * 获取用户偏好设置
+             * 功能概述：从localStorage中获取用户的偏好设置（省份、城市、类别、访问次数等）
+             * @return {Object} 用户偏好设置对象，如果获取失败则返回默认对象
+             */
+            getUserPreferences() {
+                try {
+                    // 从localStorage中获取用户偏好设置数据
+                    const data = localStorage.getItem(this.storageKeys.userPreferences);
+                    // 判断数据是否存在，如果存在则解析为JSON对象，否则返回默认对象
+                    return data ? JSON.parse(data) : { province: '', city: '', category: '', visitCount: 0 };
+                } catch (error) {
+                    // 如果发生错误，打印错误信息到控制台
+                    console.error('❌ 获取用户偏好失败:', error);
+                    // 返回默认对象
+                    return { province: '', city: '', category: '', visitCount: 0 };
+                }
+            }
+
+            /**
+             * 缓存用户个人信息
+             * 功能概述：将用户个人信息缓存到localStorage中，用于离线访问
+             * @param {Object} userInfo - 用户信息对象，包含用户的各种属性
+             */
+            cacheUserProfile(userInfo) {
+                try {
+                    // 构建缓存数据对象，包含用户信息和时间戳
+                    const profileData = {
+                        ...userInfo,  // 使用展开运算符复制用户信息对象的所有属性
+                        timestamp: Date.now()  // 添加时间戳，用于判断缓存是否过期
+                    };
+                    // 将缓存数据对象转换为JSON字符串并存储到localStorage中
+                    localStorage.setItem(this.storageKeys.userProfile, JSON.stringify(profileData));
+                    // 打印成功信息到控制台
+                    console.log('✅ 用户信息已缓存');
+                } catch (error) {
+                    // 如果发生错误，打印错误信息到控制台
+                    console.error('❌ 缓存用户信息失败:', error);
+                }
+            }
+
+            /**
+             * 获取缓存的用户信息
+             * 功能概述：从localStorage中获取缓存的用户个人信息
+             * @return {Object|null} 缓存的用户信息对象，如果获取失败则返回null
+             */
+            getCachedUserProfile() {
+                try {
+                    // 从localStorage中获取缓存的用户信息数据
+                    const data = localStorage.getItem(this.storageKeys.userProfile);
+                    // 判断数据是否存在，如果存在则解析为JSON对象，否则返回null
+                    return data ? JSON.parse(data) : null;
+                } catch (error) {
+                    // 如果发生错误，打印错误信息到控制台
+                    console.error('❌ 获取缓存用户信息失败:', error);
+                    // 返回null
+                    return null;
+                }
+            }
+
+            /**
+             * 清除特定浏览记录
+             * 功能概述：从localStorage中删除指定景点的浏览记录
+             * @param {String} attractionName - 景点名称
+             * @return {Boolean} 如果删除成功返回true，否则返回false
+             */
+            removeBrowsingHistory(attractionName) {
+                try {
+                    // 获取浏览历史记录数组
+                    let history = this.getBrowsingHistory();
+                    // 使用filter方法过滤掉指定景点的浏览记录
+                    history = history.filter(item => item.name !== attractionName);
+                    // 将过滤后的浏览历史记录数组转换为JSON字符串并存储到localStorage中
+                    localStorage.setItem(this.storageKeys.browsingHistory, JSON.stringify(history));
+                    // 打印成功信息到控制台
+                    console.log('✅ 已删除浏览记录:', attractionName);
+                    // 返回true，表示删除成功
+                    return true;
+                } catch (error) {
+                    // 如果发生错误，打印错误信息到控制台
+                    console.error('❌ 删除浏览记录失败:', error);
+                    // 返回false，表示删除失败
+                    return false;
+                }
+            }
+
+            /**
+             * 清除特定收藏
+             * 功能概述：从localStorage中删除指定景点的收藏记录
+             * @param {String} attractionName - 景点名称
+             * @return {Boolean} 如果删除成功返回true，否则返回false
+             */
+            removeFavorite(attractionName) {
+                try {
+                    // 获取收藏景点数组
+                    let favorites = this.getFavorites();
+                    // 使用filter方法过滤掉指定景点的收藏记录
+                    favorites = favorites.filter(item => item.name !== attractionName);
+                    // 将过滤后的收藏景点数组转换为JSON字符串并存储到localStorage中
+                    localStorage.setItem(this.storageKeys.favoriteAttractions, JSON.stringify(favorites));
+                    // 打印成功信息到控制台
+                    console.log('✅ 已删除收藏:', attractionName);
+                    // 返回true，表示删除成功
+                    return true;
+                } catch (error) {
+                    // 如果发生错误，打印错误信息到控制台
+                    console.error('❌ 删除收藏失败:', error);
+                    // 返回false，表示删除失败
+                    return false;
+                }
+            }
+
+            /**
+             * 获取存储统计信息
+             * 功能概述：获取localStorage中所有用户数据的统计信息
+             * @return {Object} 统计信息对象，包含用户偏好、浏览历史数量、搜索历史数量、收藏数量、是否有用户信息等
+             */
+            getStorageStats() {
+                // 构建统计信息对象
+                const stats = {
+                    preferences: this.getUserPreferences(),  // 用户偏好设置
+                    browsingHistoryCount: this.getBrowsingHistory().length,  // 浏览历史数量
+                    searchHistoryCount: this.getSearchHistory().length,  // 搜索历史数量
+                    favoritesCount: this.getFavorites().length,  // 收藏数量
+                    hasUserProfile: !!localStorage.getItem(this.storageKeys.userProfile)  // 是否有用户信息（转换为布尔值）
+                };
+                
+                // 返回统计信息对象
+                return stats;
+            }
+        }
+
+        // ==================== 数据管理器初始化 ====================
+        /**
+         * 初始化数据管理器
+         * 功能概述：创建UserDataManager类的实例，用于管理localStorage中的用户数据
+         */
+        // 创建UserDataManager类的实例
+        const userDataManager = new UserDataManager();
+
+        // ==================== 鼠标跟随光效模块 ====================
+        /**
+         * 鼠标跟随光效功能
+         * 功能概述：实现鼠标跟随光效动画，光效元素跟随鼠标移动，带有平滑过渡效果
+         */
+        // 获取鼠标跟随光效元素
+        const cursorGlow = document.getElementById('cursorGlow');
+        // 鼠标当前X坐标，初始值为0
+        let mouseX = 0;
+        // 鼠标当前Y坐标，初始值为0
+        let mouseY = 0;
+        // 光效元素当前X坐标，初始值为0
+        let currentX = 0;
+        // 光效元素当前Y坐标，初始值为0
+        let currentY = 0;
+
+        /**
+         * 监听鼠标移动事件
+         * 功能概述：实时更新鼠标坐标，用于计算光效元素的目标位置
+         */
+        // 监听document的mousemove事件，当鼠标移动时触发
+        document.addEventListener('mousemove', (e) => {
+            // 更新鼠标当前X坐标（相对于浏览器窗口的X坐标）
+            mouseX = e.clientX;
+            // 更新鼠标当前Y坐标（相对于浏览器窗口的Y坐标）
+            mouseY = e.clientY;
+        });
+
+        /**
+         * 更新光效元素位置
+         * 功能概述：使用平滑插值算法更新光效元素位置，实现跟随鼠标的平滑动画效果
+         */
+        function updateCursor() {
+            // 使用线性插值算法，平滑更新光效元素X坐标（每次移动10%的距离，实现平滑跟随效果）
+            currentX += (mouseX - currentX) * 0.1;
+            // 使用线性插值算法，平滑更新光效元素Y坐标（每次移动10%的距离，实现平滑跟随效果）
+            currentY += (mouseY - currentY) * 0.1;
+            
+            // 设置光效元素左偏移量（减去10px是为了让光效元素中心点对齐鼠标位置）
+            cursorGlow.style.left = currentX - 10 + 'px';
+            // 设置光效元素上偏移量（减去10px是为了让光效元素中心点对齐鼠标位置）
+            cursorGlow.style.top = currentY - 10 + 'px';
+            
+            // 使用requestAnimationFrame递归调用updateCursor函数，实现平滑动画循环（60fps）
+            requestAnimationFrame(updateCursor);
+        }
+        // 立即调用updateCursor函数，启动鼠标跟随光效动画
+        updateCursor();
+
+        // ==================== 页面初始化功能模块 ====================
+        /**
+         * 页面加载时更新统计数据
+         * 功能概述：监听DOMContentLoaded事件，当DOM加载完成后更新用户统计数据和活动数据
+         */
+        // 监听DOMContentLoaded事件，当DOM加载完成后触发
+        document.addEventListener('DOMContentLoaded', function() {
+            // 更新用户统计数据
+            updateUserStats();
+            // 加载最近活动数据
+            loadRecentActivity();
+        });
+
+        // ==================== 统计数据更新功能模块 ====================
+        /**
+         * 更新用户统计数据
+         * 功能概述：从localStorage获取用户统计数据，更新统计卡片显示，并启动数字动画效果
+         */
+        function updateUserStats() {
+            // 获取localStorage中的用户统计数据
+            const stats = userDataManager.getStorageStats();
+            
+            // 更新统计卡片
+            // 获取所有统计卡片中的数字元素
+            const statCards = document.querySelectorAll('.stat-card .stat-number');
+            // 判断统计卡片数量是否大于等于4
+            if (statCards.length >= 4) {
+                // 更新第一个统计卡片（我的收藏）的数字
+                statCards[0].textContent = stats.favoritesCount;
+                // 更新第二个统计卡片（浏览记录）的数字
+                statCards[1].textContent = stats.browsingHistoryCount;
+                // 更新第三个统计卡片（我的订单）的数字（暂时保持原样，未来可通过API获取）
+                statCards[2].textContent = '0';
+                // 更新第四个统计卡片（我的评价）的数字（暂时保持原样，未来可通过API获取）
+                statCards[3].textContent = '0';
+            }
+
+            // 启动数字动画
+            // 延迟500毫秒后启动数字动画效果
+            setTimeout(() => {
+                // 调用animateNumbers函数，启动数字动画
+                animateNumbers();
+            }, 500);
+
+            // 打印用户统计数据到控制台，用于调试
+            console.log('📊 用户统计已更新:', stats);
+        }
+
+        // ==================== 活动数据加载功能模块 ====================
+        /**
+         * 加载最近活动数据
+         * 功能概述：从localStorage获取用户的浏览历史、搜索历史、收藏列表，并创建活动展示区域
+         */
+        function loadRecentActivity() {
+            // 从localStorage获取浏览历史记录
+            const browsingHistory = userDataManager.getBrowsingHistory();
+            // 从localStorage获取搜索历史记录
+            const searchHistory = userDataManager.getSearchHistory();
+            // 从localStorage获取收藏景点列表
+            const favorites = userDataManager.getFavorites();
+
+            // 在个人信息卡片后添加活动展示区域
+            // 获取主要内容区域元素
+            const mainContent = document.querySelector('.main-content');
+            
+            // 创建活动展示区域
+            // 调用createActivitySection函数创建活动展示区域的HTML元素
+            const activitySection = createActivitySection(browsingHistory, searchHistory, favorites);
+            // 将活动展示区域添加到主要内容区域中
+            mainContent.appendChild(activitySection);
+        }
+
+        /**
+         * 创建活动展示区域
+         * 功能概述：创建活动展示区域的HTML元素，包含收藏、浏览历史、搜索记录三个标签页
+         * @param {Array} browsingHistory - 浏览历史记录数组
+         * @param {Array} searchHistory - 搜索历史记录数组
+         * @param {Array} favorites - 收藏景点数组
+         * @return {HTMLElement} 活动展示区域的div元素
+         */
+        function createActivitySection(browsingHistory, searchHistory, favorites) {
+            // 创建活动展示区域的div元素
+            const section = document.createElement('div');
+            // 设置活动展示区域的类名
+            section.className = 'activity-section';
+            // 设置活动展示区域的网格列跨度（跨越整个宽度）
+            section.style.gridColumn = '1 / -1';
+            // 设置活动展示区域的上边距
+            section.style.marginTop = '30px';
+
+            // 设置活动展示区域的HTML内容
+            section.innerHTML = `
+                <div class="activity-container">
+                    <div class="activity-tabs">
+                        <button class="activity-tab active" data-tab="favorites">我的收藏 (${favorites.length})</button>
+                        <button class="activity-tab" data-tab="history">浏览历史 (${browsingHistory.length})</button>
+                        <button class="activity-tab" data-tab="search">搜索记录 (${searchHistory.length})</button>
+                    </div>
+                    
+                    <div class="activity-content">
+                        <div id="favorites-content" class="tab-content active">
+                            ${createFavoritesContent(favorites)}
+                        </div>
+                        <div id="history-content" class="tab-content">
+                            ${createHistoryContent(browsingHistory)}
+                        </div>
+                        <div id="search-content" class="tab-content">
+                            ${createSearchContent(searchHistory)}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 添加标签切换事件
+            // 遍历所有活动标签，为每个标签添加点击事件监听器
+            section.querySelectorAll('.activity-tab').forEach(tab => {
+                // 监听标签的click事件，当点击标签时触发
+                tab.addEventListener('click', () => {
+                    // 获取标签的data-tab属性值（目标标签页名称）
+                    const targetTab = tab.dataset.tab;
+                    // 调用switchActivityTab函数，切换到目标标签页
+                    switchActivityTab(targetTab);
+                });
+            });
+
+            // 返回活动展示区域的div元素
+            return section;
+        }
+
+        // ==================== 活动内容生成功能模块 ====================
+        /**
+         * 创建收藏内容
+         * 功能概述：根据收藏景点数组生成收藏内容的HTML字符串
+         * @param {Array} favorites - 收藏景点数组
+         * @return {String} 收藏内容的HTML字符串
+         */
+        function createFavoritesContent(favorites) {
+            // 判断收藏数组是否为空
+            if (favorites.length === 0) {
+                // 如果收藏数组为空，返回空状态提示HTML
+                return `
+                    <div class="empty-state">
+                        <i class="fas fa-heart" style="font-size: 48px; color: #ddd; margin-bottom: 15px;"></i>
+                        <p>还没有收藏的景点</p>
+                        <p>去<a href="/travel" style="color: #00CED1;">景点推荐</a>页面收藏喜欢的景点吧！</p>
+                    </div>
+                `;
+            }
+
+            // 如果收藏数组不为空，返回收藏列表HTML
+            return `
+                <div class="activity-list">
+                    ${favorites.slice(0, 10).map(item => `
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-heart" style="color: #dc3545;"></i>
+                            </div>
+                            <div class="activity-details">
+                                <div class="activity-title">${item.name}</div>
+                                <div class="activity-meta">${item.date} 收藏</div>
+                                <div class="activity-desc">${item.data.location || '位置信息'}</div>
+                            </div>
+                            <div class="activity-actions">
+                                <button class="action-btn" onclick="removeFavoriteItem('${item.name}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                    ${favorites.length > 10 ? `<div class="show-more">还有 ${favorites.length - 10} 个收藏...</div>` : ''}
+                </div>
+            `;
+        }
+
+        /**
+         * 创建浏览历史内容
+         * 功能概述：根据浏览历史记录数组生成浏览历史内容的HTML字符串
+         * @param {Array} history - 浏览历史记录数组
+         * @return {String} 浏览历史内容的HTML字符串
+         */
+        function createHistoryContent(history) {
+            // 判断浏览历史数组是否为空
+            if (history.length === 0) {
+                // 如果浏览历史数组为空，返回空状态提示HTML
+                return `
+                    <div class="empty-state">
+                        <i class="fas fa-history" style="font-size: 48px; color: #ddd; margin-bottom: 15px;"></i>
+                        <p>还没有浏览记录</p>
+                        <p>去<a href="/travel" style="color: #00CED1;">景点推荐</a>页面浏览景点吧！</p>
+                    </div>
+                `;
+            }
+
+            // 如果浏览历史数组不为空，返回浏览历史列表HTML
+            return `
+                <div class="activity-list">
+                    ${history.slice(0, 15).map(item => `
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-eye" style="color: #17a2b8;"></i>
+                            </div>
+                            <div class="activity-details">
+                                <div class="activity-title">${item.name}</div>
+                                <div class="activity-meta">${item.date} 浏览</div>
+                                <div class="activity-desc">${item.data.location || '查看了详情'}</div>
+                            </div>
+                            <div class="activity-actions">
+                                <button class="action-btn" onclick="removeHistoryItem('${item.name}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                    ${history.length > 15 ? `<div class="show-more">还有 ${history.length - 15} 条记录...</div>` : ''}
+                </div>
+            `;
+        }
+
+        /**
+         * 创建搜索记录内容
+         * 功能概述：根据搜索历史记录数组生成搜索记录内容的HTML字符串
+         * @param {Array} searches - 搜索历史记录数组
+         * @return {String} 搜索记录内容的HTML字符串
+         */
+        function createSearchContent(searches) {
+            // 判断搜索历史数组是否为空
+            if (searches.length === 0) {
+                // 如果搜索历史数组为空，返回空状态提示HTML
+                return `
+                    <div class="empty-state">
+                        <i class="fas fa-search" style="font-size: 48px; color: #ddd; margin-bottom: 15px;"></i>
+                        <p>还没有搜索记录</p>
+                        <p>去<a href="/travel" style="color: #00CED1;">景点推荐</a>页面搜索景点吧！</p>
+                    </div>
+                `;
+            }
+
+            // 如果搜索历史数组不为空，返回搜索记录列表HTML
+            return `
+                <div class="activity-list">
+                    ${searches.map(item => `
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-search" style="color: #28a745;"></i>
+                            </div>
+                            <div class="activity-details">
+                                <div class="activity-title">搜索: ${item.keyword}</div>
+                                <div class="activity-meta">${item.date}</div>
+                            </div>
+                            <div class="activity-actions">
+                                <button class="action-btn" onclick="searchAgain('${item.keyword}')">
+                                    <i class="fas fa-redo"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // ==================== 活动标签切换功能模块 ====================
+        /**
+         * 切换活动标签
+         * 功能概述：在收藏、浏览历史、搜索记录三个标签页之间切换
+         * @param {String} targetTab - 目标标签页名称（'favorites'、'history'、'search'）
+         */
+        function switchActivityTab(targetTab) {
+            // 更新标签状态
+            // 遍历所有活动标签，移除active类，取消激活状态
+            document.querySelectorAll('.activity-tab').forEach(tab => {
+                // 移除标签的active类
+                tab.classList.remove('active');
+                // 判断标签的data-tab属性值是否等于目标标签页名称
+                if (tab.dataset.tab === targetTab) {
+                    // 如果等于目标标签页名称，为标签添加active类，激活选中状态
+                    tab.classList.add('active');
+                }
+            });
+
+            // 更新内容区域
+            // 遍历所有标签内容区域，移除active类，隐藏所有内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            // 为指定标签页的内容区域添加active类，显示对应内容
+            document.getElementById(`${targetTab}-content`).classList.add('active');
+        }
+
+        // ==================== 活动数据操作功能模块 ====================
+        /**
+         * 删除收藏项
+         * 功能概述：删除指定景点的收藏记录，删除成功后重新加载页面
+         * @param {String} attractionName - 景点名称
+         */
+        function removeFavoriteItem(attractionName) {
+            // 显示确认对话框，询问用户是否确定取消收藏
+            if (confirm(`确定要取消收藏 "${attractionName}" 吗？`)) {
+                // 如果用户确认，调用userDataManager的removeFavorite方法删除收藏
+                if (userDataManager.removeFavorite(attractionName)) {
+                    // 如果删除成功，重新加载活动数据（刷新页面）
+                    location.reload();
+                }
+            }
+        }
+
+        /**
+         * 删除浏览历史项
+         * 功能概述：删除指定景点的浏览记录，删除成功后重新加载页面
+         * @param {String} attractionName - 景点名称
+         */
+        function removeHistoryItem(attractionName) {
+            // 显示确认对话框，询问用户是否确定删除浏览记录
+            if (confirm(`确定要删除 "${attractionName}" 的浏览记录吗？`)) {
+                // 如果用户确认，调用userDataManager的removeBrowsingHistory方法删除浏览记录
+                if (userDataManager.removeBrowsingHistory(attractionName)) {
+                    // 如果删除成功，重新加载活动数据（刷新页面）
+                    location.reload();
+                }
+            }
+        }
+
+        /**
+         * 重新搜索
+         * 功能概述：跳转到景点推荐页面并自动填入搜索词
+         * @param {String} keyword - 搜索关键词
+         */
+        function searchAgain(keyword) {
+            // 跳转到景点推荐页面并自动填入搜索词
+            // 跳转到景点推荐页面，传递搜索关键词参数（使用encodeURIComponent编码）
+            window.location.href = `/travel?search=${encodeURIComponent(keyword)}`;
+        }
+
+        // ==================== 个人信息更新功能模块 ====================
+        /**
+         * 更新个人信息表单提交
+         * 功能概述：监听个人信息编辑表单的提交事件，验证表单数据，发送更新请求到后端，处理响应并更新页面显示
+         */
+        // 监听个人信息编辑表单的submit事件，当表单提交时触发
+        document.getElementById('profile-form').addEventListener('submit', function(e) {
+            // 阻止表单的默认提交行为（页面跳转）
+            e.preventDefault();
+            
+            // 创建FormData对象，获取表单数据
+            const formData = new FormData(this);
+            // 从表单数据中获取昵称
+            const nickname = formData.get('nickname');
+            // 从表单数据中获取邮箱
+            const email = formData.get('email');
+
+            // 表单验证
+            // 判断昵称是否为空或长度小于2个字符
+            if (!nickname || nickname.trim().length < 2) {
+                // 如果昵称无效，显示错误消息
+                showMessage('profile-message-1', '昵称至少2个字符');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 判断邮箱格式是否正确（如果邮箱不为空）
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                // 如果邮箱格式不正确，显示错误消息
+                showMessage('profile-message-1', '邮箱格式不正确');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 获取提交按钮元素
+            const submitBtn = this.querySelector('.btn');
+            // 禁用提交按钮，防止重复提交
+            submitBtn.disabled = true;
+            // 更新按钮文本，显示加载动画和"更新中"文字
+            submitBtn.innerHTML = '<span class="loading"></span>更新中...';
+
+            // 使用fetch API发送POST请求到后端更新个人信息接口
+            fetch('/user/updateProfile', {
+                method: 'POST',  // 请求方法为POST
+                body: new URLSearchParams(formData)  // 将表单数据转换为URL编码格式作为请求体
+            })
+            .then(response => response.json())  // 将响应转换为JSON对象
+            .then(data => {
+                // 判断后端是否返回成功
+                if (data.success) {
+                    // 如果更新成功，显示成功消息
+                    showSuccess('profile-success-1', data.message);
+                    // 更新页面显示的用户信息
+                    // 判断后端是否返回用户信息
+                    if (data.user) {
+                        // 如果返回用户信息，更新页面显示的用户昵称或用户名
+                        document.querySelector('.user-details h2').textContent = data.user.nickname || data.user.username;
+                        // 更新页面显示的用户头像（显示昵称或用户名的首字符）
+                        document.querySelector('.avatar').textContent = (data.user.nickname || data.user.username).substring(0, 1);
+                        
+                        // 缓存更新后的用户信息
+                        // 调用userDataManager的cacheUserProfile方法，将更新后的用户信息缓存到localStorage中
+                        userDataManager.cacheUserProfile(data.user);
+                    }
+                // 如果后端返回失败
+                } else {
+                    // 显示错误消息
+                    showMessage('profile-message-1', data.message);
+                }
+            })
+            .catch(error => {
+                // 如果发生网络错误或其他异常，打印错误信息到控制台
+                console.error('Error:', error);
+                // 显示网络错误消息
+                showMessage('profile-message-1', '更新失败，请重试');
+            })
+            .finally(() => {
+                // 无论成功或失败，都执行以下操作
+                // 重新启用提交按钮
+                submitBtn.disabled = false;
+                // 恢复按钮文本为"更新信息"
+                submitBtn.textContent = '更新信息';
+            });
+        });
+
+        // ==================== 密码修改功能模块 ====================
+        /**
+         * 修改密码表单提交
+         * 功能概述：监听密码修改表单的提交事件，验证表单数据，发送修改密码请求到后端，处理响应
+         */
+        // 监听密码修改表单的submit事件，当表单提交时触发
+        document.getElementById('password-form').addEventListener('submit', function(e) {
+            // 阻止表单的默认提交行为（页面跳转）
+            e.preventDefault();
+            
+            // 创建FormData对象，获取表单数据
+            const formData = new FormData(this);
+            // 从表单数据中获取当前密码
+            const oldPassword = formData.get('oldPassword');
+            // 从表单数据中获取新密码
+            const newPassword = formData.get('newPassword');
+            // 从确认新密码输入框获取确认新密码
+            const confirmNewPassword = document.getElementById('confirm-new-password').value;
+
+            // 表单验证
+            // 判断所有必填字段是否为空
+            if (!oldPassword || !newPassword || !confirmNewPassword) {
+                // 如果有必填字段为空，显示错误消息
+                showMessage('password-message', '请填写完整信息');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 判断新密码长度是否小于6位
+            if (newPassword.length < 6) {
+                // 如果新密码长度小于6位，显示错误消息
+                showMessage('password-message', '新密码长度不能少于6位');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 判断新密码和确认新密码是否一致
+            if (newPassword !== confirmNewPassword) {
+                // 如果新密码和确认新密码不一致，显示错误消息
+                showMessage('password-message', '两次输入的新密码不一致');
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 获取提交按钮元素
+            const submitBtn = this.querySelector('.btn');
+            // 禁用提交按钮，防止重复提交
+            submitBtn.disabled = true;
+            // 更新按钮文本，显示加载动画和"修改中"文字
+            submitBtn.innerHTML = '<span class="loading"></span>修改中...';
+
+            // 使用fetch API发送POST请求到后端修改密码接口
+            fetch('/user/changePassword', {
+                method: 'POST',  // 请求方法为POST
+                body: new URLSearchParams(formData)  // 将表单数据转换为URL编码格式作为请求体
+            })
+            .then(response => response.json())  // 将响应转换为JSON对象
+            .then(data => {
+                // 判断后端是否返回成功
+                if (data.success) {
+                    // 如果修改成功，显示成功消息
+                    showSuccess('password-success', data.message);
+                    // 清空表单
+                    // 重置密码修改表单，清空所有输入字段
+                    this.reset();
+                // 如果后端返回失败
+                } else {
+                    // 显示错误消息
+                    showMessage('password-message', data.message);
+                }
+            })
+            .catch(error => {
+                // 如果发生网络错误或其他异常，打印错误信息到控制台
+                console.error('Error:', error);
+                // 显示网络错误消息
+                showMessage('password-message', '修改失败，请重试');
+            })
+            .finally(() => {
+                // 无论成功或失败，都执行以下操作
+                // 重新启用提交按钮
+                submitBtn.disabled = false;
+                // 恢复按钮文本为"修改密码"
+                submitBtn.textContent = '修改密码';
+            });
+        });
+
+        // ==================== 消息提示功能模块 ====================
+        /**
+         * 显示错误消息
+         * 功能概述：显示错误消息提示，隐藏成功消息，5秒后自动隐藏错误消息
+         * @param {String} elementId - 错误消息元素的ID
+         * @param {String} message - 错误消息文本
+         */
+        function showMessage(elementId, message) {
+            // 获取错误消息div元素
+            const errorDiv = document.getElementById(elementId);
+            // 获取对应的成功消息div元素（通过替换'message'为'success'获取ID）
+            const successDiv = document.getElementById(elementId.replace('message', 'success'));
+            
+            // 如果成功消息div存在，隐藏成功消息
+            if (successDiv) successDiv.style.display = 'none';
+            // 设置错误消息文本内容
+            errorDiv.textContent = message;
+            // 显示错误消息
+            errorDiv.style.display = 'block';
+            
+            // 延迟5000毫秒（5秒）后自动隐藏错误消息
+            setTimeout(() => {
+                // 隐藏错误消息
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        /**
+         * 显示成功消息
+         * 功能概述：显示成功消息提示，隐藏错误消息，3秒后自动隐藏成功消息
+         * @param {String} elementId - 成功消息元素的ID
+         * @param {String} message - 成功消息文本
+         */
+        function showSuccess(elementId, message) {
+            // 获取成功消息div元素
+            const successDiv = document.getElementById(elementId);
+            // 获取对应的错误消息div元素（通过替换'success'为'message'获取ID）
+            const errorDiv = document.getElementById(elementId.replace('success', 'message'));
+            
+            // 如果错误消息div存在，隐藏错误消息
+            if (errorDiv) errorDiv.style.display = 'none';
+            // 设置成功消息文本内容
+            successDiv.textContent = message;
+            // 显示成功消息
+            successDiv.style.display = 'block';
+            
+            // 延迟3000毫秒（3秒）后自动隐藏成功消息
+            setTimeout(() => {
+                // 隐藏成功消息
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // ==================== 数字动画功能模块 ====================
+        /**
+         * 页面加载动画
+         * 功能概述：监听window的load事件，当页面完全加载后启动数字动画效果
+         */
+        // 监听window的load事件，当页面完全加载后触发
+        window.addEventListener('load', function() {
+            // 启动数字动画
+            // 调用animateNumbers函数，启动统计数字的动画效果
+            animateNumbers();
+        });
+
+        /**
+         * 数字动画效果
+         * 功能概述：为统计卡片中的数字添加从0递增到目标值的动画效果
+         */
+        function animateNumbers() {
+            // 获取所有统计数字元素
+            const numbers = document.querySelectorAll('.stat-number');
+            // 遍历每个统计数字元素，为每个数字添加动画效果
+            numbers.forEach((num, index) => {
+                // 获取数字的最终值（目标值）
+                const finalValue = parseInt(num.textContent);
+                // 当前值，初始值为0
+                let currentValue = 0;
+                // 每次递增的步长（将目标值除以50，向上取整）
+                const increment = Math.ceil(finalValue / 50);
+                
+                // 延迟启动动画（每个数字延迟200毫秒，实现依次启动的效果）
+                setTimeout(() => {
+                    // 使用setInterval创建定时器，每30毫秒执行一次
+                    const timer = setInterval(() => {
+                        // 当前值增加步长
+                        currentValue += increment;
+                        // 判断当前值是否大于等于目标值
+                        if (currentValue >= finalValue) {
+                            // 如果当前值大于等于目标值，将当前值设置为目标值（确保最终值准确）
+                            currentValue = finalValue;
+                            // 清除定时器，停止动画
+                            clearInterval(timer);
+                        }
+                        // 更新数字元素的文本内容为当前值
+                        num.textContent = currentValue;
+                    }, 30);
+                }, index * 200);  // 每个数字延迟200毫秒启动，实现依次启动的效果
+            });
+        }
+
+        // ==================== 调试功能模块 ====================
+        /**
+         * 调试功能
+         * 功能概述：提供调试函数，用于在浏览器控制台中查看用户数据统计
+         */
+        // 将getUserData函数挂载到window对象上，方便在控制台中调用
+        window.getUserData = function() {
+            // 返回localStorage中的用户数据统计信息
+            return userDataManager.getStorageStats();
+        };
+
+        // 打印提示信息到控制台，告知用户可以使用调试功能
+        console.log('🚀 个人中心页面已加载，支持localStorage功能');
+        console.log('💡 在控制台输入 getUserData() 查看用户数据统计');
+
+        // ==================== 用户数据清理功能模块 ====================
+        /**
+         * 清除用户登录信息的函数（退出登录时调用）
+         * 功能概述：清除localStorage中的用户登录信息（用户ID、用户名）和购物车数据，但保留其他用户数据（浏览历史、收藏等）
+         */
+        // 将clearUserLocalStorage函数挂载到window对象上，方便在退出登录时调用
+        window.clearUserLocalStorage = function() {
+            try {
+                // 清除登录相关的localStorage数据
+                // 清除用户ID
+                localStorage.removeItem('userId');
+                // 清除用户名
+                localStorage.removeItem('userName');
+                // 打印成功信息到控制台
+                console.log('✅ 用户登录信息已从localStorage中清除');
+                
+                // 清空购物车
+                // 判断window对象上是否存在clearShoppingCart函数（shop.js中定义）
+                if (typeof window.clearShoppingCart === 'function') {
+                    // 如果clearShoppingCart函数存在，调用它清空购物车
+                    window.clearShoppingCart();
+                    // 打印成功信息到控制台
+                    console.log('✅ 购物车已清空');
+                // 如果clearShoppingCart函数不存在
+                } else {
+                    // 如果 shop.js 未加载，直接清除 localStorage 中的购物车
+                    // 直接清除localStorage中的购物车数据
+                    localStorage.removeItem('shopping_cart');
+                    // 打印成功信息到控制台
+                    console.log('✅ 购物车数据已从localStorage中清除');
+                }
+                
+                // 不清除其他用户数据（如浏览历史、收藏等），这些可以保留
+                // 如果需要清除所有数据，可以调用：userDataManager.clearAllUserData();
+            } catch (error) {
+                // 如果发生错误，打印错误信息到控制台
+                console.error('❌ 清除localStorage用户信息失败:', error);
+            }
+        };
+    </script>
+</body>
+</html> 

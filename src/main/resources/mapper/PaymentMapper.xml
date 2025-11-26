@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icss.xihu.mapper.PaymentMapper">
+
+    <!-- 获取所有缴费类型 -->
+    <select id="getAllPaymentTypes" resultType="com.icss.xihu.model.PaymentType">
+        SELECT id, type_name as typeName, type_code as typeCode, icon, description, status, 
+               create_time as createTime, update_time as updateTime
+        FROM payment_types 
+        WHERE status = 1 
+        ORDER BY id
+    </select>
+
+    <!-- 根据用户ID获取缴费账单 -->
+    <select id="getBillsByUserId" resultType="com.icss.xihu.model.PaymentBill">
+        SELECT pb.id, pb.user_id as userId, pb.account_id as accountId, pb.bill_number as billNumber,
+               pb.payment_type_id as paymentTypeId, pb.bill_amount as billAmount, pb.due_date as dueDate,
+               pb.bill_period as billPeriod, pb.bill_status as billStatus, pb.paid_amount as paidAmount,
+               pb.paid_time as paidTime, pb.create_time as createTime, pb.update_time as updateTime,
+               upa.account_name as accountName, upa.account_number as accountNumber,
+               pt.type_name as paymentTypeName, pt.icon as paymentTypeIcon
+        FROM payment_bills pb
+        LEFT JOIN user_payment_accounts upa ON pb.account_id = upa.id
+        LEFT JOIN payment_types pt ON pb.payment_type_id = pt.id
+        WHERE pb.user_id = #{userId}
+        ORDER BY pb.due_date DESC, pb.create_time DESC
+    </select>
+
+    <!-- 根据用户ID和状态获取缴费账单 -->
+    <select id="getBillsByUserIdAndStatus" resultType="com.icss.xihu.model.PaymentBill">
+        SELECT pb.id, pb.user_id as userId, pb.account_id as accountId, pb.bill_number as billNumber,
+               pb.payment_type_id as paymentTypeId, pb.bill_amount as billAmount, pb.due_date as dueDate,
+               pb.bill_period as billPeriod, pb.bill_status as billStatus, pb.paid_amount as paidAmount,
+               pb.paid_time as paidTime, pb.create_time as createTime, pb.update_time as updateTime,
+               upa.account_name as accountName, upa.account_number as accountNumber,
+               pt.type_name as paymentTypeName, pt.icon as paymentTypeIcon
+        FROM payment_bills pb
+        LEFT JOIN user_payment_accounts upa ON pb.account_id = upa.id
+        LEFT JOIN payment_types pt ON pb.payment_type_id = pt.id
+        WHERE pb.user_id = #{userId}
+        <if test="status != null">
+            <choose>
+                <!-- 如果状态为2（逾期），查询状态为2或状态为0且到期日期已过的账单 -->
+                <when test="status == 2">
+                    AND (pb.bill_status = 2 OR (pb.bill_status = 0 AND pb.due_date &lt; CURDATE()))
+                </when>
+                <!-- 其他状态，直接匹配 -->
+                <otherwise>
+                    AND pb.bill_status = #{status}
+                </otherwise>
+            </choose>
+        </if>
+        ORDER BY pb.due_date DESC, pb.create_time DESC
+    </select>
+
+    <!-- 根据账单ID获取账单详情 -->
+    <select id="getBillById" resultType="com.icss.xihu.model.PaymentBill">
+        SELECT pb.id, pb.user_id as userId, pb.account_id as accountId, pb.bill_number as billNumber,
+               pb.payment_type_id as paymentTypeId, pb.bill_amount as billAmount, pb.due_date as dueDate,
+               pb.bill_period as billPeriod, pb.bill_status as billStatus, pb.paid_amount as paidAmount,
+               pb.paid_time as paidTime, pb.create_time as createTime, pb.update_time as updateTime,
+               upa.account_name as accountName, upa.account_number as accountNumber,
+               pt.type_name as paymentTypeName, pt.icon as paymentTypeIcon
+        FROM payment_bills pb
+        LEFT JOIN user_payment_accounts upa ON pb.account_id = upa.id
+        LEFT JOIN payment_types pt ON pb.payment_type_id = pt.id
+        WHERE pb.id = #{billId}
+    </select>
+
+    <!-- 更新账单状态 -->
+    <update id="updateBillStatus">
+        UPDATE payment_bills 
+        SET bill_status = #{status},
+            paid_amount = #{paidAmount},
+            paid_time = #{paidTime},
+            update_time = NOW()
+        WHERE id = #{billId}
+    </update>
+
+    <!-- 根据账单ID更新支付状态(用于统一支付) -->
+    <update id="updatePaymentBillStatus">
+        UPDATE payment_bills 
+        SET bill_status = #{status},
+            paid_time = #{paidTime},
+            update_time = NOW()
+        WHERE id = #{billId}
+    </update>
+
+    <!-- 创建缴费记录 -->
+    <insert id="createPaymentRecord">
+        INSERT INTO payment_records (user_id, bill_id, payment_method, payment_amount, payment_status, transaction_id, payment_time)
+        VALUES (#{userId}, #{billId}, #{paymentMethod}, #{paymentAmount}, 1, #{transactionId}, NOW())
+    </insert>
+
+    <!-- 获取用户缴费统计 -->
+    <select id="getPaymentStats" resultType="java.util.Map">
+        SELECT 
+            COUNT(*) as totalBills,
+            SUM(CASE WHEN bill_status = 0 THEN 1 ELSE 0 END) as unpaidBills,
+            SUM(CASE WHEN bill_status = 1 THEN 1 ELSE 0 END) as paidBills,
+            SUM(CASE WHEN bill_status = 2 THEN 1 ELSE 0 END) as overdueBills,
+            SUM(CASE WHEN bill_status = 1 THEN bill_amount ELSE 0 END) as totalPaidAmount,
+            SUM(CASE WHEN bill_status = 0 THEN bill_amount ELSE 0 END) as totalUnpaidAmount
+        FROM payment_bills 
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 自动更新过期账单状态 -->
+    <update id="updateOverdueBills">
+        UPDATE payment_bills 
+        SET bill_status = 2,
+            update_time = NOW()
+        WHERE bill_status = 0 
+        AND due_date &lt; CURDATE()
+        <if test="userId != null">
+            AND user_id = #{userId}
+        </if>
+    </update>
+
+</mapper>

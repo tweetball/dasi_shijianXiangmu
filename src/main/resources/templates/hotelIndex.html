@@ -1,0 +1,1121 @@
+<!--
+    文件名称：hotelIndex.html
+    文件功能：住宿服务首页模板
+    功能概述：
+        1. 显示住宿服务首页，包括轮播图区域（hero section）
+        2. 提供酒店搜索功能（搜索酒店名称、地址等）
+        3. 提供筛选功能（价格范围、酒店星级、排序方式）
+        4. 显示酒店列表（酒店卡片，包含图片、名称、地址、星级、电话、描述、价格等）
+        5. 提供分页功能（分页导航）
+        6. 响应式设计，支持PC端和移动端访问
+    技术栈：HTML5 + CSS3 + JavaScript + Thymeleaf模板引擎
+    依赖文件：
+        - Font Awesome图标库（CDN）
+        - /css/navbar.css（导航栏样式）
+        - /css/module-themes.css（模块主题样式）
+    作者：游市生活开发团队
+    创建日期：2024年
+    最后更新：2024年
+-->
+<!DOCTYPE html>
+<!-- HTML5文档类型声明，标识这是一个HTML5文档 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<!-- 
+    HTML根元素
+    lang="zh-CN"：设置页面语言为简体中文
+    xmlns:th="http://www.thymeleaf.org"：声明Thymeleaf命名空间，用于模板引擎语法
+-->
+<head>
+    <!-- HTML文档头部，包含元数据和样式表引用 -->
+    <!-- 字符编码声明，指定页面使用UTF-8编码，支持中文等多语言字符 -->
+    <meta charset="UTF-8">
+    <!-- 视口元数据，设置页面在移动设备上的显示方式，width=device-width表示宽度自适应设备宽度，initial-scale=1.0表示初始缩放比例为1.0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题 -->
+    <title>游市生活 - 住宿服务</title>
+    <!-- Font Awesome图标库（CDN） -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 导航栏样式表 -->
+    <link rel="stylesheet" href="/css/navbar.css">
+    <!-- 模块主题样式表 -->
+    <link rel="stylesheet" href="/css/module-themes.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        /* 住宿服务模块个性化样式 */
+        .module-hotel {
+            --primary-color: #FF6600;
+            --primary-light: #FF8533;
+            --primary-dark: #e55a00;
+            --accent-color: #ffb366;
+            --background-gradient: linear-gradient(135deg, #FF6600, #FF8533);
+            --card-shadow: 0 4px 15px rgba(255, 102, 0, 0.2);
+            --hover-shadow: 0 8px 25px rgba(255, 102, 0, 0.3);
+        }
+
+        /* 导航栏样式已移至外部CSS文件 /css/navbar.css */
+
+        /* 主要内容区域 */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 20px 30px 20px;
+        }
+
+        /* 轮播图区域 */
+        .hero-section {
+            background: linear-gradient(135deg, #FF6600, #FF8533);
+            color: white;
+            padding: 60px 0;
+            margin-bottom: 40px;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .search-box {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-input-group {
+            display: flex;
+            background: white;
+            border-radius: 50px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            background: transparent;
+        }
+
+        .search-btn {
+            background: #FF6600;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: #e55a00;
+        }
+
+        /* 筛选区域样式 */
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .filter-container {
+            display: flex;
+            gap: 20px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #FF6600;
+        }
+
+        .filter-btn {
+            background: #FF6600;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-btn:hover {
+            background: #e55a00;
+        }
+
+        .hero-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.3;
+            z-index: 1;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .page-title h1 {
+            font-size: 36px;
+            color: #00CED1;
+            margin-bottom: 10px;
+        }
+
+        .page-title p {
+            font-size: 18px;
+            color: #666;
+        }
+
+        /* 搜索区域 */
+        .search-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #FF6600;
+        }
+
+        .search-btn {
+            padding: 12px 30px;
+            background: #FF6600;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-btn:hover {
+            background: #e55a00;
+        }
+
+        /* 酒店列表 */
+        .hotel-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .hotel-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .hotel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        .hotel-image {
+            width: 100%;
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .hotel-content {
+            padding: 20px;
+        }
+
+        .hotel-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .hotel-info {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .hotel-info span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .hotel-description {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .hotel-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hotel-price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FF6600;
+        }
+
+        .view-details-btn {
+            padding: 8px 20px;
+            background: #FF6600;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .view-details-btn:hover {
+            background: #e55a00;
+            color: white;
+        }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 40px;
+        }
+
+        .pagination a {
+            padding: 10px 15px;
+            background: white;
+            color: #333;
+            text-decoration: none;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s;
+        }
+
+        .pagination a:hover,
+        .pagination a.active {
+            background: #FF6600;
+            color: white;
+            border-color: #FF6600;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-links {
+                gap: 20px;
+            }
+
+            .search-form {
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-width: 100%;
+            }
+
+            .hotel-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 页面主体 -->
+    <!-- 顶部导航栏 - 与首页完全一致 -->
+    <!-- 页面头部导航栏 -->
+    <header class="header">
+        <!-- 导航栏容器 -->
+        <nav class="nav">
+            <!-- 网站Logo链接 -->
+            <a href="/" class="logo">
+                <!-- 城市图标 -->
+                <i class="fas fa-city"></i>
+                <!-- 网站名称 -->
+                游市生活
+            </a>
+            <!-- 导航链接列表 -->
+            <ul class="nav-links">
+                <!-- 首页导航链接 -->
+                <li><a href="/">首页</a></li>
+                <!-- 住宿服务导航链接 -->
+                <li><a href="/hc/f2">住宿服务</a></li>
+                <!-- 出行服务导航链接 -->
+                <li><a href="/travel">出行服务</a></li>
+                <!-- 美食服务导航链接 -->
+                <li><a href="/food">美食服务</a></li>
+                <!-- 购物服务导航链接 -->
+                <li><a href="/shopping">购物服务</a></li>
+                <!-- 生活缴费导航链接 -->
+                <li><a href="/payment">生活缴费</a></li>
+            </ul>
+            <!-- 用户操作区域 -->
+            <div class="user-actions">
+                <!-- 未登录状态显示 -->
+                <!-- 使用Thymeleaf判断用户是否未登录 -->
+                <div th:if="${session.user == null}">
+                    <!-- 登录按钮链接 -->
+                    <a href="/user/login" class="login-btn">登录</a>
+                    <!-- 注册按钮链接 -->
+                    <a href="/user/register" class="register-btn">注册</a>
+                </div>
+                <!-- 已登录状态显示 -->
+                <!-- 使用Thymeleaf判断用户是否已登录 -->
+                <div th:if="${session.user != null}">
+                    <!-- 我的订单链接（统一订单中心） -->
+                    <a href="/unified-new/orders" style="color: #FF6600; text-decoration: none; font-weight: 500; margin-right: 15px;">
+                        <!-- 订单列表图标 -->
+                        <i class="fas fa-list-alt"></i>
+                        <!-- 我的订单文本 -->
+                        我的订单
+                    </a>
+                    <!-- 个人中心链接 -->
+                    <a href="/user/profile" style="color: #00CED1; text-decoration: none; font-weight: 500;">
+                        <!-- 用户图标 -->
+                        <i class="fas fa-user-circle"></i>
+                        <!-- 用户昵称或用户名（使用Thymeleaf动态显示，优先显示昵称，如果没有则显示用户名） -->
+                        <span th:text="${session.user.nickname ?: session.user.username}">用户</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 主要内容 -->
+    <!-- 住宿服务页面主要内容区域（使用module-hotel类应用住宿模块个性化样式） -->
+    <main class="main-content module-hotel">
+        <!-- 轮播图区域 -->
+        <!-- 页面头部轮播图区域（hero section） -->
+        <div class="hero-section">
+            <!-- 背景图片（使用内联样式设置背景图片，通过JavaScript动态切换） -->
+            <div class="hero-image" style="background-image: url('/img/1.jpg')"></div>
+            <!-- 轮播图内容区域 -->
+            <div class="hero-content">
+                <!-- 页面主标题 -->
+                <h1 class="hero-title">精选住宿</h1>
+                <!-- 页面副标题 -->
+                <p class="hero-subtitle">发现优质酒店民宿，享受舒适住宿体验</p>
+            </div>
+        </div>
+
+        <!-- 搜索区域 -->
+        <!-- 酒店搜索区域 -->
+        <div class="search-section">
+            <!-- 搜索表单（提交时调用searchHotels函数，阻止默认提交行为） -->
+            <form class="search-form" onsubmit="searchHotels(event)">
+                <!-- 搜索输入框（文本类型，占位符提示用户输入搜索关键词） -->
+                <input type="text" class="search-input" placeholder="搜索酒店名称、地址..." id="searchKeyword">
+                <!-- 搜索按钮（提交类型，包含搜索图标和文本） -->
+                <button type="submit" class="search-btn">
+                    <!-- 搜索图标 -->
+                    <i class="fas fa-search"></i> 
+                    <!-- 搜索文本 -->
+                    搜索
+                </button>
+                <!-- 显示全部按钮（点击时加载所有酒店） -->
+                <button type="button" class="search-btn" onclick="loadAllHotels()" style="background: #6c757d; margin-left: 10px;">
+                    <!-- 刷新图标 -->
+                    <i class="fas fa-redo"></i> 
+                    <!-- 显示全部文本 -->
+                    显示全部
+                </button>
+            </form>
+        </div>
+
+        <!-- 筛选区域 -->
+        <!-- 酒店筛选区域 -->
+        <div class="filter-section">
+            <!-- 筛选容器 -->
+            <div class="filter-container">
+                <!-- 价格范围筛选组 -->
+                <div class="filter-group">
+                    <!-- 价格范围标签 -->
+                    <label>价格范围</label>
+                    <!-- 价格范围下拉选择框 -->
+                    <select class="filter-select" id="priceFilter">
+                        <!-- 不限选项（默认） -->
+                        <option value="">不限</option>
+                        <!-- ¥200以下选项 -->
+                        <option value="0-200">¥200以下</option>
+                        <!-- ¥200-400选项 -->
+                        <option value="200-400">¥200-400</option>
+                        <!-- ¥400-600选项 -->
+                        <option value="400-600">¥400-600</option>
+                        <!-- ¥600以上选项 -->
+                        <option value="600+">¥600以上</option>
+                    </select>
+                </div>
+                <!-- 酒店星级筛选组 -->
+                <div class="filter-group">
+                    <!-- 酒店星级标签 -->
+                    <label>酒店星级</label>
+                    <!-- 酒店星级下拉选择框 -->
+                    <select class="filter-select" id="starFilter">
+                        <!-- 不限选项（默认） -->
+                        <option value="">不限</option>
+                        <!-- 五星级选项 -->
+                        <option value="5">五星级</option>
+                        <!-- 四星级选项 -->
+                        <option value="4">四星级</option>
+                        <!-- 三星级选项 -->
+                        <option value="3">三星级</option>
+                        <!-- 二星级选项 -->
+                        <option value="2">二星级</option>
+                    </select>
+                </div>
+                <!-- 排序方式筛选组 -->
+                <div class="filter-group">
+                    <!-- 排序方式标签 -->
+                    <label>排序方式</label>
+                    <!-- 排序方式下拉选择框 -->
+                    <select class="filter-select" id="sortFilter">
+                        <!-- 默认排序选项 -->
+                        <option value="default">默认排序</option>
+                        <!-- 价格从低到高选项 -->
+                        <option value="price-low">价格从低到高</option>
+                        <!-- 价格从高到低选项 -->
+                        <option value="price-high">价格从高到低</option>
+                        <!-- 评分最高选项 -->
+                        <option value="rating">评分最高</option>
+                    </select>
+                </div>
+                <!-- 应用筛选按钮（点击后调用applyFilters函数） -->
+                <button class="filter-btn" onclick="applyFilters()">
+                    <!-- 筛选图标 -->
+                    <i class="fas fa-filter"></i>
+                    <!-- 应用筛选文本 -->
+                    应用筛选
+                </button>
+            </div>
+        </div>
+
+        <!-- 酒店列表 -->
+        <!-- 酒店列表容器（使用Thymeleaf遍历hotelList集合，为每个酒店生成酒店卡片） -->
+        <div class="hotel-list" id="hotelList">
+            <!-- 使用Thymeleaf遍历hotelList集合，为每个酒店生成酒店卡片 -->
+            <div th:each="hotel : ${hotelList}" class="hotel-card">
+                <!-- 酒店图片（使用Thymeleaf动态设置背景图片） -->
+                <div class="hotel-image" th:style="'background-image: url(' + ${hotel.img} + ')'"></div>
+                <!-- 酒店内容区域 -->
+                <div class="hotel-content">
+                    <!-- 酒店名称（使用Thymeleaf动态显示） -->
+                    <h3 class="hotel-name" th:text="${hotel.name}">酒店名称</h3>
+                    <!-- 酒店信息区域 -->
+                    <div class="hotel-info">
+                        <!-- 酒店地址信息（带位置图标，使用Thymeleaf动态显示） -->
+                        <span><i class="fas fa-map-marker-alt"></i> <span th:text="${hotel.address}">地址</span></span>
+                        <!-- 酒店星级信息（带星级图标，使用Thymeleaf动态显示） -->
+                        <span><i class="fas fa-star"></i> <span th:text="${hotel.level}">星级</span></span>
+                        <!-- 酒店电话信息（带电话图标，使用Thymeleaf动态显示） -->
+                        <span><i class="fas fa-phone"></i> <span th:text="${hotel.tel}">电话</span></span>
+                    </div>
+                    <!-- 酒店描述（使用Thymeleaf动态显示） -->
+                    <p class="hotel-description" th:text="${hotel.content}">酒店描述信息</p>
+                    <!-- 酒店操作区域 -->
+                    <div class="hotel-actions">
+                        <!-- 酒店价格（使用Thymeleaf动态显示最低价格） -->
+                        <div class="hotel-price" th:text="'¥' + ${hotel.minPrice} + '起'">¥299起</div>
+                        <!-- 查看详情按钮链接（使用Thymeleaf动态生成链接，传递酒店ID） -->
+                        <a th:href="@{/hc/findById(id=${hotel.id})}" class="view-details-btn">查看详情</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分页 -->
+        <!-- 分页导航区域 -->
+        <div class="pagination">
+            <!-- 第1页链接（默认激活） -->
+            <a href="#" class="active">1</a>
+            <!-- 第2页链接 -->
+            <a href="#">2</a>
+            <!-- 第3页链接 -->
+            <a href="#">3</a>
+            <!-- 下一页链接 -->
+            <a href="#">下一页</a>
+        </div>
+    </main>
+
+    <!-- 
+        JavaScript代码块
+        功能概述：实现住宿服务首页的交互功能，包括轮播图、酒店搜索、筛选、卡片交互、导航激活状态设置等
+    -->
+    <script>
+        /**
+         * 文件级注释：住宿服务首页JavaScript功能模块
+         * 功能概述：
+         *   1. 轮播图功能（自动切换背景图片）
+         *   2. 酒店搜索功能（搜索酒店名称、地址等）
+         *   3. 筛选功能（价格范围、酒店星级、排序方式）
+         *   4. 酒店卡片交互效果（鼠标悬停效果）
+         *   5. 导航激活状态设置功能（根据当前路径设置导航链接的激活状态）
+         *   6. 页面初始化功能（绑定事件监听器，启动轮播图等）
+         */
+        
+        // ==================== 轮播图功能模块 ====================
+        /**
+         * 轮播图功能
+         * 功能概述：自动切换轮播图背景图片
+         */
+        // 当前图片索引（初始值为0）
+        let currentImageIndex = 0;
+        // 轮播图图片数组（包含5张图片路径）
+        const heroImages = ['/img/1.jpg', '/img/2.jpg', '/img/3.jpg', '/img/4.jpg', '/img/5.jpg'];
+        
+        /**
+         * 切换轮播图背景图片
+         * 功能概述：切换到下一张轮播图背景图片
+         */
+        function changeHeroImage() {
+            // 计算下一张图片的索引（当前索引加1，如果超过数组长度则回到0）
+            currentImageIndex = (currentImageIndex + 1) % heroImages.length;
+            // 获取轮播图背景图片元素
+            const heroImage = document.querySelector('.hero-image');
+            // 判断轮播图背景图片元素是否存在
+            if (heroImage) {
+                // 如果存在，更新背景图片为下一张图片
+                heroImage.style.backgroundImage = `url('${heroImages[currentImageIndex]}')`;
+            }
+        }
+
+        // ==================== 全局变量 ====================
+        /**
+         * 原始酒店列表（数据源）
+         * 功能概述：存储所有酒店数据，作为筛选和排序的数据源
+         */
+        let allHotelsData = [];
+        
+        /**
+         * 当前显示的酒店列表
+         * 功能概述：存储当前显示的酒店数据（筛选和排序后的结果）
+         */
+        let currentHotels = [];
+
+        // ==================== 酒店搜索功能模块 ====================
+        /**
+         * 搜索酒店
+         * 功能概述：处理搜索表单提交，搜索酒店名称、地址等
+         * @param {Event} event - 表单提交事件对象
+         */
+        async function searchHotels(event) {
+            // 阻止表单的默认提交行为（页面跳转）
+            event.preventDefault();
+            // 获取搜索关键词输入框的值
+            const keyword = document.getElementById('searchKeyword').value.trim();
+            // 判断搜索关键词是否不为空
+            if (keyword) {
+                try {
+                    // 显示加载状态（可选：可以添加loading提示）
+                    const hotelListContainer = document.getElementById('hotelList');
+                    if (hotelListContainer) {
+                        hotelListContainer.style.opacity = '0.6';
+                    }
+                    
+                    // 调用后端搜索接口
+                    const response = await fetch(`/hc/search?keyword=${encodeURIComponent(keyword)}`);
+                    // 判断响应是否成功
+                    if (response.ok) {
+                    // 解析响应数据为JSON格式
+                    const hotels = await response.json();
+                    // 打印调试信息到控制台，查看返回的数据结构
+                    console.log('搜索返回的酒店数据:', hotels);
+                    if (hotels.length > 0) {
+                        console.log('第一个酒店的数据:', hotels[0]);
+                        console.log('第一个酒店的价格:', hotels[0].minPrice);
+                    }
+                    // 更新酒店列表显示
+                    displayHotels(hotels);
+                    // 打印调试信息到控制台
+                    console.log('搜索关键词:', keyword, '，找到', hotels.length, '个酒店');
+                        
+                        // 恢复透明度
+                        if (hotelListContainer) {
+                            hotelListContainer.style.opacity = '1';
+                        }
+                    } else {
+                        // 如果响应失败，显示错误提示
+                        alert('搜索失败，请稍后重试');
+                        // 恢复透明度
+                        if (hotelListContainer) {
+                            hotelListContainer.style.opacity = '1';
+                        }
+                    }
+                } catch (error) {
+                    // 捕获异常，显示错误提示
+                    console.error('搜索错误:', error);
+                    alert('搜索出错，请稍后重试');
+                    // 恢复透明度
+                    const hotelListContainer = document.getElementById('hotelList');
+                    if (hotelListContainer) {
+                        hotelListContainer.style.opacity = '1';
+                    }
+                }
+            } else {
+                // 如果搜索关键词为空，加载所有酒店
+                loadAllHotels();
+            }
+        }
+
+        /**
+         * 显示酒店列表
+         * 功能概述：根据酒店数据动态生成并显示酒店卡片列表
+         * @param {Array} hotels - 酒店数据数组
+         * @param {Boolean} updateDataSource - 是否更新数据源（默认true）
+         */
+        function displayHotels(hotels, updateDataSource = true) {
+            // 如果更新数据源，保存到allHotelsData
+            if (updateDataSource) {
+                allHotelsData = hotels;
+            }
+            // 保存当前显示的酒店列表
+            currentHotels = hotels;
+            
+            // 获取酒店列表容器元素
+            const hotelListContainer = document.getElementById('hotelList');
+            // 判断酒店列表容器是否存在
+            if (!hotelListContainer) {
+                return;
+            }
+            
+            // 判断酒店列表是否为空
+            if (hotels.length === 0) {
+                // 如果为空，显示无结果提示
+                hotelListContainer.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <i class="fas fa-search" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
+                        <p style="font-size: 18px; color: #666;">未找到相关酒店，请尝试其他关键词</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 生成酒店卡片HTML字符串
+            let hotelsHTML = '';
+            // 遍历酒店数组，为每个酒店生成卡片HTML
+            hotels.forEach(hotel => {
+                // 获取价格，处理可能的字段名差异（minPrice或price）
+                const price = hotel.minPrice !== undefined ? hotel.minPrice : (hotel.price !== undefined ? hotel.price : 0);
+                // 格式化价格显示（保留整数，如果是小数则保留一位小数）
+                const priceDisplay = price > 0 ? (price % 1 === 0 ? price : price.toFixed(1)) : 0;
+                
+                // 打印调试信息（仅第一个酒店）
+                if (hotels.indexOf(hotel) === 0) {
+                    console.log('生成酒店卡片 - 酒店数据:', hotel);
+                    console.log('生成酒店卡片 - 价格:', price, '显示:', priceDisplay);
+                }
+                
+                hotelsHTML += `
+                    <div class="hotel-card">
+                        <div class="hotel-image" style="background-image: url('${hotel.img || '/img/1.jpg'}')"></div>
+                        <div class="hotel-content">
+                            <h3 class="hotel-name">${hotel.name || '酒店名称'}</h3>
+                            <div class="hotel-info">
+                                <span><i class="fas fa-map-marker-alt"></i> <span>${hotel.address || '地址'}</span></span>
+                                <span><i class="fas fa-star"></i> <span>${hotel.level || '星级'}</span></span>
+                                <span><i class="fas fa-phone"></i> <span>${hotel.tel || '电话'}</span></span>
+                            </div>
+                            <p class="hotel-description">${hotel.content || '酒店描述信息'}</p>
+                            <div class="hotel-actions">
+                                <div class="hotel-price">¥${priceDisplay}起</div>
+                                <a href="/hc/findById?id=${hotel.id}" class="view-details-btn">查看详情</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // 将生成的HTML字符串插入到酒店列表容器中
+            hotelListContainer.innerHTML = hotelsHTML;
+            
+            // 重新初始化酒店卡片交互效果
+            initHotelCards();
+        }
+
+        // ==================== 筛选功能模块 ====================
+        /**
+         * 应用筛选
+         * 功能概述：根据筛选条件（价格范围、酒店星级、排序方式）筛选和排序酒店列表
+         */
+        function applyFilters() {
+            // 如果数据源为空，先加载所有酒店
+            if (allHotelsData.length === 0) {
+                loadAllHotels();
+                // 延迟执行筛选，等待数据加载完成
+                setTimeout(applyFilters, 500);
+                return;
+            }
+            
+            // 获取价格范围筛选值
+            const priceFilter = document.getElementById('priceFilter').value;
+            // 获取酒店星级筛选值
+            const starFilter = document.getElementById('starFilter').value;
+            // 获取排序方式筛选值
+            const sortFilter = document.getElementById('sortFilter').value;
+            
+            // 基于数据源进行筛选，而不是当前显示的列表
+            let filteredHotels = [...allHotelsData];
+            
+            // 按价格范围筛选
+            if (priceFilter) {
+                filteredHotels = filteredHotels.filter(hotel => {
+                    // 获取酒店最低价格（处理可能的字段名差异）
+                    const hotelPrice = parseFloat(hotel.minPrice !== undefined ? hotel.minPrice : (hotel.price !== undefined ? hotel.price : 0));
+                    
+                    // 根据价格范围字符串判断价格是否在范围内
+                    if (priceFilter === '0-200') {
+                        return hotelPrice >= 0 && hotelPrice <= 200;
+                    } else if (priceFilter === '200-400') {
+                        return hotelPrice > 200 && hotelPrice <= 400;
+                    } else if (priceFilter === '400-600') {
+                        return hotelPrice > 400 && hotelPrice <= 600;
+                    } else if (priceFilter === '600+') {
+                        return hotelPrice > 600;
+                    }
+                    return true;
+                });
+            }
+            
+            // 按酒店星级筛选
+            if (starFilter) {
+                filteredHotels = filteredHotels.filter(hotel => {
+                    // 获取酒店星级（从level字段中提取数字，例如"五星级"提取"5"）
+                    const hotelLevel = String(hotel.level || '').replace(/[^\d]/g, '');
+                    // 判断酒店星级是否匹配
+                    return hotelLevel === starFilter;
+                });
+            }
+            
+            // 排序
+            if (sortFilter !== 'default') {
+                filteredHotels.sort((a, b) => {
+                    // 获取酒店最低价格（处理可能的字段名差异）
+                    const priceA = parseFloat(a.minPrice !== undefined ? a.minPrice : (a.price !== undefined ? a.price : 0));
+                    const priceB = parseFloat(b.minPrice !== undefined ? b.minPrice : (b.price !== undefined ? b.price : 0));
+                    
+                    if (sortFilter === 'price-low') {
+                        // 价格从低到高
+                        return priceA - priceB;
+                    } else if (sortFilter === 'price-high') {
+                        // 价格从高到低
+                        return priceB - priceA;
+                    } else if (sortFilter === 'rating') {
+                        // 评分最高（这里使用星级作为评分，实际应该从数据库获取评分）
+                        const ratingA = parseFloat(String(a.level || '0').replace(/[^\d]/g, '')) || 0;
+                        const ratingB = parseFloat(String(b.level || '0').replace(/[^\d]/g, '')) || 0;
+                        return ratingB - ratingA;
+                    }
+                    return 0;
+                });
+            }
+            
+            // 打印筛选条件到控制台（用于调试）
+            console.log('筛选条件:', {
+                price: priceFilter,  // 价格范围
+                star: starFilter,  // 酒店星级
+                sort: sortFilter,  // 排序方式
+                sourceCount: allHotelsData.length,  // 数据源数量
+                resultCount: filteredHotels.length  // 筛选结果数量
+            });
+            
+            // 更新显示筛选后的酒店列表（不更新数据源，因为筛选是基于数据源的）
+            displayHotels(filteredHotels, false);
+        }
+
+        // ==================== 酒店卡片交互效果模块 ====================
+        /**
+         * 初始化酒店卡片交互效果
+         * 功能概述：为所有酒店卡片添加鼠标悬停效果（提升和阴影变化）
+         */
+        function initHotelCards() {
+            // 获取所有酒店卡片元素
+            const hotelCards = document.querySelectorAll('.hotel-card');
+            // 遍历所有酒店卡片，为每个卡片绑定鼠标事件
+            hotelCards.forEach(card => {
+                // 为酒店卡片绑定mouseenter事件（鼠标进入时触发）
+                card.addEventListener('mouseenter', function() {
+                    // 鼠标进入时，提升卡片（向上移动5px）
+                    this.style.transform = 'translateY(-5px)';
+                    // 鼠标进入时，增加阴影效果
+                    this.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
+                });
+                
+                // 为酒店卡片绑定mouseleave事件（鼠标离开时触发）
+                card.addEventListener('mouseleave', function() {
+                    // 鼠标离开时，恢复卡片位置（回到原位置）
+                    this.style.transform = 'translateY(0)';
+                    // 鼠标离开时，恢复原始阴影效果
+                    this.style.boxShadow = '0 5px 20px rgba(0,0,0,0.1)';
+                });
+            });
+        }
+
+        // ==================== 导航激活状态设置功能模块 ====================
+        /**
+         * 设置导航激活状态
+         * 功能概述：根据当前页面路径，设置导航链接的激活状态（添加active类）
+         */
+        function setActiveNavItem() {
+            // 获取当前页面路径
+            const currentPath = window.location.pathname;
+            // 获取所有导航链接元素
+            const navLinks = document.querySelectorAll('.nav-links a');
+            
+            // 遍历所有导航链接，移除active类，然后根据当前路径添加active类
+            navLinks.forEach(link => {
+                // 移除导航链接的active类，取消激活状态
+                link.classList.remove('active');
+                // 获取导航链接的href属性值
+                const href = link.getAttribute('href');
+                
+                // 根据当前路径设置激活状态
+                // 判断是否为首页（当前路径为'/'且href为'/'）
+                if (currentPath === '/' && href === '/') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                // 判断是否为住宿服务页面（当前路径以'/hc/'开头且href为'/hc/f2'）
+                } else if (currentPath.startsWith('/hc/') && href === '/hc/f2') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                // 判断是否为出行服务页面（当前路径以'/travel'开头且href为'/travel'）
+                } else if (currentPath.startsWith('/travel') && href === '/travel') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                // 判断是否为美食服务页面（当前路径以'/food'开头且href为'/food'）
+                } else if (currentPath.startsWith('/food') && href === '/food') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                // 判断是否为购物服务页面（当前路径以'/shopping'开头且href为'/shopping'）
+                } else if (currentPath.startsWith('/shopping') && href === '/shopping') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                // 判断是否为生活缴费页面（当前路径以'/payment'开头且href为'/payment'）
+                } else if (currentPath.startsWith('/payment') && href === '/payment') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        /**
+         * 加载所有酒店
+         * 功能概述：从后端加载所有酒店列表并显示
+         */
+        async function loadAllHotels() {
+            try {
+                // 调用后端接口获取所有活跃酒店
+                const response = await fetch('/hc/allHotels');
+                // 判断响应是否成功
+                if (response.ok) {
+                // 解析响应数据为JSON格式
+                const hotels = await response.json();
+                // 打印调试信息到控制台，查看返回的数据结构
+                console.log('加载返回的酒店数据:', hotels);
+                if (hotels.length > 0) {
+                    console.log('第一个酒店的数据:', hotels[0]);
+                    console.log('第一个酒店的价格:', hotels[0].minPrice);
+                }
+                // 更新酒店列表显示
+                displayHotels(hotels);
+                // 打印调试信息到控制台
+                console.log('已加载', hotels.length, '个酒店');
+                } else {
+                    // 如果响应失败，显示错误提示
+                    alert('加载酒店列表失败，请刷新页面重试');
+                }
+            } catch (error) {
+                // 捕获异常，显示错误提示
+                console.error('加载酒店列表错误:', error);
+                alert('加载酒店列表出错，请刷新页面重试');
+            }
+        }
+
+        /**
+         * 从页面中提取酒店数据
+         * 功能概述：从Thymeleaf渲染的HTML中提取酒店数据，保存到currentHotels变量
+         */
+        function extractHotelsFromPage() {
+            // 获取所有酒店卡片元素
+            const hotelCards = document.querySelectorAll('.hotel-card');
+            // 初始化酒店数组
+            const hotels = [];
+            
+            // 遍历所有酒店卡片，提取酒店数据
+            hotelCards.forEach(card => {
+                // 获取酒店名称
+                const nameElement = card.querySelector('.hotel-name');
+                const name = nameElement ? nameElement.textContent.trim() : '';
+                
+                // 获取酒店图片（从背景图片URL中提取）
+                const imageElement = card.querySelector('.hotel-image');
+                const img = imageElement ? 
+                    (imageElement.style.backgroundImage.match(/url\(['"]?([^'"]+)['"]?\)/) || [])[1] || '' : '';
+                
+                // 获取酒店地址
+                const addressElement = card.querySelector('.hotel-info span:first-child span');
+                const address = addressElement ? addressElement.textContent.trim() : '';
+                
+                // 获取酒店星级
+                const levelElement = card.querySelector('.hotel-info span:nth-child(2) span');
+                const level = levelElement ? levelElement.textContent.trim() : '';
+                
+                // 获取酒店电话
+                const telElement = card.querySelector('.hotel-info span:last-child span');
+                const tel = telElement ? telElement.textContent.trim() : '';
+                
+                // 获取酒店描述
+                const contentElement = card.querySelector('.hotel-description');
+                const content = contentElement ? contentElement.textContent.trim() : '';
+                
+                // 获取酒店ID（从查看详情链接中提取）
+                const detailLink = card.querySelector('.view-details-btn');
+                const idMatch = detailLink ? detailLink.href.match(/id=(\d+)/) : null;
+                const id = idMatch ? parseInt(idMatch[1]) : 0;
+                
+                // 获取酒店最低价格（从价格元素中提取）
+                const priceElement = card.querySelector('.hotel-price');
+                const priceText = priceElement ? priceElement.textContent.trim() : '¥0起';
+                const priceMatch = priceText.match(/¥(\d+(?:\.\d+)?)/);
+                const minPrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
+                
+                // 创建酒店对象并添加到数组
+                hotels.push({
+                    id: id,
+                    name: name,
+                    img: img,
+                    address: address,
+                    level: level,
+                    tel: tel,
+                    content: content,
+                    minPrice: minPrice
+                });
+            });
+            
+            // 保存到全局变量（作为数据源）
+            allHotelsData = hotels;
+            currentHotels = hotels;
+            console.log('从页面提取了', hotels.length, '个酒店数据');
+        }
+
+        // ==================== 页面初始化功能模块 ====================
+        /**
+         * 页面加载完成后的初始化
+         * 功能概述：监听DOMContentLoaded事件，当DOM加载完成后设置导航激活状态、启动轮播图、初始化酒店卡片交互效果
+         */
+        // 监听DOMContentLoaded事件，当DOM加载完成后触发
+        document.addEventListener('DOMContentLoaded', function() {
+            // 打印调试信息到控制台
+            console.log('住宿服务页面加载完成');
+            
+            // 从页面中提取酒店数据（如果页面已通过Thymeleaf渲染了酒店列表）
+            extractHotelsFromPage();
+            
+            // 设置导航激活状态
+            // 调用setActiveNavItem函数，根据当前路径设置导航链接的激活状态
+            setActiveNavItem();
+            
+            // 启动轮播图
+            // 使用setInterval定时器，每5秒调用一次changeHeroImage函数，自动切换轮播图背景图片
+            setInterval(changeHeroImage, 5000); // 每5秒切换一次图片
+            
+            // 初始化酒店卡片交互效果
+            // 调用initHotelCards函数，为所有酒店卡片添加鼠标悬停效果
+            initHotelCards();
+        });
+    </script>
+
+</body>
+</html>

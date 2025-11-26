@@ -1,0 +1,807 @@
+<!--
+    文件名称：foodIndex.html
+    文件功能：美食服务首页模板
+    功能概述：
+        1. 显示餐厅列表，支持分页加载
+        2. 提供餐厅搜索功能（按餐厅名称、菜系、地址搜索）
+        3. 提供菜系分类筛选功能（热门菜系标签）
+        4. 集成词云图展示功能（热门菜系分布可视化）
+        5. 显示餐厅详细信息（名称、位置、评分、营业时间、描述、特色、价格区间等）
+        6. 提供餐厅详情跳转功能
+        7. 响应式设计，支持PC端和移动端访问
+    技术栈：HTML5 + CSS3 + JavaScript + Thymeleaf模板引擎
+    依赖文件：
+        - Font Awesome图标库（CDN）
+        - /css/navbar.css（导航栏样式）
+        - /css/module-themes.css（模块主题样式）
+        - WordCloud.js库（CDN，用于词云图展示）
+    作者：游市生活开发团队
+    创建日期：2024年
+    最后更新：2024年
+-->
+<!DOCTYPE html>
+<!-- HTML5文档类型声明，标识这是一个HTML5文档 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<!-- 
+    HTML根元素
+    lang="zh-CN"：设置页面语言为简体中文
+    xmlns:th="http://www.thymeleaf.org"：声明Thymeleaf命名空间，用于模板引擎语法
+-->
+<head>
+    <!-- HTML文档头部，包含元数据和样式表引用 -->
+    <!-- 字符编码声明，指定页面使用UTF-8编码，支持中文等多语言字符 -->
+    <meta charset="UTF-8">
+    <!-- 视口元数据，设置页面在移动设备上的显示方式，width=device-width表示宽度自适应设备宽度，initial-scale=1.0表示初始缩放比例为1.0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题 -->
+    <title>游市生活 - 美食服务</title>
+    <!-- Font Awesome图标库（CDN） -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 导航栏样式表 -->
+    <link rel="stylesheet" href="/css/navbar.css">
+    <!-- 模块主题样式表 -->
+    <link rel="stylesheet" href="/css/module-themes.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        /* 美食服务模块个性化样式 */
+        .module-food {
+            --primary-color: #ff6b6b;
+            --primary-light: #ff8e8e;
+            --primary-dark: #ff5252;
+            --accent-color: #ffb3b3;
+            --background-gradient: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            --card-shadow: 0 4px 15px rgba(255, 107, 107, 0.2);
+            --hover-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 20px 30px 20px;
+        }
+
+        /* 轮播图区域 */
+        .hero-section {
+            background: linear-gradient(135deg, #FF6600, #FF8533);
+            color: white;
+            padding: 60px 0;
+            margin-bottom: 40px;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .hero-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.3;
+            z-index: 1;
+        }
+
+        /* 搜索区域 */
+        .search-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #FF6600;
+        }
+
+        .search-btn {
+            padding: 12px 30px;
+            background: #FF6600;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-btn:hover {
+            background: #e55a00;
+        }
+
+        /* 餐厅列表 */
+        .restaurant-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .restaurant-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .restaurant-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        .restaurant-image {
+            width: 100%;
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .restaurant-content {
+            padding: 20px;
+        }
+
+        .restaurant-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .restaurant-info {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .restaurant-info span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .restaurant-description {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .restaurant-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .restaurant-price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FF6600;
+        }
+
+        .view-details-btn {
+            padding: 8px 20px;
+            background: #FF6600;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .view-details-btn:hover {
+            background: #e55a00;
+            color: white;
+        }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 40px;
+        }
+
+        .pagination a {
+            padding: 10px 15px;
+            background: white;
+            color: #333;
+            text-decoration: none;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s;
+        }
+
+        .pagination a:hover,
+        .pagination a.active {
+            background: #FF6600;
+            color: white;
+            border-color: #FF6600;
+        }
+
+        /* 菜系分类区域 */
+        .category-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+
+        .category-section h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .category-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .category-tag {
+            padding: 8px 16px;
+            background: #f8f9fa;
+            color: #666;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .category-tag:hover {
+            background: #FF6600;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* 词云图区域 */
+        .category-wordcloud {
+            background: linear-gradient(135deg, #fff5f5, #ffe8e8);
+            padding: 60px 20px;
+            margin: 40px 0;
+            border-radius: 15px;
+        }
+
+        .category-wordcloud h2 {
+            text-align: center;
+            color: #ff6b6b;
+            font-size: 32px;
+            margin-bottom: 30px;
+        }
+
+        #wordcloudCanvas {
+            cursor: pointer;
+            border-radius: 10px;
+        }
+
+        /* 餐厅特色标签 */
+        .restaurant-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .feature-tag {
+            padding: 4px 8px;
+            background: #ff6b6b;
+            color: white;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .search-form {
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-width: 100%;
+            }
+
+            .restaurant-list {
+                grid-template-columns: 1fr;
+            }
+
+            .category-tags {
+                justify-content: flex-start;
+            }
+
+            .category-wordcloud {
+                padding: 40px 15px;
+            }
+
+            .category-wordcloud h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 页面主体 -->
+    <!-- 统一导航栏 -->
+    <!-- 页面头部导航栏 -->
+    <header class="header">
+        <!-- 导航栏容器 -->
+        <nav class="nav">
+            <!-- 网站Logo链接 -->
+            <a href="/" class="logo">
+                <!-- 城市图标 -->
+                <i class="fas fa-city"></i>
+                <!-- 网站名称 -->
+                游市生活
+            </a>
+            <!-- 导航链接列表 -->
+            <ul class="nav-links">
+                <!-- 首页导航链接 -->
+                <li><a href="/">首页</a></li>
+                <!-- 住宿服务导航链接 -->
+                <li><a href="/hc/f2">住宿服务</a></li>
+                <!-- 出行服务导航链接 -->
+                <li><a href="/travel">出行服务</a></li>
+                <!-- 美食服务导航链接 -->
+                <li><a href="/food">美食服务</a></li>
+                <!-- 购物服务导航链接 -->
+                <li><a href="/shopping">购物服务</a></li>
+                <!-- 生活缴费导航链接 -->
+                <li><a href="/payment">生活缴费</a></li>
+            </ul>
+            <!-- 用户操作区域 -->
+            <div class="user-actions">
+                <!-- 未登录状态显示 -->
+                <!-- 使用Thymeleaf判断用户是否未登录 -->
+                <div th:if="${session.user == null}">
+                    <!-- 登录按钮链接 -->
+                    <a href="/user/login" class="login-btn">登录</a>
+                    <!-- 注册按钮链接 -->
+                    <a href="/user/register" class="register-btn">注册</a>
+                </div>
+                <!-- 已登录状态显示 -->
+                <!-- 使用Thymeleaf判断用户是否已登录 -->
+                <div th:if="${session.user != null}">
+                    <!-- 我的订单链接（统一订单中心） -->
+                    <a href="/unified-new/orders" style="color: #FF6600; text-decoration: none; font-weight: 500; margin-right: 15px;">
+                        <!-- 订单列表图标 -->
+                        <i class="fas fa-list-alt"></i>
+                        <!-- 我的订单文本 -->
+                        我的订单
+                    </a>
+                    <!-- 个人中心链接 -->
+                    <a href="/user/profile" style="color: #00CED1; text-decoration: none; font-weight: 500;">
+                        <!-- 用户图标 -->
+                        <i class="fas fa-user-circle"></i>
+                        <!-- 用户昵称或用户名（使用Thymeleaf动态显示，优先显示昵称，如果没有则显示用户名） -->
+                        <span th:text="${session.user.nickname ?: session.user.username}">用户</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 主要内容 -->
+    <!-- 美食服务页面主要内容区域（使用module-food类应用美食模块个性化样式） -->
+    <main class="main-content module-food">
+        <!-- 轮播图区域 -->
+        <!-- 页面顶部轮播图区域（展示美食服务主题） -->
+        <div class="hero-section">
+            <!-- 轮播图背景图片（使用背景图片样式） -->
+            <div class="hero-image" style="background-image: url('/img/1.jpg')"></div>
+            <!-- 轮播图内容区域 -->
+            <div class="hero-content">
+                <!-- 轮播图标题 -->
+                <h1 class="hero-title">美食服务</h1>
+                <!-- 轮播图副标题 -->
+                <p class="hero-subtitle">精选美食推荐，品味城市味道，让您的味蕾享受极致体验</p>
+            </div>
+        </div>
+
+        <!-- 搜索区域 -->
+        <!-- 餐厅搜索区域 -->
+        <div class="search-section">
+            <!-- 搜索表单（提交时调用searchRestaurants函数） -->
+            <form class="search-form" onsubmit="searchRestaurants(event)">
+                <!-- 搜索输入框（支持按餐厅名称、菜系、地址搜索） -->
+                <input type="text" class="search-input" placeholder="搜索餐厅名称、菜系、地址..." id="searchKeyword">
+                <!-- 搜索按钮 -->
+                <button type="submit" class="search-btn">
+                    <!-- 搜索图标 -->
+                    <i class="fas fa-search"></i> 
+                    <!-- 搜索文本 -->
+                    搜索
+                </button>
+            </form>
+        </div>
+
+        <!-- 菜系分类快速导航 -->
+        <!-- 热门菜系分类标签区域 -->
+        <div class="category-section">
+            <!-- 区域标题 -->
+            <h2>热门菜系</h2>
+            <!-- 菜系标签容器 -->
+            <div class="category-tags">
+                <!-- 使用Thymeleaf遍历categories集合，为每个菜系生成标签（点击后调用filterByCategory函数） -->
+                <span th:each="category : ${categories}" class="category-tag" th:text="${category}" onclick="filterByCategory(this.textContent)"></span>
+            </div>
+        </div>
+
+        <!-- 词云图区域 -->
+        <!-- 热门菜系分布词云图区域 -->
+        <div class="category-wordcloud">
+            <!-- 区域标题 -->
+            <h2>热门菜系分布</h2>
+            <!-- 词云图画布容器（通过JavaScript动态渲染词云图） -->
+            <div id="wordcloudCanvas" style="width: 100%; height: 400px;"></div>
+        </div>
+
+        <!-- 餐厅列表 -->
+        <!-- 餐厅列表网格容器 -->
+        <div class="restaurant-list" id="restaurantList">
+            <!-- 使用Thymeleaf遍历restaurants集合，为每个餐厅生成卡片 -->
+            <div th:each="restaurant : ${restaurants}" class="restaurant-card">
+                <!-- 餐厅图片（使用Thymeleaf动态设置背景图片） -->
+                <div class="restaurant-image" th:style="'background-image: url(' + ${restaurant.img} + ')'"></div>
+                <!-- 餐厅内容区域 -->
+                <div class="restaurant-content">
+                    <!-- 餐厅名称（使用Thymeleaf动态显示） -->
+                    <h3 class="restaurant-name" th:text="${restaurant.name}"></h3>
+                    <!-- 餐厅信息区域 -->
+                    <div class="restaurant-info">
+                        <!-- 餐厅位置信息（使用Thymeleaf动态显示城市） -->
+                        <span><i class="fas fa-map-marker-alt"></i> <span th:text="${restaurant.city}"></span></span>
+                        <!-- 餐厅评分信息（使用Thymeleaf动态显示评分） -->
+                        <span><i class="fas fa-star"></i> <span th:text="${restaurant.rating}"></span>分</span>
+                        <!-- 餐厅营业时间信息（使用Thymeleaf动态显示营业时间） -->
+                        <span><i class="fas fa-clock"></i> <span th:text="${restaurant.openingHours}"></span></span>
+                    </div>
+                    <!-- 餐厅描述（使用Thymeleaf动态显示） -->
+                    <p class="restaurant-description" th:text="${restaurant.description}"></p>
+                    <!-- 餐厅特色标签区域 -->
+                    <div class="restaurant-features">
+                        <!-- 使用Thymeleaf遍历餐厅特色（features字段按逗号分割），为每个特色生成标签 -->
+                        <span th:each="feature : ${#strings.arraySplit(restaurant.features, ',')}" 
+                              class="feature-tag" th:text="${feature}"></span>
+                    </div>
+                    <!-- 餐厅操作区域 -->
+                    <div class="restaurant-actions">
+                        <!-- 餐厅价格区间（使用Thymeleaf动态显示） -->
+                        <div class="restaurant-price" th:text="${restaurant.priceRange}"></div>
+                        <!-- 查看详情按钮链接（使用Thymeleaf动态生成链接，跳转到餐厅详情页面） -->
+                        <a th:href="@{'/food/detail/' + ${restaurant.id}}" class="view-details-btn">查看详情</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分页 -->
+        <!-- 分页导航区域 -->
+        <div class="pagination">
+            <!-- 第一页链接（默认激活状态） -->
+            <a href="#" class="active">1</a>
+            <!-- 第二页链接 -->
+            <a href="#">2</a>
+            <!-- 第三页链接 -->
+            <a href="#">3</a>
+            <!-- 下一页链接 -->
+            <a href="#">下一页</a>
+        </div>
+    </main>
+
+    <!-- 引入词云库 -->
+    <!-- WordCloud.js库（CDN），用于词云图展示 -->
+    <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.min.js"></script>
+    
+    <!-- 
+        JavaScript代码块
+        功能概述：实现美食服务首页的交互功能，包括餐厅搜索、菜系筛选、词云图初始化、导航激活状态设置等
+    -->
+    <script>
+        /**
+         * 文件级注释：美食服务首页JavaScript功能模块
+         * 功能概述：
+         *   1. 餐厅搜索功能（按关键词搜索餐厅）
+         *   2. 菜系筛选功能（按菜系分类筛选餐厅）
+         *   3. 词云图初始化功能（生成并渲染热门菜系分布词云图）
+         *   4. 导航激活状态设置功能（根据当前路径设置导航链接的激活状态）
+         *   5. 页面初始化功能（绑定事件监听器，初始化词云图）
+         */
+        
+        // ==================== 餐厅搜索功能模块 ====================
+        /**
+         * 搜索餐厅
+         * 功能概述：获取搜索关键词，跳转到餐厅搜索页面
+         * @param {Event} event - 表单提交事件对象
+         */
+        function searchRestaurants(event) {
+            // 阻止表单的默认提交行为（页面跳转）
+            event.preventDefault();
+            // 获取搜索输入框的值
+            const keyword = document.getElementById('searchKeyword').value;
+            // 判断搜索关键词是否不为空（去除首尾空格后）
+            if (keyword.trim()) {
+                // 如果搜索关键词不为空，跳转到餐厅搜索页面，传递搜索关键词参数（使用encodeURIComponent编码）
+                window.location.href = '/food/search?keyword=' + encodeURIComponent(keyword);
+            }
+        }
+
+        // ==================== 菜系筛选功能模块 ====================
+        /**
+         * 按菜系筛选
+         * 功能概述：根据菜系分类跳转到餐厅列表页面
+         * @param {String} category - 菜系分类名称
+         */
+        function filterByCategory(category) {
+            // 跳转到餐厅列表页面，传递菜系分类参数（使用encodeURIComponent编码）
+            window.location.href = '/food/list?category=' + encodeURIComponent(category);
+        }
+
+        // ==================== 词云图初始化功能模块 ====================
+        /**
+         * 初始化词云图
+         * 功能概述：生成热门菜系分布词云图，包含中国菜系、亚洲菜系、西方菜系、特色分类等，确保中国菜系占主导地位
+         */
+        function initWordCloud() {
+            // 按权重分层的菜系词汇库
+            // 定义菜系数据对象，包含不同类别的菜系及其权重
+            const cuisineData = {
+                // 中国菜系 - 最高权重 (60-100)
+                chinese: [
+                    {word: '川菜', weight: 95}, {word: '粤菜', weight: 90}, {word: '湘菜', weight: 85}, {word: '鲁菜', weight: 80},
+                    {word: '苏菜', weight: 75}, {word: '浙菜', weight: 70}, {word: '闽菜', weight: 65}, {word: '徽菜', weight: 60},
+                    {word: '京菜', weight: 85}, {word: '东北菜', weight: 70}, {word: '西北菜', weight: 65}, {word: '新疆菜', weight: 60},
+                    {word: '云南菜', weight: 70}, {word: '贵州菜', weight: 65}, {word: '江西菜', weight: 60}, {word: '河南菜', weight: 60},
+                    {word: '湖北菜', weight: 65}, {word: '山西菜', weight: 60}, {word: '陕西菜', weight: 60}, {word: '甘肃菜', weight: 55},
+                    {word: '广西菜', weight: 60}, {word: '海南菜', weight: 55}, {word: '台湾菜', weight: 70},
+                    {word: '火锅', weight: 90}, {word: '烧烤', weight: 80}, {word: '麻辣烫', weight: 75}, {word: '串串香', weight: 70},
+                    {word: '冒菜', weight: 65}, {word: '酸菜鱼', weight: 80}, {word: '水煮鱼', weight: 75}, {word: '宫保鸡丁', weight: 70},
+                    {word: '麻婆豆腐', weight: 70}, {word: '回锅肉', weight: 65}, {word: '糖醋里脊', weight: 65}, {word: '红烧肉', weight: 70},
+                    {word: '烤鸭', weight: 80}, {word: '包子', weight: 75}, {word: '饺子', weight: 80}, {word: '馄饨', weight: 70},
+                    {word: '面条', weight: 85}, {word: '米粉', weight: 70}, {word: '凉皮', weight: 65}, {word: '肉夹馍', weight: 70},
+                    {word: '煎饼', weight: 65}, {word: '油条', weight: 60}, {word: '豆浆', weight: 60}, {word: '豆腐脑', weight: 60}
+                ],
+                // 亚洲菜系 - 中等权重 (30-60)
+                asian: [
+                    {word: '日料', weight: 60}, {word: '韩料', weight: 55}, {word: '泰菜', weight: 50}, {word: '越南菜', weight: 45},
+                    {word: '印度菜', weight: 50}, {word: '新加坡菜', weight: 40}, {word: '马来西亚菜', weight: 35}
+                ],
+                // 西方菜系 - 较低权重 (20-50)
+                western: [
+                    {word: '意大利菜', weight: 45}, {word: '法餐', weight: 40}, {word: '德餐', weight: 35}, {word: '美式', weight: 40},
+                    {word: '墨西哥菜', weight: 30}, {word: '巴西菜', weight: 25}, {word: '希腊菜', weight: 30}, {word: '土耳其菜', weight: 25},
+                    {word: '阿拉伯菜', weight: 20}, {word: '以色列菜', weight: 15}, {word: '摩洛哥菜', weight: 15}
+                ],
+                // 特色分类 - 中等权重 (25-55)
+                special: [
+                    {word: '海鲜', weight: 55}, {word: '素食', weight: 45}, {word: '甜品', weight: 40}, {word: '咖啡', weight: 35},
+                    {word: '茶饮', weight: 50}, {word: '快餐', weight: 40}, {word: '家常菜', weight: 60}, {word: '私房菜', weight: 45},
+                    {word: '奶茶', weight: 50}, {word: '果汁', weight: 30}, {word: '酸奶', weight: 35}, {word: '冰淇淋', weight: 30}
+                ]
+            };
+            
+            // 生成词云数据
+            // 初始化词云数据列表（每个元素为[词汇, 权重]的数组）
+            const wordList = [];
+            // 初始化已使用词汇集合（用于去重）
+            const usedWords = new Set();
+            
+            // 确保中国菜系占主导地位
+            // 生成总词汇数量（30-50个词，随机生成）
+            const totalWords = Math.floor(Math.random() * 21) + 30;
+            // 设置中国菜系占比为70%
+            const chineseRatio = 0.7;
+            // 计算中国菜系词汇数量
+            const chineseCount = Math.floor(totalWords * chineseRatio);
+            // 计算其他菜系词汇数量
+            const otherCount = totalWords - chineseCount;
+            
+            // 添加中国菜系
+            // 复制中国菜系数组（避免修改原数组）
+            const chineseWords = [...cuisineData.chinese];
+            // 循环添加中国菜系词汇，直到达到目标数量或数组为空
+            for (let i = 0; i < chineseCount && chineseWords.length > 0; i++) {
+                // 生成随机索引
+                const randomIndex = Math.floor(Math.random() * chineseWords.length);
+                // 从数组中移除并获取随机选中的词汇
+                const selected = chineseWords.splice(randomIndex, 1)[0];
+                // 判断词汇是否已被使用（去重）
+                if (!usedWords.has(selected.word)) {
+                    // 如果词汇未被使用，添加到已使用集合中
+                    usedWords.add(selected.word);
+                    // 将词汇和权重添加到词云数据列表中
+                    wordList.push([selected.word, selected.weight]);
+                }
+            }
+            
+            // 添加其他菜系
+            // 合并其他菜系数组（亚洲菜系、西方菜系、特色分类）
+            const otherCuisines = [...cuisineData.asian, ...cuisineData.western, ...cuisineData.special];
+            // 循环添加其他菜系词汇，直到达到目标数量或数组为空
+            for (let i = 0; i < otherCount && otherCuisines.length > 0; i++) {
+                // 生成随机索引
+                const randomIndex = Math.floor(Math.random() * otherCuisines.length);
+                // 从数组中移除并获取随机选中的词汇
+                const selected = otherCuisines.splice(randomIndex, 1)[0];
+                // 判断词汇是否已被使用（去重）
+                if (!usedWords.has(selected.word)) {
+                    // 如果词汇未被使用，添加到已使用集合中
+                    usedWords.add(selected.word);
+                    // 将词汇和权重添加到词云数据列表中
+                    wordList.push([selected.word, selected.weight]);
+                }
+            }
+            
+            // 按权重排序，权重大的在前面
+            // 使用sort方法对词云数据列表按权重降序排序（权重大的在前）
+            wordList.sort((a, b) => b[1] - a[1]);
+            
+            // 打印调试信息到控制台
+            console.log('生成的词云数据:', wordList);
+            // 计算并打印中国菜系占比
+            console.log('中国菜系占比:', (wordList.filter(item => cuisineData.chinese.some(chinese => chinese.word === item[0])).length / wordList.length * 100).toFixed(1) + '%');
+            
+            // 渲染词云
+            // 调用WordCloud库渲染词云图
+            WordCloud(document.getElementById('wordcloudCanvas'), {
+                list: wordList,  // 词云数据列表
+                gridSize: 8,  // 减小网格大小，让更多词汇能显示
+                weightFactor: 1.2,  // 调整权重因子，让词汇大小更均匀
+                fontFamily: 'Microsoft YaHei, Arial, sans-serif',  // 字体族（优先使用微软雅黑）
+                color: function() {
+                    // 使用温暖美食主题色系
+                    // 定义颜色数组，包含暖橙色系、深红色系、绿色系、蓝色系、紫色系、棕色系等
+                    const colors = [
+                        // 暖橙色系 - 代表热情和活力
+                        '#ff8c42', '#ff6b35', '#f7931e', '#ffa726', '#ffb74d', '#ffcc80', '#ffd54f', '#ffeb3b',
+                        // 深红色系 - 代表传统和经典
+                        '#d32f2f', '#c62828', '#b71c1c', '#8d6e63', '#795548', '#6d4c41', '#5d4037', '#4e342e',
+                        // 绿色系 - 代表健康和自然
+                        '#388e3c', '#2e7d32', '#1b5e20', '#4caf50', '#66bb6a', '#81c784', '#a5d6a7', '#c8e6c9',
+                        // 蓝色系 - 代表清新和宁静
+                        '#1976d2', '#1565c0', '#0d47a1', '#2196f3', '#42a5f5', '#64b5f6', '#90caf9', '#bbdefb',
+                        // 紫色系 - 代表优雅和神秘
+                        '#7b1fa2', '#6a1b9a', '#4a148c', '#9c27b0', '#ba68c8', '#ce93d8', '#e1bee7', '#f3e5f5',
+                        // 棕色系 - 代表温暖和舒适
+                        '#8d6e63', '#795548', '#6d4c41', '#5d4037', '#4e342e', '#3e2723', '#2e1b14', '#1c0f0a'
+                    ];
+                    // 从颜色数组中随机选择一个颜色返回
+                    return colors[Math.floor(Math.random() * colors.length)];
+                },
+                rotateRatio: 0.4,  // 旋转比例（40%的词汇会旋转）
+                backgroundColor: '#ffffff',  // 背景颜色（白色）
+                click: function(item) {
+                    // 点击词云标签，跳转到对应菜系筛选
+                    // 当用户点击词云中的词汇时，跳转到餐厅列表页面，传递菜系分类参数（使用encodeURIComponent编码）
+                    window.location.href = '/food/list?category=' + encodeURIComponent(item[0]);
+                }
+            });
+        }
+
+        // ==================== 导航激活状态设置功能模块 ====================
+        /**
+         * 设置导航激活状态
+         * 功能概述：根据当前页面路径，设置导航链接的激活状态（添加active类）
+         */
+        function setActiveNavItem() {
+            // 获取当前页面路径
+            const currentPath = window.location.pathname;
+            // 获取所有导航链接元素
+            const navLinks = document.querySelectorAll('.nav-links a');
+            
+            // 遍历所有导航链接，移除active类，然后根据当前路径添加active类
+            navLinks.forEach(link => {
+                // 移除导航链接的active类，取消激活状态
+                link.classList.remove('active');
+                // 获取导航链接的href属性值
+                const href = link.getAttribute('href');
+                
+                // 根据当前路径设置激活状态
+                // 判断是否为首页（当前路径为'/'且href为'/'）
+                if (currentPath === '/' && href === '/') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                // 判断是否为住宿服务页面（当前路径以'/hc/'开头且href为'/hc/f2'）
+                } else if (currentPath.startsWith('/hc/') && href === '/hc/f2') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                // 判断是否为出行服务页面（当前路径以'/travel'开头且href为'/travel'）
+                } else if (currentPath.startsWith('/travel') && href === '/travel') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                // 判断是否为美食服务页面（当前路径以'/food'开头且href为'/food'）
+                } else if (currentPath.startsWith('/food') && href === '/food') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                // 判断是否为购物服务页面（当前路径以'/shopping'开头且href为'/shopping'）
+                } else if (currentPath.startsWith('/shopping') && href === '/shopping') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                // 判断是否为生活缴费页面（当前路径以'/payment'开头且href为'/payment'）
+                } else if (currentPath.startsWith('/payment') && href === '/payment') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        // ==================== 页面初始化功能模块 ====================
+        /**
+         * 页面加载完成后的初始化
+         * 功能概述：监听DOMContentLoaded事件，当DOM加载完成后设置导航激活状态、初始化词云图
+         */
+        // 监听DOMContentLoaded事件，当DOM加载完成后触发
+        document.addEventListener('DOMContentLoaded', function() {
+            // 打印调试信息到控制台
+            console.log('美食服务页面加载完成');
+            
+            // 设置导航激活状态
+            // 调用setActiveNavItem函数，根据当前路径设置导航链接的激活状态
+            setActiveNavItem();
+            
+            // 初始化词云图
+            // 调用initWordCloud函数，生成并渲染热门菜系分布词云图
+            initWordCloud();
+        });
+    </script>
+    
+</body>
+</html>

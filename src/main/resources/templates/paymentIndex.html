@@ -1,0 +1,364 @@
+<!--
+    文件名称：paymentIndex.html
+    文件功能：生活缴费首页模板
+    功能概述：
+        1. 显示生活缴费服务首页，包括统计卡片（总账单、待缴费、已缴费、逾期）
+        2. 显示缴费类型列表（通过JavaScript动态加载）
+        3. 提供账单筛选功能（全部、待缴费、已缴费、逾期）
+        4. 显示账单列表（通过JavaScript动态加载）
+        5. 提供加载状态和空状态提示
+        6. 响应式设计，支持PC端和移动端访问
+    技术栈：HTML5 + CSS3 + JavaScript + Thymeleaf模板引擎
+    依赖文件：
+        - Font Awesome图标库（CDN）
+        - /css/navbar.css（导航栏样式）
+        - /css/payment.css（生活缴费样式）
+        - /js/payment.js（生活缴费JavaScript功能）
+    作者：游市生活开发团队
+    创建日期：2024年
+    最后更新：2024年
+-->
+<!DOCTYPE html>
+<!-- HTML5文档类型声明，标识这是一个HTML5文档 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<!-- 
+    HTML根元素
+    lang="zh-CN"：设置页面语言为简体中文
+    xmlns:th="http://www.thymeleaf.org"：声明Thymeleaf命名空间，用于模板引擎语法
+-->
+<head>
+    <!-- HTML文档头部，包含元数据和样式表引用 -->
+    <!-- 字符编码声明，指定页面使用UTF-8编码，支持中文等多语言字符 -->
+    <meta charset="UTF-8">
+    <!-- 视口元数据，设置页面在移动设备上的显示方式，width=device-width表示宽度自适应设备宽度，initial-scale=1.0表示初始缩放比例为1.0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题 -->
+    <title>游市生活 - 生活缴费</title>
+    <!-- Font Awesome图标库（CDN） -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 导航栏样式表 -->
+    <link rel="stylesheet" href="/css/navbar.css">
+    <!-- 生活缴费样式表 -->
+    <link rel="stylesheet" href="/css/payment.css">
+</head>
+
+<body>
+    <!-- 页面主体 -->
+    <!-- 统一导航栏 -->
+    <!-- 页面头部导航栏 -->
+    <header class="header">
+        <!-- 导航栏容器 -->
+        <nav class="nav">
+            <!-- 网站Logo链接 -->
+            <a href="/" class="logo">
+                <!-- 城市图标 -->
+                <i class="fas fa-city"></i>
+                <!-- 网站名称 -->
+                游市生活
+            </a>
+            <!-- 导航链接列表 -->
+            <ul class="nav-links">
+                <!-- 首页导航链接 -->
+                <li><a href="/">首页</a></li>
+                <!-- 住宿服务导航链接 -->
+                <li><a href="/hc/f2">住宿服务</a></li>
+                <!-- 出行服务导航链接 -->
+                <li><a href="/travel">出行服务</a></li>
+                <!-- 美食服务导航链接 -->
+                <li><a href="/food">美食服务</a></li>
+                <!-- 购物服务导航链接 -->
+                <li><a href="/shopping">购物服务</a></li>
+                <!-- 生活缴费导航链接 -->
+                <li><a href="/payment">生活缴费</a></li>
+            </ul>
+            <!-- 用户操作区域 -->
+            <div class="user-actions">
+                <!-- 未登录状态显示 -->
+                <!-- 使用Thymeleaf判断用户是否未登录 -->
+                <div th:if="${session.user == null}">
+                    <!-- 登录按钮链接 -->
+                    <a href="/user/login" class="login-btn">登录</a>
+                    <!-- 注册按钮链接 -->
+                    <a href="/user/register" class="register-btn">注册</a>
+                </div>
+                <!-- 已登录状态显示 -->
+                <!-- 使用Thymeleaf判断用户是否已登录 -->
+                <div th:if="${session.user != null}">
+                    <!-- 我的订单链接（统一订单中心） -->
+                    <a href="/unified-new/orders" style="color: #FF6600; text-decoration: none; font-weight: 500; margin-right: 15px;">
+                        <!-- 订单列表图标 -->
+                        <i class="fas fa-list-alt"></i>
+                        <!-- 我的订单文本 -->
+                        我的订单
+                    </a>
+                    <!-- 个人中心链接 -->
+                    <a href="/user/profile" style="color: #00CED1; text-decoration: none; font-weight: 500;">
+                        <!-- 用户图标 -->
+                        <i class="fas fa-user-circle"></i>
+                        <!-- 用户昵称或用户名（使用Thymeleaf动态显示，优先显示昵称，如果没有则显示用户名） -->
+                        <span th:text="${session.user.nickname ?: session.user.username}">用户</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 主要内容 -->
+    <!-- 生活缴费页面主要内容区域 -->
+    <main class="payment-container">
+        <!-- 页面标题 -->
+        <!-- 页面头部标题区域 -->
+        <div class="page-header">
+            <!-- 页面主标题（带图标） -->
+            <h1><i class="fas fa-credit-card"></i> 生活缴费</h1>
+            <!-- 页面副标题 -->
+            <p>便捷缴费，安全可靠</p>
+        </div>
+
+        <!-- 统计卡片 -->
+        <!-- 账单统计卡片区域（通过JavaScript动态更新数据） -->
+        <div class="stats-cards" id="statsCards">
+            <!-- 总账单统计卡片 -->
+            <div class="stat-card">
+                <!-- 统计图标 -->
+                <div class="stat-icon">
+                    <!-- 发票图标 -->
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <!-- 统计内容区域 -->
+                <div class="stat-content">
+                    <!-- 总账单数量（通过JavaScript动态更新） -->
+                    <div class="stat-number" id="totalBills">0</div>
+                    <!-- 统计标签 -->
+                    <div class="stat-label">总账单</div>
+                </div>
+            </div>
+            <!-- 待缴费统计卡片 -->
+            <div class="stat-card">
+                <!-- 统计图标（待缴费样式） -->
+                <div class="stat-icon unpaid">
+                    <!-- 时钟图标 -->
+                    <i class="fas fa-clock"></i>
+                </div>
+                <!-- 统计内容区域 -->
+                <div class="stat-content">
+                    <!-- 待缴费数量（通过JavaScript动态更新） -->
+                    <div class="stat-number" id="unpaidBills">0</div>
+                    <!-- 统计标签 -->
+                    <div class="stat-label">待缴费</div>
+                </div>
+            </div>
+            <!-- 已缴费统计卡片 -->
+            <div class="stat-card">
+                <!-- 统计图标（已缴费样式） -->
+                <div class="stat-icon paid">
+                    <!-- 完成图标 -->
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <!-- 统计内容区域 -->
+                <div class="stat-content">
+                    <!-- 已缴费数量（通过JavaScript动态更新） -->
+                    <div class="stat-number" id="paidBills">0</div>
+                    <!-- 统计标签 -->
+                    <div class="stat-label">已缴费</div>
+                </div>
+            </div>
+            <!-- 逾期统计卡片 -->
+            <div class="stat-card">
+                <!-- 统计图标（逾期样式） -->
+                <div class="stat-icon overdue">
+                    <!-- 警告图标 -->
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <!-- 统计内容区域 -->
+                <div class="stat-content">
+                    <!-- 逾期数量（通过JavaScript动态更新） -->
+                    <div class="stat-number" id="overdueBills">0</div>
+                    <!-- 统计标签 -->
+                    <div class="stat-label">逾期</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 缴费类型 -->
+        <!-- 缴费类型展示区域 -->
+        <div class="payment-types">
+            <!-- 缴费类型标题 -->
+            <h2>缴费类型</h2>
+            <!-- 缴费类型网格容器（通过JavaScript动态加载缴费类型） -->
+            <div class="type-grid" id="typeGrid">
+                <!-- 缴费类型将通过JavaScript动态加载 -->
+            </div>
+        </div>
+
+        <!-- 账单筛选 -->
+        <!-- 账单筛选区域 -->
+        <div class="bill-filters">
+            <!-- 我的账单标题 -->
+            <h2>我的账单</h2>
+            <!-- 筛选标签容器 -->
+            <div class="filter-tabs">
+                <!-- 全部筛选标签（默认激活） -->
+                <button class="filter-tab active" data-status="">全部</button>
+                <!-- 待缴费筛选标签（data-status="0"） -->
+                <button class="filter-tab" data-status="0">待缴费</button>
+                <!-- 已缴费筛选标签（data-status="1"） -->
+                <button class="filter-tab" data-status="1">已缴费</button>
+                <!-- 逾期筛选标签（data-status="2"） -->
+                <button class="filter-tab" data-status="2">逾期</button>
+            </div>
+        </div>
+
+        <!-- 账单列表 -->
+        <!-- 账单列表容器（通过JavaScript动态加载账单） -->
+        <div class="bill-list" id="billList">
+            <!-- 账单将通过JavaScript动态加载 -->
+        </div>
+
+        <!-- 加载状态 -->
+        <!-- 加载状态提示（初始隐藏，通过JavaScript控制显示/隐藏） -->
+        <div class="loading" id="loadingState" style="display: none;">
+            <!-- 加载动画 -->
+            <div class="loading-spinner"></div>
+            <!-- 加载提示文本 -->
+            <div>加载中...</div>
+        </div>
+
+        <!-- 空状态 -->
+        <!-- 空状态提示（初始隐藏，通过JavaScript控制显示/隐藏） -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <!-- 空状态图标 -->
+            <div class="empty-icon">📄</div>
+            <!-- 空状态提示文本 -->
+            <div class="empty-text">暂无账单</div>
+        </div>
+    </main>
+
+
+    <!-- 
+        JavaScript代码块
+        功能概述：实现生活缴费首页的交互功能，包括导航激活状态设置、账单筛选、数据加载等
+    -->
+    <!-- 外部JavaScript文件（生活缴费功能模块） -->
+    <script src="/js/payment.js"></script>
+    <!-- 内嵌JavaScript代码 -->
+    <script>
+        /**
+         * 文件级注释：生活缴费首页JavaScript功能模块
+         * 功能概述：
+         *   1. 导航激活状态设置功能（根据当前路径设置导航链接的激活状态）
+         *   2. 账单筛选功能（根据筛选标签加载对应状态的账单）
+         *   3. 页面初始化功能（绑定事件监听器，加载初始数据）
+         *   4. 数据刷新功能（从支付成功页面返回时刷新数据）
+         */
+        
+        // ==================== 导航激活状态设置功能模块 ====================
+        /**
+         * 设置导航激活状态
+         * 功能概述：根据当前页面路径，设置导航链接的激活状态（添加active类）
+         */
+        function setActiveNavItem() {
+            // 获取当前页面路径
+            const currentPath = window.location.pathname;
+            // 获取所有导航链接元素
+            const navLinks = document.querySelectorAll('.nav-links a');
+            
+            // 遍历所有导航链接，移除active类，然后根据当前路径添加active类
+            navLinks.forEach(link => {
+                // 移除导航链接的active类，取消激活状态
+                link.classList.remove('active');
+                // 获取导航链接的href属性值
+                const href = link.getAttribute('href');
+                
+                // 判断是否为首页（当前路径为'/'且href为'/'）
+                if (currentPath === '/' && href === '/') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                // 判断是否为住宿服务页面（当前路径以'/hc/'开头且href为'/hc/f2'）
+                } else if (currentPath.startsWith('/hc/') && href === '/hc/f2') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                // 判断是否为出行服务页面（当前路径以'/travel'开头且href为'/travel'）
+                } else if (currentPath.startsWith('/travel') && href === '/travel') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                // 判断是否为美食服务页面（当前路径以'/food'开头且href为'/food'）
+                } else if (currentPath.startsWith('/food') && href === '/food') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                // 判断是否为购物服务页面（当前路径以'/shopping'开头且href为'/shopping'）
+                } else if (currentPath.startsWith('/shopping') && href === '/shopping') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                // 判断是否为生活缴费页面（当前路径以'/payment'开头且href为'/payment'）
+                } else if (currentPath.startsWith('/payment') && href === '/payment') {
+                    // 如果匹配，添加active类，激活选中状态
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        // ==================== 页面初始化功能模块 ====================
+        /**
+         * 页面加载完成后的初始化
+         * 功能概述：监听DOMContentLoaded事件，当DOM加载完成后设置导航激活状态、绑定筛选标签事件、加载初始数据
+         */
+        // 监听DOMContentLoaded事件，当DOM加载完成后触发
+        document.addEventListener('DOMContentLoaded', function() {
+            // 打印调试信息到控制台
+            console.log('生活缴费页面加载完成');
+            
+            // 设置导航激活状态
+            // 调用setActiveNavItem函数，根据当前路径设置导航链接的激活状态
+            setActiveNavItem();
+            
+            // 绑定筛选标签事件
+            // 遍历所有筛选标签，为每个标签绑定点击事件
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                // 为筛选标签绑定click事件监听器
+                tab.addEventListener('click', function() {
+                    // 更新标签状态
+                    // 遍历所有筛选标签，移除active类，取消激活状态
+                    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                    // 为当前点击的筛选标签添加active类，激活选中状态
+                    this.classList.add('active');
+                    
+                    // 加载对应状态的账单
+                    // 获取当前筛选标签的data-status属性值（账单状态）
+                    const status = this.getAttribute('data-status');
+                    // 调用loadBills函数（定义在payment.js中），加载对应状态的账单
+                    loadBills(status);
+                });
+            });
+            
+            // 初始加载数据
+            // 调用loadPaymentTypes函数（定义在payment.js中），加载缴费类型列表
+            loadPaymentTypes();
+            // 调用loadStats函数（定义在payment.js中），加载账单统计数据
+            loadStats();
+            // 默认只加载未支付的账单（status=0）
+            // 调用loadBills函数（定义在payment.js中），加载待缴费账单（status=0）
+            loadBills(0);
+            
+            // 如果是从支付成功页面返回的，刷新数据
+            // 创建URLSearchParams对象，解析URL查询参数
+            const urlParams = new URLSearchParams(window.location.search);
+            // 判断URL中是否包含refresh=true参数（表示从支付成功页面返回）
+            if (urlParams.get('refresh') === 'true') {
+                // 延迟刷新，确保页面已加载完成
+                // 使用setTimeout延迟500毫秒后执行刷新操作
+                setTimeout(() => {
+                    // 重新加载账单统计数据
+                    loadStats();
+                    // 重新加载待缴费账单（status=0）
+                    loadBills(0);
+                }, 500);
+                // 清除URL参数
+                // 使用window.history.replaceState方法，将URL中的查询参数清除，但不刷新页面
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
+    </script>
+    
+</body>
+</html>

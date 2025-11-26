@@ -1,0 +1,550 @@
+/* ========================================
+   模块个性化主题样式
+   ======================================== */
+
+/* ========================================
+   住宿服务模块 - 橙色主题
+   ======================================== */
+.module-hotel {
+    --primary-color: #FF6600;
+    --primary-light: #FF8533;
+    --primary-dark: #e55a00;
+    --accent-color: #ffb366;
+    --background-gradient: linear-gradient(135deg, #FF6600, #FF8533);
+    --card-shadow: 0 4px 15px rgba(255, 102, 0, 0.2);
+    --hover-shadow: 0 8px 25px rgba(255, 102, 0, 0.3);
+
+    /* 导航栏主题色 */
+    --navbar-bg: #ffffff;
+    --navbar-shadow: 0 2px 10px rgba(255, 102, 0, 0.15);
+    --navbar-border: rgba(255, 102, 0, 0.2);
+    --navbar-brand-color: #333;
+    --navbar-brand-hover-color: var(--primary-color);
+    --navbar-brand-icon-color: var(--primary-color);
+    --navbar-brand-gradient: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    --navbar-link-color: #666;
+    --navbar-link-hover-color: #333;
+    --navbar-link-hover-bg: rgba(255, 102, 0, 0.1);
+    --navbar-link-hover-icon-color: var(--primary-color);
+    --navbar-link-active-color: var(--primary-color);
+    --navbar-link-active-bg: rgba(255, 102, 0, 0.15);
+    --navbar-link-active-icon-color: var(--primary-color);
+    --navbar-link-active-indicator: var(--primary-color);
+    --navbar-user-color: #666;
+    --navbar-user-hover-color: #333;
+    --navbar-user-hover-bg: rgba(255, 102, 0, 0.05);
+    --navbar-user-hover-border: var(--primary-color);
+    --navbar-user-hover-icon-color: var(--primary-color);
+    --navbar-user-active-color: var(--primary-color);
+    --navbar-user-active-bg: rgba(255, 102, 0, 0.1);
+    --navbar-user-active-border: var(--primary-color);
+}
+
+.module-hotel .hero-section {
+    background: var(--background-gradient);
+    position: relative;
+    overflow: hidden;
+}
+
+.module-hotel .hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="hotel-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="2" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23hotel-pattern)"/></svg>');
+    opacity: 0.3;
+}
+
+.module-hotel .service-card {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.module-hotel .service-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--hover-shadow);
+    transform: translateY(-5px);
+}
+
+.module-hotel .btn-primary {
+    background: var(--background-gradient);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.module-hotel .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow);
+}
+
+/* ========================================
+   旅游服务模块 - 蓝紫色主题
+   ======================================== */
+.module-travel {
+    --primary-color: #667eea;
+    --primary-light: #764ba2;
+    --primary-dark: #5a6fd8;
+    --accent-color: #a8b5ff;
+    --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --card-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    --hover-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+
+    /* 导航栏主题色 */
+    --navbar-bg: #ffffff;
+    --navbar-shadow: 0 2px 10px rgba(102, 126, 234, 0.15);
+    --navbar-border: rgba(102, 126, 234, 0.2);
+    --navbar-brand-color: #333;
+    --navbar-brand-hover-color: var(--primary-color);
+    --navbar-brand-icon-color: var(--primary-color);
+    --navbar-brand-gradient: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    --navbar-link-color: #666;
+    --navbar-link-hover-color: #333;
+    --navbar-link-hover-bg: rgba(102, 126, 234, 0.1);
+    --navbar-link-hover-icon-color: var(--primary-color);
+    --navbar-link-active-color: var(--primary-color);
+    --navbar-link-active-bg: rgba(102, 126, 234, 0.15);
+    --navbar-link-active-icon-color: var(--primary-color);
+    --navbar-link-active-indicator: var(--primary-color);
+    --navbar-user-color: #666;
+    --navbar-user-hover-color: #333;
+    --navbar-user-hover-bg: rgba(102, 126, 234, 0.05);
+    --navbar-user-hover-border: var(--primary-color);
+    --navbar-user-hover-icon-color: var(--primary-color);
+    --navbar-user-active-color: var(--primary-color);
+    --navbar-user-active-bg: rgba(102, 126, 234, 0.1);
+    --navbar-user-active-border: var(--primary-color);
+}
+
+.module-travel {
+    background: var(--background-gradient);
+    min-height: 100vh;
+}
+
+.module-travel .hero-section {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.module-travel .service-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.module-travel .service-card:hover {
+    background: rgba(255, 255, 255, 0.95);
+    transform: translateY(-5px);
+    box-shadow: var(--hover-shadow);
+}
+
+.module-travel .btn-primary {
+    background: var(--background-gradient);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.module-travel .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow);
+}
+
+/* ========================================
+   美食服务模块 - 红色主题
+   ======================================== */
+.module-food {
+    --primary-color: #ff6b6b;
+    --primary-light: #ff8e8e;
+    --primary-dark: #ff5252;
+    --accent-color: #ffb3b3;
+    --background-gradient: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+    --card-shadow: 0 4px 15px rgba(255, 107, 107, 0.2);
+    --hover-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+
+    /* 导航栏主题色 */
+    --navbar-bg: #ffffff;
+    --navbar-shadow: 0 2px 10px rgba(255, 107, 107, 0.15);
+    --navbar-border: rgba(255, 107, 107, 0.2);
+    --navbar-brand-color: #333;
+    --navbar-brand-hover-color: var(--primary-color);
+    --navbar-brand-icon-color: var(--primary-color);
+    --navbar-brand-gradient: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    --navbar-link-color: #666;
+    --navbar-link-hover-color: #333;
+    --navbar-link-hover-bg: rgba(255, 107, 107, 0.1);
+    --navbar-link-hover-icon-color: var(--primary-color);
+    --navbar-link-active-color: var(--primary-color);
+    --navbar-link-active-bg: rgba(255, 107, 107, 0.15);
+    --navbar-link-active-icon-color: var(--primary-color);
+    --navbar-link-active-indicator: var(--primary-color);
+    --navbar-user-color: #666;
+    --navbar-user-hover-color: #333;
+    --navbar-user-hover-bg: rgba(255, 107, 107, 0.05);
+    --navbar-user-hover-border: var(--primary-color);
+    --navbar-user-hover-icon-color: var(--primary-color);
+    --navbar-user-active-color: var(--primary-color);
+    --navbar-user-active-bg: rgba(255, 107, 107, 0.1);
+    --navbar-user-active-border: var(--primary-color);
+}
+
+.module-food .hero-section {
+    background: var(--background-gradient);
+    position: relative;
+    overflow: hidden;
+}
+
+.module-food .hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="food-pattern" x="0" y="0" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M7.5,0 L15,7.5 L7.5,15 L0,7.5 Z" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23food-pattern)"/></svg>');
+    opacity: 0.3;
+}
+
+.module-food .service-card {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.module-food .service-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 107, 107, 0.1), transparent);
+    transition: left 0.6s ease;
+}
+
+.module-food .service-card:hover::before {
+    left: 100%;
+}
+
+.module-food .service-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--hover-shadow);
+    transform: translateY(-5px);
+}
+
+.module-food .btn-primary {
+    background: var(--background-gradient);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.module-food .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow);
+}
+
+/* ========================================
+   购物服务模块 - 青色主题
+   ======================================== */
+.module-shopping {
+    --primary-color: #4ecdc4;
+    --primary-light: #6dd5cd;
+    --primary-dark: #3bb5ac;
+    --accent-color: #a8f0ed;
+    --background-gradient: linear-gradient(135deg, #4ecdc4, #6dd5cd);
+    --card-shadow: 0 4px 15px rgba(78, 205, 196, 0.2);
+    --hover-shadow: 0 8px 25px rgba(78, 205, 196, 0.3);
+
+    /* 导航栏主题色 */
+    --navbar-bg: #ffffff;
+    --navbar-shadow: 0 2px 10px rgba(78, 205, 196, 0.15);
+    --navbar-border: rgba(78, 205, 196, 0.2);
+    --navbar-brand-color: #333;
+    --navbar-brand-hover-color: var(--primary-color);
+    --navbar-brand-icon-color: var(--primary-color);
+    --navbar-brand-gradient: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    --navbar-link-color: #666;
+    --navbar-link-hover-color: #333;
+    --navbar-link-hover-bg: rgba(78, 205, 196, 0.1);
+    --navbar-link-hover-icon-color: var(--primary-color);
+    --navbar-link-active-color: var(--primary-color);
+    --navbar-link-active-bg: rgba(78, 205, 196, 0.15);
+    --navbar-link-active-icon-color: var(--primary-color);
+    --navbar-link-active-indicator: var(--primary-color);
+    --navbar-user-color: #666;
+    --navbar-user-hover-color: #333;
+    --navbar-user-hover-bg: rgba(78, 205, 196, 0.05);
+    --navbar-user-hover-border: var(--primary-color);
+    --navbar-user-hover-icon-color: var(--primary-color);
+    --navbar-user-active-color: var(--primary-color);
+    --navbar-user-active-bg: rgba(78, 205, 196, 0.1);
+    --navbar-user-active-border: var(--primary-color);
+}
+
+.module-shopping .hero-section {
+    background: var(--background-gradient);
+    position: relative;
+    overflow: hidden;
+}
+
+.module-shopping .hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="shopping-pattern" x="0" y="0" width="25" height="25" patternUnits="userSpaceOnUse"><rect x="0" y="0" width="25" height="25" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23shopping-pattern)"/></svg>');
+    opacity: 0.3;
+}
+
+.module-shopping .service-card {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.module-shopping .service-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--hover-shadow);
+    transform: translateY(-5px) rotate(1deg);
+}
+
+.module-shopping .btn-primary {
+    background: var(--background-gradient);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.module-shopping .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow);
+}
+
+/* ========================================
+   生活缴费模块 - 蓝色主题
+   ======================================== */
+.module-payment {
+    --primary-color: #45b7d1;
+    --primary-light: #6bc5d8;
+    --primary-dark: #3aa3c4;
+    --accent-color: #a8e6f0;
+    --background-gradient: linear-gradient(135deg, #45b7d1, #6bc5d8);
+    --card-shadow: 0 4px 15px rgba(69, 183, 209, 0.2);
+    --hover-shadow: 0 8px 25px rgba(69, 183, 209, 0.3);
+
+    /* 导航栏主题色 */
+    --navbar-bg: #ffffff;
+    --navbar-shadow: 0 2px 10px rgba(69, 183, 209, 0.15);
+    --navbar-border: rgba(69, 183, 209, 0.2);
+    --navbar-brand-color: #333;
+    --navbar-brand-hover-color: var(--primary-color);
+    --navbar-brand-icon-color: var(--primary-color);
+    --navbar-brand-gradient: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    --navbar-link-color: #666;
+    --navbar-link-hover-color: #333;
+    --navbar-link-hover-bg: rgba(69, 183, 209, 0.1);
+    --navbar-link-hover-icon-color: var(--primary-color);
+    --navbar-link-active-color: var(--primary-color);
+    --navbar-link-active-bg: rgba(69, 183, 209, 0.15);
+    --navbar-link-active-icon-color: var(--primary-color);
+    --navbar-link-active-indicator: var(--primary-color);
+    --navbar-user-color: #666;
+    --navbar-user-hover-color: #333;
+    --navbar-user-hover-bg: rgba(69, 183, 209, 0.05);
+    --navbar-user-hover-border: var(--primary-color);
+    --navbar-user-hover-icon-color: var(--primary-color);
+    --navbar-user-active-color: var(--primary-color);
+    --navbar-user-active-bg: rgba(69, 183, 209, 0.1);
+    --navbar-user-active-border: var(--primary-color);
+}
+
+.module-payment .hero-section {
+    background: var(--background-gradient);
+    position: relative;
+    overflow: hidden;
+}
+
+.module-payment .hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="payment-pattern" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse"><circle cx="15" cy="15" r="3" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23payment-pattern)"/></svg>');
+    opacity: 0.3;
+}
+
+.module-payment .service-card {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.module-payment .service-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--hover-shadow);
+    transform: translateY(-5px) scale(1.02);
+}
+
+.module-payment .btn-primary {
+    background: var(--background-gradient);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.module-payment .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow);
+}
+
+/* ========================================
+   通用模块样式
+   ======================================== */
+
+/* 模块容器 */
+.module-container {
+    min-height: 100vh;
+    position: relative;
+}
+
+/* 主要内容区域 */
+.module-main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 100px 20px 80px 20px; /* 为TabBar预留空间 */
+}
+
+/* 英雄区域 */
+.module-hero-section {
+    text-align: center;
+    padding: 60px 0;
+    margin-bottom: 40px;
+    border-radius: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.module-hero-title {
+    font-size: 48px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.module-hero-subtitle {
+    font-size: 20px;
+    opacity: 0.9;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* 服务卡片网格 */
+.module-services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.module-service-card {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.module-service-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--hover-shadow);
+}
+
+.module-service-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.module-service-card:hover .module-service-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.module-service-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.module-service-description {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .module-main-content {
+        padding: 80px 15px 70px 15px;
+    }
+    
+    .module-hero-title {
+        font-size: 36px;
+    }
+    
+    .module-hero-subtitle {
+        font-size: 18px;
+    }
+    
+    .module-services-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .module-service-card {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .module-main-content {
+        padding: 70px 10px 60px 10px;
+    }
+    
+    .module-hero-title {
+        font-size: 28px;
+    }
+    
+    .module-hero-subtitle {
+        font-size: 16px;
+    }
+    
+    .module-service-card {
+        padding: 15px;
+    }
+    
+    .module-service-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+}

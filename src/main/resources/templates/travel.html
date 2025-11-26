@@ -1,0 +1,1889 @@
+<!--
+    文件名称：travel.html
+    文件功能：景点推荐页面模板
+    功能概述：
+        1. 显示景点推荐页面，包括筛选区域（省份、城市、分类、搜索）
+        2. 提供景点列表展示（景点卡片，包含图片、名称、位置、评分、价格、描述、标签、统计等）
+        3. 提供收藏功能（添加/取消收藏景点）
+        4. 提供浏览历史记录功能（记录用户浏览的景点）
+        5. 提供搜索历史记录功能（记录用户搜索的关键词）
+        6. 提供localStorage缓存功能（缓存省份、城市、景点数据）
+        7. 提供用户偏好设置功能（保存用户的筛选偏好）
+        8. 响应式设计，支持PC端和移动端访问
+    技术栈：HTML5 + CSS3 + JavaScript + Thymeleaf模板引擎
+    依赖文件：
+        - Font Awesome图标库（CDN）
+        - /css/navbar.css（导航栏样式）
+        - /css/module-themes.css（模块主题样式）
+    作者：游市生活开发团队
+    创建日期：2024年
+    最后更新：2024年
+-->
+<!DOCTYPE html>
+<!-- HTML5文档类型声明，标识这是一个HTML5文档 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<!-- 
+    HTML根元素
+    lang="zh-CN"：设置页面语言为简体中文
+    xmlns:th="http://www.thymeleaf.org"：声明Thymeleaf命名空间，用于模板引擎语法
+-->
+<head>
+    <!-- HTML文档头部，包含元数据和样式表引用 -->
+    <!-- 字符编码声明，指定页面使用UTF-8编码，支持中文等多语言字符 -->
+    <meta charset="UTF-8">
+    <!-- 视口元数据，设置页面在移动设备上的显示方式，width=device-width表示宽度自适应设备宽度，initial-scale=1.0表示初始缩放比例为1.0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题 -->
+    <title>景点推荐 - 游市生活</title>
+    <!-- Font Awesome图标库（CDN） -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 导航栏样式表 -->
+    <link rel="stylesheet" href="/css/navbar.css">
+    <!-- 模块主题样式表 -->
+    <link rel="stylesheet" href="/css/module-themes.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        /* 旅游服务模块个性化样式 */
+        .module-travel {
+            --primary-color: #667eea;
+            --primary-light: #764ba2;
+            --primary-dark: #5a6fd8;
+            --accent-color: #a8b5ff;
+            --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+            --hover-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #667eea;
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            padding-top: 110px;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header-section h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-section p {
+            font-size: 20px;
+            opacity: 0.9;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .filter-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .filter-select, .search-input {
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .filter-select:focus, .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-group {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .search-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+
+        .attractions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .attraction-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .attraction-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 220px;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .attraction-card:hover .card-image img {
+            transform: scale(1.05);
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .rating-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 193, 7, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .card-content {
+            padding: 25px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .card-location {
+            color: #666;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .card-price {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .card-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .tag {
+            background: #f8f9fa;
+            color: #495057;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            border: 1px solid #e9ecef;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .card-stats {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .view-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .loading, .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .loading i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .filter-group, .search-group {
+                width: 100%;
+            }
+
+            .attractions-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .header-section h1 {
+                font-size: 36px;
+            }
+            
+        }
+
+        /* 收藏按钮样式 */
+        .favorite-btn {
+            position: absolute;
+            top: 15px;
+            right: 50px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .favorite-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+            transform: scale(1.1);
+        }
+
+        .favorite-btn.favorited {
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+        }
+
+        .favorite-btn.favorited:hover {
+            background: rgba(220, 53, 69, 1);
+        }
+
+        /* 优化卡片样式以适应收藏按钮 */
+        .card-image {
+            position: relative;
+        }
+
+        .rating-badge {
+            right: 15px;
+            top: 60px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面主体 -->
+    <!-- 统一导航栏 -->
+    <!-- 页面头部导航栏 -->
+    <header class="header">
+        <!-- 导航栏容器 -->
+        <nav class="nav">
+            <!-- 网站Logo链接 -->
+            <a href="/" class="logo">
+                <!-- 城市图标 -->
+                <i class="fas fa-city"></i>
+                <!-- 网站名称 -->
+                游市生活
+            </a>
+            <!-- 导航链接列表 -->
+            <ul class="nav-links">
+                <!-- 首页导航链接 -->
+                <li><a href="/">首页</a></li>
+                <!-- 住宿服务导航链接 -->
+                <li><a href="/hc/f2">住宿服务</a></li>
+                <!-- 出行服务导航链接 -->
+                <li><a href="/travel">出行服务</a></li>
+                <!-- 美食服务导航链接 -->
+                <li><a href="/food">美食服务</a></li>
+                <!-- 购物服务导航链接 -->
+                <li><a href="/shopping">购物服务</a></li>
+                <!-- 生活缴费导航链接 -->
+                <li><a href="/payment">生活缴费</a></li>
+            </ul>
+            <!-- 用户操作区域 -->
+            <div class="user-actions">
+                <!-- 未登录状态显示 -->
+                <!-- 使用Thymeleaf判断用户是否未登录 -->
+                <div th:if="${session.user == null}">
+                    <!-- 登录按钮链接 -->
+                    <a href="/user/login" class="login-btn">登录</a>
+                    <!-- 注册按钮链接 -->
+                    <a href="/user/register" class="register-btn">注册</a>
+                </div>
+                <!-- 已登录状态显示 -->
+                <!-- 使用Thymeleaf判断用户是否已登录 -->
+                <div th:if="${session.user != null}">
+                    <!-- 我的订单链接（统一订单中心） -->
+                    <a href="/unified-new/orders" style="color: #FF6600; text-decoration: none; font-weight: 500; margin-right: 15px;">
+                        <!-- 订单列表图标 -->
+                        <i class="fas fa-list-alt"></i>
+                        <!-- 我的订单文本 -->
+                        我的订单
+                    </a>
+                    <!-- 个人中心链接 -->
+                    <a href="/user/profile" style="color: #FF6600; text-decoration: none; font-weight: 500;">
+                        <!-- 用户图标 -->
+                        <i class="fas fa-user-circle"></i>
+                        <!-- 用户昵称或用户名（使用Thymeleaf动态显示，优先显示昵称，如果没有则显示用户名） -->
+                        <span th:text="${session.user.nickname ?: session.user.username}">用户</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 主要内容 -->
+    <!-- 景点推荐页面主要内容区域（使用module-travel类应用出行模块个性化样式） -->
+    <div class="main-container module-travel">
+        <!-- 头部标题 -->
+        <!-- 页面头部标题区域 -->
+        <div class="header-section">
+            <!-- 页面主标题（带图标） -->
+            <h1><i class="fas fa-map-pin"></i> 景点推荐</h1>
+            <!-- 页面副标题 -->
+            <p>探索精选景点，发现美好旅程</p>
+        </div>
+
+        <!-- 筛选区域 -->
+        <!-- 景点筛选区域 -->
+        <div class="filter-section">
+            <!-- 筛选行容器 -->
+            <div class="filter-row">
+                <!-- 省份筛选组 -->
+                <div class="filter-group">
+                    <!-- 省份筛选标签 -->
+                    <label for="provinceSelect">选择省份</label>
+                    <!-- 省份下拉选择框（通过JavaScript动态加载省份选项） -->
+                    <select id="provinceSelect" class="filter-select">
+                        <!-- 默认选项 -->
+                        <option value="">所有省份</option>
+                    </select>
+                </div>
+                <!-- 城市筛选组 -->
+                <div class="filter-group">
+                    <!-- 城市筛选标签 -->
+                    <label for="citySelect">选择城市</label>
+                    <!-- 城市下拉选择框（初始禁用，选择省份后启用，通过JavaScript动态加载城市选项） -->
+                    <select id="citySelect" class="filter-select" disabled>
+                        <!-- 默认选项 -->
+                        <option value="">请先选择省份</option>
+                    </select>
+                </div>
+                <!-- 搜索组 -->
+                <div class="search-group">
+                    <!-- 搜索输入组 -->
+                    <div class="filter-group">
+                        <!-- 搜索输入标签 -->
+                        <label for="searchInput">搜索景点</label>
+                        <!-- 搜索输入框（文本类型，占位符提示用户输入景点名称） -->
+                        <input type="text" id="searchInput" class="search-input" placeholder="输入景点名称...">
+                    </div>
+                    <!-- 搜索按钮（点击后调用searchAttractions函数） -->
+                    <button class="search-btn" onclick="searchAttractions()">
+                        <!-- 搜索图标 -->
+                        <i class="fas fa-search"></i> 
+                        <!-- 搜索文本 -->
+                        搜索
+                    </button>
+                </div>
+            </div>
+
+            <!-- 分类筛选 -->
+        </div>
+
+        <!-- 景点列表 -->
+        <!-- 景点列表容器（通过JavaScript动态加载景点数据） -->
+        <div id="attractionsContainer">
+            <!-- 加载状态提示（初始显示，通过JavaScript控制显示/隐藏） -->
+            <div class="loading">
+                <!-- 加载动画图标（旋转动画） -->
+                <i class="fas fa-spinner"></i>
+                <!-- 加载提示文本 -->
+                <div>正在加载景点信息...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 
+        JavaScript代码块
+        功能概述：实现景点推荐页面的交互功能，包括localStorage数据管理、景点数据加载、筛选、搜索、收藏、浏览历史等
+    -->
+    <script>
+        /**
+         * 文件级注释：景点推荐页面JavaScript功能模块
+         * 功能概述：
+         *   1. localStorage数据管理功能（UserDataManager类：用户偏好、浏览历史、搜索历史、收藏、缓存等）
+         *   2. 景点数据加载功能（根据省份、城市、分类加载景点数据，支持缓存）
+         *   3. 筛选功能（省份、城市、分类筛选）
+         *   4. 搜索功能（搜索景点名称，支持搜索历史）
+         *   5. 收藏功能（添加/取消收藏景点）
+         *   6. 浏览历史功能（记录用户浏览的景点）
+         *   7. 景点卡片展示功能（创建和显示景点卡片）
+         *   8. 导航激活状态设置功能（根据当前路径设置导航链接的激活状态）
+         *   9. 页面初始化功能（绑定事件监听器，加载初始数据）
+         */
+        
+        // ==================== 默认图片数据模块 ====================
+        /**
+         * 默认景点图片URL数组
+         * 功能概述：提供43张美丽景点图片URL，用于景点卡片默认图片显示
+         */
+        // ===== 43张美丽景点图片URL数组 =====
+        // 初始化默认景点图片URL数组（包含43张不同类别的景点图片）
+        const defaultAttractionImages = [
+            // 自然风光类
+            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 山峰
+            'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 森林
+            'https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 湖泊
+            'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 海岸
+            'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 瀑布
+            'https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 雪山
+            'https://images.unsplash.com/photo-1501436513145-30f24e19fcc4?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 沙漠
+            'https://images.unsplash.com/photo-1464822759844-d150f84ad8de?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 峡谷
+            'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 海滩
+            'https://images.unsplash.com/photo-1439066615861-d1af74d74000?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 日出
+            
+            // 古建筑文化类
+            'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古寺庙
+            'https://images.unsplash.com/photo-1471919743851-c4df8b6ee133?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古城墙
+            'https://images.unsplash.com/photo-1545558014-8692077e9b5c?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 宫殿
+            'https://images.unsplash.com/photo-1513415825881-57c6b43bf862?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古塔
+            'https://images.unsplash.com/photo-1559717201-fbb671ff56b7?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 传统建筑
+            'https://images.unsplash.com/photo-1518709268805-4e9042af2ac0?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古桥
+            'https://images.unsplash.com/photo-1574608851747-15d28b7e3d69?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 园林
+            'https://images.unsplash.com/photo-1565967511849-76a60a516170?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 亭台楼阁
+            'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古村落
+            'https://images.unsplash.com/photo-1609948668013-b5e7f3088607?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 故宫
+            
+            // 现代景观类
+            'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 现代建筑
+            'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1f?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 摩天大楼
+            'https://images.unsplash.com/photo-1514924013411-cbf25faa35bb?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 城市夜景
+            'https://images.unsplash.com/photo-1549924231-f129b911e442?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 公园
+            'https://images.unsplash.com/photo-1533587851505-d119e13fa0d7?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 广场
+            'https://images.unsplash.com/photo-1529655683826-3c6b7ded86b6?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 博物馆
+            'https://images.unsplash.com/photo-1429734956993-8a9b0555e122?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 艺术馆
+            'https://images.unsplash.com/photo-1494949649109-ecfc3b8c35df?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 科技馆
+            'https://images.unsplash.com/photo-1518135714426-c18f5ffb6f4d?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 观景台
+            'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 主题公园
+            
+            // 特色景点类
+            'https://images.unsplash.com/photo-1464278533981-50106e6176b1?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 竹林
+            'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 茶园
+            'https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 花田
+            'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 田园风光
+            'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 古镇
+            'https://images.unsplash.com/photo-1586511925558-a4c6376fe65f?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 江南水乡
+            'https://images.unsplash.com/photo-1571804499305-1dfe4c7e5d63?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 民俗村
+            'https://images.unsplash.com/photo-1555400113-8a2d1c19f1e1?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 温泉
+            'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 海岛
+            'https://images.unsplash.com/photo-1537225228614-56cc3556d7ed?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 溶洞
+            
+            // 季节特色类
+            'https://images.unsplash.com/photo-1509773896068-7fd415d91e2e?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 春花
+            'https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 夏日海滨
+            'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?ixlib=rb-4.0.3&w=800&h=600&fit=crop', // 秋叶
+            'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?ixlib=rb-4.0.3&w=800&h=600&fit=crop'  // 冬雪
+        ];
+
+        /**
+         * 获取随机默认图片
+         * 功能概述：从默认景点图片数组中随机选择一张图片URL
+         * @returns {String} 随机图片URL
+         */
+        function getRandomDefaultImage() {
+            // 生成随机索引（0到数组长度-1之间的随机整数）
+            const randomIndex = Math.floor(Math.random() * defaultAttractionImages.length);
+            // 返回随机索引对应的图片URL
+            return defaultAttractionImages[randomIndex];
+        }
+
+        // ==================== localStorage数据管理功能模块 ====================
+        /**
+         * UserDataManager类
+         * 功能概述：管理用户数据的localStorage存储，包括用户偏好、浏览历史、搜索历史、收藏、缓存等
+         */
+        // ===== localStorage 数据管理系统 =====
+        // 定义UserDataManager类，用于管理用户数据的localStorage存储
+        class UserDataManager {
+            /**
+             * 构造函数
+             * 功能概述：初始化UserDataManager类，设置localStorage键名和缓存过期时间
+             */
+            constructor() {
+                // 定义localStorage键名对象（用于存储不同类型的数据）
+                this.storageKeys = {
+                    userPreferences: 'xihu_user_preferences',  // 用户偏好设置键名
+                    browsingHistory: 'xihu_browsing_history',  // 浏览历史键名
+                    searchHistory: 'xihu_search_history',  // 搜索历史键名
+                    provincesCache: 'xihu_provinces_cache',  // 省份缓存键名
+                    citiesCache: 'xihu_cities_cache',  // 城市缓存键名
+                    attractionsCache: 'xihu_attractions_cache',  // 景点缓存键名
+                    userProfile: 'xihu_user_profile',  // 用户资料键名
+                    favoriteAttractions: 'xihu_favorite_attractions'  // 收藏景点键名
+                };
+                // 定义缓存过期时间对象（单位：毫秒）
+                this.cacheExpiry = {
+                    provinces: 7 * 24 * 60 * 60 * 1000,  // 省份缓存过期时间：7天
+                    cities: 7 * 24 * 60 * 60 * 1000,  // 城市缓存过期时间：7天
+                    attractions: 2 * 60 * 60 * 1000,  // 景点缓存过期时间：2小时
+                    searchHistory: 30 * 24 * 60 * 60 * 1000  // 搜索历史过期时间：30天
+                };
+            }
+
+            /**
+             * 保存用户偏好设置
+             * 功能概述：将用户的筛选偏好（省份、城市、分类）保存到localStorage
+             * @param {String} province - 省份名称
+             * @param {String} city - 城市名称
+             * @param {String} category - 分类ID
+             */
+            saveUserPreferences(province, city, category) {
+                // 构建用户偏好对象
+                const preferences = {
+                    province: province || '',  // 省份名称（如果没有则为空字符串）
+                    city: city || '',  // 城市名称（如果没有则为空字符串）
+                    category: category || '',  // 分类ID（如果没有则为空字符串）
+                    lastUpdated: Date.now(),  // 最后更新时间（当前时间戳）
+                    visitCount: this.getUserPreferences().visitCount + 1 || 1  // 访问次数（获取当前访问次数加1，如果没有则默认为1）
+                };
+                // 将用户偏好对象转换为JSON字符串并保存到localStorage
+                localStorage.setItem(this.storageKeys.userPreferences, JSON.stringify(preferences));
+                // 打印调试信息到控制台
+                console.log('✅ 用户偏好已保存:', preferences);
+            }
+
+            /**
+             * 获取用户偏好设置
+             * 功能概述：从localStorage获取用户的筛选偏好
+             * @returns {Object} 用户偏好对象（包含province、city、category、visitCount等属性）
+             */
+            getUserPreferences() {
+                try {
+                    // 从localStorage获取用户偏好数据
+                    const data = localStorage.getItem(this.storageKeys.userPreferences);
+                    // 判断数据是否存在
+                    // 如果存在，将JSON字符串转换为对象并返回
+                    // 如果不存在，返回默认值对象
+                    return data ? JSON.parse(data) : { province: '', city: '', category: '', visitCount: 0 };
+                } catch (error) {
+                    // 如果发生错误（如JSON解析失败），打印错误信息到控制台
+                    console.error('❌ 获取用户偏好失败:', error);
+                    // 返回默认值对象
+                    return { province: '', city: '', category: '', visitCount: 0 };
+                }
+            }
+
+            // 保存浏览历史
+            saveBrowsingHistory(attractionName, attractionData) {
+                try {
+                    let history = this.getBrowsingHistory();
+                    
+                    // 移除已存在的相同景点（避免重复）
+                    history = history.filter(item => item.name !== attractionName);
+                    
+                    // 添加新的浏览记录
+                    const historyItem = {
+                        name: attractionName,
+                        data: attractionData,
+                        timestamp: Date.now(),
+                        date: new Date().toLocaleDateString('zh-CN')
+                    };
+                    
+                    history.unshift(historyItem);
+                    
+                    // 只保留最近50条记录
+                    if (history.length > 50) {
+                        history = history.slice(0, 50);
+                    }
+                    
+                    localStorage.setItem(this.storageKeys.browsingHistory, JSON.stringify(history));
+                    console.log('✅ 浏览历史已保存:', attractionName);
+                } catch (error) {
+                    console.error('❌ 保存浏览历史失败:', error);
+                }
+            }
+
+            // 获取浏览历史
+            getBrowsingHistory() {
+                try {
+                    const data = localStorage.getItem(this.storageKeys.browsingHistory);
+                    return data ? JSON.parse(data) : [];
+                } catch (error) {
+                    console.error('❌ 获取浏览历史失败:', error);
+                    return [];
+                }
+            }
+
+            // 保存搜索历史
+            saveSearchHistory(keyword) {
+                if (!keyword || keyword.trim().length < 2) return;
+                
+                try {
+                    let searches = this.getSearchHistory();
+                    
+                    // 移除已存在的相同搜索词
+                    searches = searches.filter(item => item.keyword !== keyword);
+                    
+                    // 添加新的搜索记录
+                    searches.unshift({
+                        keyword: keyword,
+                        timestamp: Date.now(),
+                        date: new Date().toLocaleDateString('zh-CN')
+                    });
+                    
+                    // 只保留最近20条搜索记录
+                    if (searches.length > 20) {
+                        searches = searches.slice(0, 20);
+                    }
+                    
+                    localStorage.setItem(this.storageKeys.searchHistory, JSON.stringify(searches));
+                    console.log('✅ 搜索历史已保存:', keyword);
+                } catch (error) {
+                    console.error('❌ 保存搜索历史失败:', error);
+                }
+            }
+
+            // 获取搜索历史
+            getSearchHistory() {
+                try {
+                    const data = localStorage.getItem(this.storageKeys.searchHistory);
+                    if (!data) return [];
+                    
+                    const searches = JSON.parse(data);
+                    // 清理过期的搜索记录
+                    const validSearches = searches.filter(item => 
+                        Date.now() - item.timestamp < this.cacheExpiry.searchHistory
+                    );
+                    
+                    if (validSearches.length !== searches.length) {
+                        localStorage.setItem(this.storageKeys.searchHistory, JSON.stringify(validSearches));
+                    }
+                    
+                    return validSearches;
+                } catch (error) {
+                    console.error('❌ 获取搜索历史失败:', error);
+                    return [];
+                }
+            }
+
+            // 缓存省份数据
+            cacheProvinces(provinces) {
+                const cacheData = {
+                    data: provinces,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(this.storageKeys.provincesCache, JSON.stringify(cacheData));
+                console.log('✅ 省份数据已缓存, 数量:', provinces.length);
+            }
+
+            // 获取缓存的省份数据
+            getCachedProvinces() {
+                try {
+                    const data = localStorage.getItem(this.storageKeys.provincesCache);
+                    if (!data) return null;
+                    
+                    const cache = JSON.parse(data);
+                    if (Date.now() - cache.timestamp > this.cacheExpiry.provinces) {
+                        localStorage.removeItem(this.storageKeys.provincesCache);
+                        console.log('⏰ 省份缓存已过期，已清理');
+                        return null;
+                    }
+                    
+                    console.log('✅ 使用缓存的省份数据, 数量:', cache.data.length);
+                    return cache.data;
+                } catch (error) {
+                    console.error('❌ 获取省份缓存失败:', error);
+                    return null;
+                }
+            }
+
+            // 缓存城市数据
+            cacheCities(province, cities) {
+                try {
+                    let allCitiesCache = JSON.parse(localStorage.getItem(this.storageKeys.citiesCache)) || {};
+                    
+                    allCitiesCache[province] = {
+                        data: cities,
+                        timestamp: Date.now()
+                    };
+                    
+                    localStorage.setItem(this.storageKeys.citiesCache, JSON.stringify(allCitiesCache));
+                    console.log(`✅ ${province} 城市数据已缓存, 数量:`, cities.length);
+                } catch (error) {
+                    console.error('❌ 缓存城市数据失败:', error);
+                }
+            }
+
+            // 获取缓存的城市数据
+            getCachedCities(province) {
+                try {
+                    const data = localStorage.getItem(this.storageKeys.citiesCache);
+                    if (!data) return null;
+                    
+                    const cache = JSON.parse(data);
+                    const provinceCache = cache[province];
+                    
+                    if (!provinceCache) return null;
+                    
+                    if (Date.now() - provinceCache.timestamp > this.cacheExpiry.cities) {
+                        delete cache[province];
+                        localStorage.setItem(this.storageKeys.citiesCache, JSON.stringify(cache));
+                        console.log(`⏰ ${province} 城市缓存已过期，已清理`);
+                        return null;
+                    }
+                    
+                    console.log(`✅ 使用缓存的${province}城市数据, 数量:`, provinceCache.data.length);
+                    return provinceCache.data;
+                } catch (error) {
+                    console.error('❌ 获取城市缓存失败:', error);
+                    return null;
+                }
+            }
+
+            // 保存/更新用户收藏
+            toggleFavorite(attractionName, attractionData) {
+                try {
+                    let favorites = this.getFavorites();
+                    const index = favorites.findIndex(item => item.name === attractionName);
+                    
+                    if (index > -1) {
+                        // 取消收藏
+                        favorites.splice(index, 1);
+                        console.log('💔 已取消收藏:', attractionName);
+                        localStorage.setItem(this.storageKeys.favoriteAttractions, JSON.stringify(favorites));
+                        return false;
+                    } else {
+                        // 添加收藏
+                        favorites.unshift({
+                            name: attractionName,
+                            data: attractionData,
+                            timestamp: Date.now(),
+                            date: new Date().toLocaleDateString('zh-CN')
+                        });
+                        console.log('❤️ 已添加收藏:', attractionName);
+                        localStorage.setItem(this.storageKeys.favoriteAttractions, JSON.stringify(favorites));
+                        return true;
+                    }
+                } catch (error) {
+                    console.error('❌ 操作收藏失败:', error);
+                    return false;
+                }
+            }
+
+            // 获取收藏列表
+            getFavorites() {
+                try {
+                    const data = localStorage.getItem(this.storageKeys.favoriteAttractions);
+                    return data ? JSON.parse(data) : [];
+                } catch (error) {
+                    console.error('❌ 获取收藏列表失败:', error);
+                    return [];
+                }
+            }
+
+            // 检查是否已收藏
+            isFavorite(attractionName) {
+                const favorites = this.getFavorites();
+                return favorites.some(item => item.name === attractionName);
+            }
+
+            // 清理过期缓存
+            cleanExpiredCache() {
+                try {
+                    // 清理省份缓存
+                    const provincesData = localStorage.getItem(this.storageKeys.provincesCache);
+                    if (provincesData) {
+                        const cache = JSON.parse(provincesData);
+                        if (Date.now() - cache.timestamp > this.cacheExpiry.provinces) {
+                            localStorage.removeItem(this.storageKeys.provincesCache);
+                            console.log('🧹 已清理过期的省份缓存');
+                        }
+                    }
+
+                    // 清理城市缓存
+                    const citiesData = localStorage.getItem(this.storageKeys.citiesCache);
+                    if (citiesData) {
+                        const cache = JSON.parse(citiesData);
+                        let hasChanged = false;
+                        
+                        Object.keys(cache).forEach(province => {
+                            if (Date.now() - cache[province].timestamp > this.cacheExpiry.cities) {
+                                delete cache[province];
+                                hasChanged = true;
+                            }
+                        });
+                        
+                        if (hasChanged) {
+                            localStorage.setItem(this.storageKeys.citiesCache, JSON.stringify(cache));
+                            console.log('🧹 已清理过期的城市缓存');
+                        }
+                    }
+
+                    console.log('✅ 缓存清理完成');
+                } catch (error) {
+                    console.error('❌ 清理缓存失败:', error);
+                }
+            }
+
+            // 获取存储统计信息
+            getStorageStats() {
+                const stats = {
+                    preferences: this.getUserPreferences(),
+                    browsingHistoryCount: this.getBrowsingHistory().length,
+                    searchHistoryCount: this.getSearchHistory().length,
+                    favoritesCount: this.getFavorites().length,
+                    hasProvincesCache: !!localStorage.getItem(this.storageKeys.provincesCache),
+                    hasCitiesCache: !!localStorage.getItem(this.storageKeys.citiesCache)
+                };
+                
+                console.log('📊 存储统计:', stats);
+                return stats;
+            }
+
+            // 清空所有用户数据（可选功能）
+            clearAllUserData() {
+                Object.values(this.storageKeys).forEach(key => {
+                    localStorage.removeItem(key);
+                });
+                console.log('🧹 所有用户数据已清空');
+            }
+        }
+
+        // ==================== 全局变量和初始化模块 ====================
+        /**
+         * 初始化数据管理器
+         * 功能概述：创建UserDataManager实例，用于管理用户数据的localStorage存储
+         */
+        // 创建UserDataManager实例，用于管理用户数据的localStorage存储
+        const userDataManager = new UserDataManager();
+        
+        // ===== 原有变量和初始化逻辑 =====
+        /**
+         * 全局变量
+         * 功能概述：存储当前页面的筛选状态和景点数据
+         */
+        // 当前分类ID（初始值为空字符串）
+        // 当前省份名称（初始值为空字符串）
+        let currentProvince = '';
+        // 当前城市名称（初始值为空字符串）
+        let currentCity = '';
+        
+        // 临时存储当前页面显示的景点数据（key为卡片ID，value为景点数据对象）
+        let currentAttractions = {};
+
+        // ==================== 页面初始化功能模块 ====================
+        /**
+         * 页面加载完成后初始化
+         * 功能概述：监听DOMContentLoaded事件，当DOM加载完成后调用initializePage函数初始化页面
+         */
+        // 监听DOMContentLoaded事件，当DOM加载完成后触发
+        document.addEventListener('DOMContentLoaded', function() {
+            // 调用initializePage函数初始化页面
+            initializePage();
+        });
+
+        /**
+         * 初始化页面
+         * 功能概述：执行页面初始化操作，包括清理过期缓存、恢复用户偏好、加载数据、设置事件监听器等
+         */
+        function initializePage() {
+            // 清理过期缓存
+            // 调用userDataManager的cleanExpiredCache方法，清理过期的缓存数据
+            userDataManager.cleanExpiredCache();
+            
+            // 恢复用户偏好设置
+            // 调用restoreUserPreferences函数，从localStorage恢复用户的筛选偏好
+            restoreUserPreferences();
+            
+            // 加载省份数据
+            // 调用loadProvinces函数，加载省份列表（支持缓存）
+            loadProvinces();
+            
+            // 加载景点数据
+            // 调用loadAttractions函数，根据当前筛选条件加载景点数据
+            loadAttractions();
+            
+            // 设置事件监听器
+            // 调用setupEventListeners函数，为筛选控件绑定事件监听器
+            setupEventListeners();
+            
+            // 显示存储统计
+            // 调用userDataManager的getStorageStats方法，获取并显示存储统计信息
+            userDataManager.getStorageStats();
+
+            // 打印调试信息到控制台
+            console.log('🚀 页面初始化完成，已启用localStorage缓存功能');
+        }
+
+        /**
+         * 恢复用户偏好设置
+         * 功能概述：从localStorage恢复用户的筛选偏好，并更新页面状态
+         */
+        function restoreUserPreferences() {
+            // 从userDataManager获取用户偏好设置
+            const preferences = userDataManager.getUserPreferences();
+            
+            // 判断是否有省份偏好
+            if (preferences.province) {
+                // 如果有省份偏好，设置当前省份为偏好值
+                currentProvince = preferences.province;
+                // 打印调试信息到控制台
+                console.log('🔄 恢复省份偏好:', currentProvince);
+            }
+            
+            // 判断是否有城市偏好
+            if (preferences.city) {
+                // 如果有城市偏好，设置当前城市为偏好值
+                currentCity = preferences.city;
+                // 打印调试信息到控制台
+                console.log('🔄 恢复城市偏好:', currentCity);
+            }
+            
+            // 判断是否有分类偏好
+            if (preferences.category) {
+            }
+
+            // 判断访问次数是否大于0
+            if (preferences.visitCount > 0) {
+                // 如果访问次数大于0，打印欢迎信息到控制台
+                console.log('👋 欢迎回来！这是您第', preferences.visitCount, '次访问景点推荐页面');
+            }
+        }
+
+        /**
+         * 设置事件监听器
+         * 功能概述：为筛选控件绑定事件监听器，包括省份选择、城市选择、分类按钮、搜索输入框等
+         */
+        function setupEventListeners() {
+            // 省份选择变化
+            // 为省份下拉选择框绑定change事件监听器
+            document.getElementById('provinceSelect').addEventListener('change', function() {
+                // 获取当前选择的省份值
+                const province = this.value;
+                // 更新当前省份变量
+                currentProvince = province;
+                // 清空当前城市变量（选择新省份时清空城市选择）
+                currentCity = '';
+                
+                // 保存用户偏好
+                // 调用userDataManager的saveUserPreferences方法，保存用户的筛选偏好
+                userDataManager.saveUserPreferences(currentProvince, currentCity, '');
+                
+                // 判断是否选择了省份
+                if (province) {
+                    // 如果选择了省份，调用loadCities函数加载该省份的城市列表
+                    loadCities(province);
+                // 如果未选择省份
+                } else {
+                    // 获取城市下拉选择框元素
+                    const citySelect = document.getElementById('citySelect');
+                    // 重置城市下拉选择框的选项为默认选项
+                    citySelect.innerHTML = '<option value="">请先选择省份</option>';
+                    // 禁用城市下拉选择框
+                    citySelect.disabled = true;
+                }
+                
+                // 重新加载景点数据
+                // 调用loadAttractions函数，根据新的筛选条件加载景点数据
+                loadAttractions();
+            });
+
+            // 城市选择变化
+            // 为城市下拉选择框绑定change事件监听器
+            document.getElementById('citySelect').addEventListener('change', function() {
+                // 获取当前选择的城市值，并更新当前城市变量
+                currentCity = this.value;
+                
+                // 调试信息：打印城市选择变化
+                console.log('城市选择变化 - 省份:', currentProvince, '城市:', currentCity);
+                
+                // 保存用户偏好
+                // 调用userDataManager的saveUserPreferences方法，保存用户的筛选偏好
+                userDataManager.saveUserPreferences(currentProvince, currentCity, '');
+                
+                // 重新加载景点数据
+                // 调用loadAttractions函数，根据新的筛选条件加载景点数据
+                loadAttractions();
+            });
+
+            // 搜索输入框回车事件
+            // 为搜索输入框绑定keypress事件监听器
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                // 判断是否按下回车键
+                if (e.key === 'Enter') {
+                    // 如果按下回车键，调用searchAttractions函数执行搜索
+                    searchAttractions();
+                }
+            });
+        }
+
+        /**
+         * 加载省份列表（支持缓存）
+         * 功能概述：加载省份列表，优先从localStorage缓存获取，如果缓存不存在或已过期则从服务器获取
+         */
+        function loadProvinces() {
+            // 先尝试从缓存获取
+            // 调用userDataManager的getCachedProvinces方法，尝试从localStorage获取缓存的省份数据
+            const cachedProvinces = userDataManager.getCachedProvinces();
+            // 判断缓存是否存在且未过期
+            if (cachedProvinces) {
+                // 调试信息：检查缓存数据
+                console.log('从缓存获取省份数据:', cachedProvinces);
+                console.log('缓存省份数量:', cachedProvinces ? cachedProvinces.length : 0);
+                
+                // 检查缓存数据是否完整（应该有34个省份，不包括"国外"）
+                // 如果缓存数据不完整（少于30个），清除缓存并重新获取
+                if (!cachedProvinces || cachedProvinces.length < 30) {
+                    console.warn('缓存数据不完整（只有' + (cachedProvinces ? cachedProvinces.length : 0) + '个省份），清除缓存并重新获取');
+                    // 清除省份缓存（使用userDataManager的存储键名）
+                    localStorage.removeItem(userDataManager.storageKeys.provincesCache);
+                    // 继续执行，从服务器获取
+                } else {
+                    // 如果缓存存在且完整，使用缓存数据填充省份下拉选择框
+                    populateProvinceSelect(cachedProvinces);
+                    
+                    // 恢复省份选择
+                    // 判断是否有保存的省份偏好
+                    if (currentProvince) {
+                        // 如果有省份偏好，设置省份下拉选择框的值为偏好值
+                        document.getElementById('provinceSelect').value = currentProvince;
+                        // 调用loadCities函数，加载该省份的城市列表
+                        loadCities(currentProvince);
+                    }
+                    // 直接返回，不执行后续操作
+                    return;
+                }
+            }
+
+            // 缓存不存在，从服务器获取
+            // 使用fetch API发送GET请求到后端省份接口
+            fetch('/travel/api/addressProvinces')
+                .then(response => response.json())  // 将响应转换为JSON对象
+                .then(data => {
+                    // 判断后端是否返回成功
+                    if (data.success) {
+                        // 调试信息：打印省份数据
+                        console.log('获取到的省份数据:', data.provinces);
+                        console.log('省份总数:', data.provinces ? data.provinces.length : 0);
+                        console.log('后端返回的total:', data.total);
+                        
+                        // 缓存数据
+                        // 调用userDataManager的cacheProvinces方法，将省份数据保存到localStorage缓存
+                        userDataManager.cacheProvinces(data.provinces);
+                        
+                        // 使用服务器返回的数据填充省份下拉选择框
+                        populateProvinceSelect(data.provinces);
+                        
+                        // 验证填充后的选项数量
+                        const select = document.getElementById('provinceSelect');
+                        console.log('填充后的选项数量:', select.options.length);
+                        
+                        // 恢复省份选择
+                        // 判断是否有保存的省份偏好
+                        if (currentProvince) {
+                            // 如果有省份偏好，设置省份下拉选择框的值为偏好值
+                            document.getElementById('provinceSelect').value = currentProvince;
+                            // 调用loadCities函数，加载该省份的城市列表
+                            loadCities(currentProvince);
+                        }
+                    } else {
+                        console.error('获取省份失败:', data.message);
+                    }
+                })
+                .catch(error => {
+                    // 如果发生网络错误或其他异常，打印错误信息到控制台
+                    console.error('加载省份失败:', error);
+                });
+        }
+
+        /**
+         * 填充省份选择框
+         * 功能概述：将省份数据填充到省份下拉选择框中
+         * @param {Array} provinces - 省份名称数组
+         */
+        function populateProvinceSelect(provinces) {
+            // 获取省份下拉选择框元素
+            const select = document.getElementById('provinceSelect');
+            // 重置省份下拉选择框的选项为默认选项
+            select.innerHTML = '<option value="">所有省份</option>';
+            
+            // 检查provinces是否为数组且不为空
+            if (!provinces || !Array.isArray(provinces) || provinces.length === 0) {
+                console.error('省份数据无效:', provinces);
+                return;
+            }
+            
+            // 遍历省份数组，为每个省份创建选项并添加到下拉选择框中
+            provinces.forEach((province, index) => {
+                // 检查省份名称是否有效
+                if (!province || province.trim() === '') {
+                    console.warn('跳过无效的省份:', province, '索引:', index);
+                    return;
+                }
+                
+                // 创建option元素
+                const option = document.createElement('option');
+                // 设置option的value属性为省份名称
+                option.value = province;
+                // 设置option的文本内容为省份名称
+                option.textContent = province;
+                // 将option添加到省份下拉选择框中
+                select.appendChild(option);
+            });
+            
+            // 调试信息：验证所有选项都已添加
+            console.log('省份下拉菜单填充完成，总选项数:', select.options.length);
+            console.log('所有省份选项:', Array.from(select.options).map(opt => opt.textContent));
+        }
+
+        /**
+         * 加载城市列表（支持缓存）
+         * 功能概述：根据省份加载城市列表，优先从localStorage缓存获取，如果缓存不存在或已过期则从服务器获取
+         * @param {String} province - 省份名称
+         */
+        function loadCities(province) {
+            // 获取城市下拉选择框元素
+            const citySelect = document.getElementById('citySelect');
+            // 设置城市下拉选择框的选项为加载中提示
+            citySelect.innerHTML = '<option value="">加载中...</option>';
+            // 禁用城市下拉选择框（加载期间禁用）
+            citySelect.disabled = true;
+
+            // 先尝试从缓存获取
+            // 调用userDataManager的getCachedCities方法，尝试从localStorage获取缓存的该省份城市数据
+            const cachedCities = userDataManager.getCachedCities(province);
+            // 判断缓存是否存在且未过期
+            if (cachedCities) {
+                // 如果缓存存在，使用缓存数据填充城市下拉选择框
+                populateCitySelect(cachedCities);
+                
+                // 恢复城市选择
+                // 判断是否有保存的城市偏好
+                if (currentCity) {
+                    // 如果有城市偏好，设置城市下拉选择框的值为偏好值
+                    citySelect.value = currentCity;
+                }
+                // 直接返回，不执行后续操作
+                return;
+            }
+
+            // 缓存不存在，从服务器获取
+            // 使用fetch API发送GET请求到后端城市接口，传递省份参数（使用encodeURIComponent编码）
+            fetch(`/travel/api/addressCities?province=${encodeURIComponent(province)}`)
+                .then(response => response.json())  // 将响应转换为JSON对象
+                .then(data => {
+                    // 调试信息：打印城市数据
+                    console.log('获取到的城市数据:', data);
+                    console.log('城市总数:', data.cities ? data.cities.length : 0);
+                    
+                    // 判断后端是否返回成功且城市数组不为空
+                    if (data.success && data.cities && data.cities.length > 0) {
+                        // 缓存数据
+                        // 调用userDataManager的cacheCities方法，将城市数据保存到localStorage缓存
+                        userDataManager.cacheCities(province, data.cities);
+                        
+                        // 使用服务器返回的数据填充城市下拉选择框
+                        populateCitySelect(data.cities);
+                        
+                        // 恢复城市选择
+                        // 判断是否有保存的城市偏好
+                        if (currentCity) {
+                            // 如果有城市偏好，设置城市下拉选择框的值为偏好值
+                            citySelect.value = currentCity;
+                        }
+                    // 如果后端返回成功但城市数组为空
+                    } else {
+                        console.warn('城市数据为空或获取失败:', data);
+                        // 设置城市下拉选择框的选项为暂无城市数据提示
+                        citySelect.innerHTML = '<option value="">暂无城市数据</option>';
+                        // 禁用城市下拉选择框
+                        citySelect.disabled = true;
+                    }
+                })
+                .catch(error => {
+                    // 如果发生网络错误或其他异常，打印错误信息到控制台
+                    console.error('加载城市失败:', error);
+                    // 设置城市下拉选择框的选项为加载失败提示
+                    citySelect.innerHTML = '<option value="">加载失败</option>';
+                    // 禁用城市下拉选择框
+                    citySelect.disabled = true;
+                });
+        }
+
+        /**
+         * 填充城市选择框
+         * 功能概述：将城市数据填充到城市下拉选择框中
+         * @param {Array} cities - 城市名称数组
+         */
+        function populateCitySelect(cities) {
+            // 获取城市下拉选择框元素
+            const citySelect = document.getElementById('citySelect');
+            // 重置城市下拉选择框的选项为默认选项
+            citySelect.innerHTML = '<option value="">所有城市</option>';
+            
+            // 检查cities是否为数组且不为空
+            if (!cities || !Array.isArray(cities) || cities.length === 0) {
+                console.error('城市数据无效:', cities);
+                citySelect.innerHTML = '<option value="">暂无城市数据</option>';
+                citySelect.disabled = true;
+                return;
+            }
+            
+            // 遍历城市数组，为每个城市创建选项并添加到下拉选择框中
+            cities.forEach((city, index) => {
+                // 检查城市名称是否有效
+                if (!city || city.trim() === '') {
+                    console.warn('跳过无效的城市:', city, '索引:', index);
+                    return;
+                }
+                
+                // 创建option元素
+                const option = document.createElement('option');
+                // 设置option的value属性为城市名称
+                option.value = city;
+                // 设置option的文本内容为城市名称
+                option.textContent = city;
+                // 将option添加到城市下拉选择框中
+                citySelect.appendChild(option);
+            });
+            
+            // 启用城市下拉选择框（加载完成后启用）
+            citySelect.disabled = false;
+            
+            // 调试信息：验证所有选项都已添加
+            console.log('城市下拉菜单填充完成，总选项数:', citySelect.options.length);
+            console.log('所有城市选项:', Array.from(citySelect.options).map(opt => opt.textContent));
+        }
+
+        /**
+         * 加载景点数据
+         * 功能概述：根据当前筛选条件（省份、城市、分类）加载景点数据，支持多种API接口
+         */
+        function loadAttractions() {
+            // 显示加载状态
+            // 调用showLoading函数，显示加载中提示
+            showLoading();
+            
+            // 初始化API URL变量
+            let url;
+            
+            // 打印调试信息到控制台
+            console.log('开始加载景点数据...');
+            console.log('当前状态 - 省份:', currentProvince || '(空)', '城市:', currentCity || '(空)');
+            
+            // ⭐ 特别判定：所有省份的情况
+            // 判断是否未选择省份或选择"所有省份"
+            if (!currentProvince || currentProvince === '' || currentProvince === '所有省份') {
+                // 🌟 特别处理：当选择"所有省份"时，显示所有景点数据
+                // 设置API URL为所有省份景点接口（限制500条）
+                url = '/travel/api/allProvincesAttractions?limit=500';
+                // 打印调试信息到控制台
+                console.log('特别判定触发：所有省份景点API');
+                
+            // 判断是否选择了具体省份但未选择城市或选择"所有城市"
+            } else if (currentProvince && (!currentCity || currentCity === '' || currentCity === '所有城市')) {
+                // 选择了具体省份但选择"所有城市"
+                // 设置API URL为省份所有城市景点接口（传递省份参数，限制200条，使用encodeURIComponent编码）
+                url = `/travel/api/provinceAllCitiesAttractions?province=${encodeURIComponent(currentProvince)}&limit=200`;
+                // 打印调试信息到控制台
+                console.log('调用省份所有城市景点API');
+                
+            // 判断是否选择了具体省份和城市
+            } else if (currentProvince && currentCity && currentCity !== '所有城市' && currentCity !== '') {
+                // 选择了具体省份和城市
+                // 创建URLSearchParams对象，用于构建查询参数
+                const params = new URLSearchParams();
+                // 添加省份参数
+                params.append('province', currentProvince);
+                // 添加城市参数
+                params.append('city', currentCity);
+                
+                // 设置API URL为具体省份城市接口（传递查询参数）
+                url = `/travel/api/locationInfo?${params.toString()}`;
+                // 打印调试信息到控制台
+                console.log('调用具体省份城市API - 省份:', currentProvince, '城市:', currentCity);
+                console.log('API URL:', url);
+                
+            // 其他情况（备用）
+            } else {
+                // 备用情况
+                // 设置API URL为所有景点接口（限制200条）
+                url = '/travel/api/allAttractions?limit=200';
+                // 打印调试信息到控制台
+                console.log('调用备用所有景点API');
+            }
+            
+            // 打印最终API URL到控制台
+            console.log('最终API URL:', url);
+            
+            // 使用fetch API发送GET请求到后端景点接口
+            fetch(url)
+                .then(response => {
+                    // 打印API响应状态到控制台
+                    console.log('API响应状态:', response.status);
+                    
+                    // 判断响应是否成功（状态码200-299）
+                    if (!response.ok) {
+                        // 如果响应不成功，抛出错误
+                        throw new Error(`HTTP错误! 状态: ${response.status}`);
+                    }
+                    // 将响应转换为JSON对象
+                    return response.json();
+                })
+                .then(data => {
+                    // 打印API返回完整数据到控制台
+                    console.log('API返回完整数据:', data);
+                    console.log('API返回的字段:', Object.keys(data));
+                    
+                    // 判断后端是否返回成功
+                    if (data.success) {
+                        // 获取景点数组（兼容不同的数据字段名）
+                        // locationInfo API返回的是addressAttractions字段
+                        const attractions = data.addressAttractions || data.attractions || [];
+                        // 打印获取到的景点数量到控制台
+                        console.log('获取到的景点数量:', attractions.length);
+                        console.log('addressAttractions数量:', data.addressAttractions ? data.addressAttractions.length : 0);
+                        console.log('attractions数量:', data.attractions ? data.attractions.length : 0);
+                        
+                        // 判断景点数组是否为空
+                        if (attractions.length === 0) {
+                            // 如果景点数组为空，打印警告信息到控制台
+                            console.warn('警告：API返回成功但景点数组为空');
+                            console.warn('检查数据:', {
+                                addressAttractions: data.addressAttractions,
+                                attractions: data.attractions,
+                                province: currentProvince,
+                                city: currentCity
+                            });
+                            // 显示无结果提示
+                            showNoResults('没有找到景点数据，请检查数据库是否有数据');
+                        // 如果景点数组不为空
+                        } else {
+                            // 打印前5个景点详情到控制台（用于调试）
+                            console.log('前5个景点详情:', attractions.slice(0, 5));
+                            // 调用displayAttractions函数，显示景点列表
+                            displayAttractions(attractions);
+                        }
+                    // 如果后端返回失败
+                    } else {
+                        // 打印错误信息到控制台
+                        console.error('API返回失败:', data.message);
+                        // 显示无结果提示（包含错误信息）
+                        showNoResults(`API错误: ${data.message || '未知错误'}`);
+                    }
+                })
+                .catch(error => {
+                    // 如果发生网络错误或其他异常，打印错误信息到控制台
+                    console.error('加载景点失败:', error);
+                    // 显示无结果提示（包含错误信息）
+                    showNoResults(`网络错误: ${error.message}<br>请确保应用已启动并检查控制台日志`);
+                });
+        }
+
+        // 搜索景点（增强版，支持搜索历史）
+        function searchAttractions() {
+            const keyword = document.getElementById('searchInput').value.trim();
+            if (!keyword) {
+                alert('请输入搜索关键词');
+                return;
+            }
+            
+            // 保存搜索历史
+            userDataManager.saveSearchHistory(keyword);
+            
+            showLoading();
+            
+            // 简单的搜索模拟
+            fetch(`/travel/api/locationInfo?province=${encodeURIComponent(keyword)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                    if (data.success && (data.attractions || data.addressAttractions)) {
+                        const attractions = data.attractions || data.addressAttractions || [];
+                        displayAttractions(attractions);
+                        } else {
+                        showNoResults('未找到相关景点');
+                        }
+                    })
+                    .catch(error => {
+                    console.error('搜索失败:', error);
+                    showNoResults('搜索失败，请稍后重试');
+                });
+        }
+
+        // 显示景点列表
+        function displayAttractions(attractions) {
+            const container = document.getElementById('attractionsContainer');
+            
+            if (!attractions || attractions.length === 0) {
+                showNoResults('暂无景点数据');
+                return;
+            }
+            
+            const grid = document.createElement('div');
+            grid.className = 'attractions-grid';
+            
+            // 如果是address表的数据格式，需要转换
+            attractions.forEach(attraction => {
+                const card = createAttractionCard(attraction);
+                grid.appendChild(card);
+            });
+            
+            container.innerHTML = '';
+            container.appendChild(grid);
+        }
+
+        // 创建景点卡片（增强版，支持收藏功能）
+        function createAttractionCard(attraction) {
+            const card = document.createElement('div');
+            card.className = 'attraction-card';
+            
+            // 处理不同数据源的字段
+            const name = attraction.name || attraction.title || '未知景点';
+            const description = attraction.description || attraction.content || '暂无介绍';
+            const province = attraction.province || '';
+            const city = attraction.city || '';
+            const rating = attraction.rating || '4.5';
+            const priceRange = attraction.priceRange || attraction.price_range || '免费';
+            const features = attraction.features || '';
+            const tips = attraction.tips || '';
+            const openingHours = attraction.opening_hours || '';
+            const viewCount = attraction.view_count || Math.floor(Math.random() * 1000) + 100;
+            const likeCount = attraction.like_count || Math.floor(Math.random() * 100) + 20;
+            
+            // 使用真实的图片URL或随机默认图片
+            const imageUrl = attraction.image_url || getRandomDefaultImage();
+            
+            // 截取描述到合适长度
+            const shortDescription = description.length > 100 ? description.substring(0, 100) + '...' : description;
+            
+            // 处理特色标签
+            const featureTags = features ? features.split(',').slice(0, 2) : ['推荐', '必游'];
+            
+            // 检查是否已收藏
+            const isFavorited = userDataManager.isFavorite(name);
+            const favoriteIcon = isFavorited ? 'fas fa-heart' : 'far fa-heart';
+            const favoriteClass = isFavorited ? 'favorited' : '';
+            
+            // 生成唯一的卡片ID
+            const cardId = 'attraction-card-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            
+            // 创建标准化的景点数据对象，确保所有字段都有值
+            const standardizedAttraction = {
+                ...attraction,
+                name: name,  // 使用处理过的名称
+                description: description,  // 使用处理过的描述
+                province: province,
+                city: city,
+                rating: rating,
+                priceRange: priceRange,
+                price_range: priceRange,  // 保持兼容性
+                features: features,
+                tips: tips,
+                opening_hours: openingHours,
+                openingHours: openingHours,  // 保持兼容性
+                view_count: viewCount,
+                like_count: likeCount,
+                image_url: imageUrl,
+                imageUrl: imageUrl  // 保持兼容性
+            };
+            
+            // 将标准化的景点数据存储到全局对象中
+            currentAttractions[cardId] = standardizedAttraction;
+            
+            // 给卡片添加 data-card-id 属性，方便后续查找
+            card.setAttribute('data-card-id', cardId);
+            
+            card.innerHTML = `
+                <div class="card-image">
+                    <img src="${imageUrl}" alt="${name}" onerror="this.src=getRandomDefaultImage()">
+                    <div class="card-badge">热门景点</div>
+                    <div class="rating-badge">
+                        <i class="fas fa-star"></i> ${rating}
+                    </div>
+                    <div class="favorite-btn ${favoriteClass}" onclick="toggleFavorite('${name}', this)" title="${isFavorited ? '取消收藏' : '添加收藏'}">
+                        <i class="${favoriteIcon}"></i>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">${name}</div>
+                            <div class="card-location">
+                                <i class="fas fa-map-marker-alt"></i>
+                                ${province} ${city}
+                            </div>
+                        </div>
+                        <div class="card-price">${priceRange}</div>
+                    </div>
+                    <div class="card-description">${shortDescription}</div>
+                    ${openingHours ? `<div class="card-info"><i class="fas fa-clock"></i> ${openingHours}</div>` : ''}
+                    <div class="card-tags">
+                        ${featureTags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-eye"></i>
+                                <span>${viewCount}</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-heart"></i>
+                                <span>${likeCount}</span>
+                            </div>
+                        </div>
+                        <button class="view-btn" onclick="viewAttractionDetailByCard('${cardId}')">
+                            查看详情
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // 通过卡片ID查看景点详情
+        function viewAttractionDetailByCard(cardId) {
+            const attraction = currentAttractions[cardId];
+            if (!attraction) {
+                console.error('❌ 未找到景点数据:', cardId);
+                alert('无法获取景点信息，请重试');
+                return;
+            }
+            
+            const name = attraction.name || attraction.title || '未知景点';
+            viewAttractionDetail(name, attraction);
+        }
+
+        // 切换收藏状态
+        function toggleFavorite(attractionName, element) {
+            // 从卡片中获取完整的景点数据
+            const card = element.closest('.attraction-card');
+            const cardId = card.getAttribute('data-card-id');
+            let attractionData = null;
+            
+            // 优先从 currentAttractions 中获取完整数据
+            if (cardId && currentAttractions[cardId]) {
+                attractionData = currentAttractions[cardId];
+            } else {
+                // 如果找不到，从DOM中提取数据（降级方案）
+                const title = card.querySelector('.card-title')?.textContent || attractionName;
+                const location = card.querySelector('.card-location')?.textContent.trim() || '';
+                const description = card.querySelector('.card-description')?.textContent || '';
+                
+                attractionData = {
+                    name: title,
+                    location: location,
+                    description: description
+                };
+            }
+            
+            // 切换收藏状态
+            const isFavorited = userDataManager.toggleFavorite(attractionName, attractionData);
+            
+            // 更新UI
+            const icon = element.querySelector('i');
+            if (isFavorited) {
+                icon.className = 'fas fa-heart';
+                element.classList.add('favorited');
+                element.title = '取消收藏';
+                
+                // 简单的收藏动画
+                element.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    element.style.transform = 'scale(1)';
+                }, 200);
+            } else {
+                icon.className = 'far fa-heart';
+                element.classList.remove('favorited');
+                element.title = '添加收藏';
+            }
+        }
+
+        // 查看景点详情（增强版，支持浏览历史）
+        function viewAttractionDetail(name, attractionData) {
+            console.log('🔍 查看景点详情:', name);
+            console.log('📊 景点数据:', attractionData);
+            
+            // 将景点数据临时保存到localStorage，供详情页使用
+            const tempKey = 'xihu_temp_attraction_' + Date.now();
+            try {
+                localStorage.setItem(tempKey, JSON.stringify(attractionData));
+                console.log('✅ 景点数据已临时保存到localStorage');
+            } catch (error) {
+                console.warn('⚠️ 保存景点数据到localStorage失败:', error);
+            }
+            
+            // 保存浏览历史
+            userDataManager.saveBrowsingHistory(name, attractionData);
+            
+            // 跳转到详情页面，传递临时键名
+            const detailUrl = `/travel/attraction-detail?name=${encodeURIComponent(name)}&tempKey=${tempKey}`;
+            window.location.href = detailUrl;
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('attractionsContainer').innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-spinner"></i>
+                    <div>正在加载...</div>
+                </div>
+            `;
+        }
+
+        // 显示无结果
+        function showNoResults(message) {
+            document.getElementById('attractionsContainer').innerHTML = `
+                <div class="no-results">
+                    <i class="fas fa-search" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                    <div>${message}</div>
+                </div>
+            `;
+        }
+
+        // ===== 调试功能（开发时使用）=====
+        
+        // 在控制台中查看用户数据的函数
+        window.getUserData = function() {
+            return {
+                preferences: userDataManager.getUserPreferences(),
+                browsingHistory: userDataManager.getBrowsingHistory(),
+                searchHistory: userDataManager.getSearchHistory(),
+                favorites: userDataManager.getFavorites(),
+                stats: userDataManager.getStorageStats()
+            };
+        };
+
+        // 清空用户数据的函数（谨慎使用）
+        window.clearUserData = function() {
+            if (confirm('确定要清空所有用户数据吗？此操作不可撤销！')) {
+                userDataManager.clearAllUserData();
+                location.reload();
+            }
+        };
+
+        // 设置当前页面的导航激活状态
+        function setActiveNavItem() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-links a');
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                const href = link.getAttribute('href');
+                
+                // 根据当前路径设置激活状态
+                if (currentPath === '/' && href === '/') {
+                    link.classList.add('active');
+                } else if (currentPath.startsWith('/hc/') && href === '/hc/f2') {
+                    link.classList.add('active');
+                } else if (currentPath.startsWith('/travel') && href === '/travel') {
+                    link.classList.add('active');
+                } else if (currentPath.startsWith('/food') && href === '/food') {
+                    link.classList.add('active');
+                } else if (currentPath.startsWith('/shopping') && href === '/shopping') {
+                    link.classList.add('active');
+                } else if (currentPath.startsWith('/payment') && href === '/payment') {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        // 页面加载完成后设置导航激活状态
+        document.addEventListener('DOMContentLoaded', function() {
+            setActiveNavItem();
+        });
+
+        console.log('💡 调试提示：');
+        console.log('- 在控制台输入 getUserData() 查看所有用户数据');
+        console.log('- 在控制台输入 clearUserData() 清空所有用户数据');
+    </script>
+    
+</body>
+</html> 

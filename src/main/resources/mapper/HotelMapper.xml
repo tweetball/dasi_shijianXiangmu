@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icss.xihu.mapper.HotelMapper">
+    <select id="findByMany" resultMap="findHotelAndRoom">
+        select h.id as hid,
+               h.name hname,
+               h.tel htel,
+               h.content hcontent,
+               h.img himg,
+               h.score hscore,
+               h.address address,
+               r.id rid,
+               r.name rname,
+               r.content rcontent,
+               r.hid rhid,
+               r.price price,
+               r.img rimg,
+               r.full rfull
+        from hotel h inner join hotel_room r on r.hid = h.id
+        where h.id = #{value}
+    </select>
+    <resultMap id="findHotelAndRoom" type="com.icss.xihu.model.HotelMany">
+        <result column="hid" property="id"></result>
+        <result column="hname" property="name"></result>
+        <result column="htel" property="tel"></result>
+        <result column="hcontent" property="content"></result>
+        <result column="address" property="address"></result>
+        <result column="himg" property="img"></result>
+        <result column="hscore" property="score"></result>
+        <collection property="rList" ofType="com.icss.xihu.model.HotelRoom">
+            <result column="rid" property="id"></result>
+            <result column="rname" property="name"></result>
+            <result column="rhid" property="hid"></result>
+            <result column="rcontent" property="content"></result>
+            <result column="price" property="price"></result>
+            <result column="rimg" property="img"></result>
+            <result column="rfull" property="full"></result>
+        </collection>
+    </resultMap>
+    <select id="searchByKeyword" resultType="com.icss.xihu.model.Hotel">
+        SELECT CAST(id AS UNSIGNED) as id, name, tel, content, img, address, level, score, province, city, minPrice FROM hotel
+        WHERE name LIKE #{keyword} OR address LIKE #{keyword}
+    </select>
+    <select id="getHotHotels" resultType="com.icss.xihu.model.Hotel">
+        SELECT CAST(id AS UNSIGNED) as id, name, tel, content, img, address, level, score, province, city, minPrice FROM hotel
+        WHERE id IN ('1', '2', '3')
+        ORDER BY CAST(id AS UNSIGNED) ASC
+    </select>
+    <select id="findAllActive" resultType="com.icss.xihu.model.Hotel">
+        SELECT CAST(id AS UNSIGNED) as id, name, tel, content, img, address, level, score, province, city, minPrice FROM hotel
+    </select>
+</mapper>
